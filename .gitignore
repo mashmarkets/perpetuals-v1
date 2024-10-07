@@ -12,3 +12,5 @@ test-ledger
 
 .pnp.*
 .yarn/
+
+.vscode/

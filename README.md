@@ -8,20 +8,19 @@ Solana Perpetuals protocol is an open-source implementation of a non-custodial d
 
 ### Setup Environment
 
-1. Clone the repository from <https://github.com/solana-labs/perpetuals.git>.
-2. Install the latest Solana tools from <https://docs.solana.com/cli/install-solana-cli-tools>. If you already have Solana tools, run `solana-install update` to get the latest compatible version.
+1. Clone the repository from <https://github.com/mashmarkets/perpetuals-b.git>.
+2. Install the version 1.17.7 of Solana tools 
 3. Install the latest Rust stable from <https://rustup.rs/>. If you already have Rust, run `rustup update` to get the latest version.
-4. Install the latest Anchor framework from <https://www.anchor-lang.com/docs/installation>. If you already have Anchor, run `avm update` to get the latest version.
+4. Install version of 0.28.0 of Anchor framework from <https://www.anchor-lang.com/docs/installation>. 
 
-Rustfmt is used to format the code. It requires `nightly` features to be activated:
 
-5. Install `nightly` rust toolchain. <https://rust-lang.github.io/rustup/installation/index.html#installing-nightly>
-6. Execute `git config core.hooksPath .githooks` to activate pre-commit hooks.
+Rustfmt is used to format the code. 
+
+5. Execute `git config core.hooksPath .githooks` to activate pre-commit hooks.
 
 #### [Optional] Vscode setup
 
-1. Install `rust-analyzer` extension
-2. If formatting doesn't work, make sure that `rust-analyzer.rustfmt.extraArgs` is set to `+nightly`
+1. Install `rust-analyzer` extension - You will need version v0.3.2029
 
 ### Build
 

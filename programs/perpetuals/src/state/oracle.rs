@@ -291,24 +291,26 @@ impl OraclePrice {
             !Perpetuals::is_empty_account(pyth_price_info)?,
             PerpetualsError::InvalidOracleAccount
         );
-        let price_feed = pyth_sdk_solana::load_price_feed_from_account_info(pyth_price_info)
-            .map_err(|_| PerpetualsError::InvalidOracleAccount)?;
+        let data = &pyth_price_info.try_borrow_data()?[8..];
+        let pyth_feed = pyth_min::price_update::PriceUpdateV2::get_price_update_v2_from_bytes(data)
+            .price_message;
+
         let pyth_price = if use_ema {
-            price_feed.get_ema_price_unchecked()
+            pyth_feed.ema_price
         } else {
-            price_feed.get_price_unchecked()
+            pyth_feed.price
         };
 
-        let last_update_age_sec = math::checked_sub(current_time, pyth_price.publish_time)?;
+        let last_update_age_sec = math::checked_sub(current_time, pyth_feed.publish_time)?;
         if last_update_age_sec > max_price_age_sec as i64 {
             msg!("Error: Pyth oracle price is stale");
             return err!(PerpetualsError::StaleOraclePrice);
         }
 
-        if pyth_price.price <= 0
+        if pyth_price <= 0
             || math::checked_div(
-                math::checked_mul(pyth_price.conf as u128, Perpetuals::BPS_POWER)?,
-                pyth_price.price as u128,
+                math::checked_mul(pyth_feed.conf as u128, Perpetuals::BPS_POWER)?,
+                pyth_price as u128,
             )? > max_price_error as u128
         {
             msg!("Error: Pyth oracle price is out of bounds");
@@ -317,8 +319,8 @@ impl OraclePrice {
 
         Ok(OraclePrice {
             // price is i64 and > 0 per check above
-            price: pyth_price.price as u64,
-            exponent: pyth_price.expo,
+            price: pyth_price as u64,
+            exponent: pyth_feed.exponent,
         })
     }
 }
