@@ -36,7 +36,7 @@ export function CollateralModal(props: Props) {
 
   let pool = poolData[props.position.pool.toString()]!;
 
-  let payToken = props.position.token;
+  let payToken = props.position.collateralToken;
 
   let payTokenBalance = userData.tokenBalances[pool.getTokenList()[0]!];
 

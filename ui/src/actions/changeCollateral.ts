@@ -42,7 +42,7 @@ export async function changeCollateral(
   let custody = pool.getCustodyAccount(position.token)!;
 
   let userCustodyTokenAccount = await getAssociatedTokenAddress(
-    custody.mint,
+    position.collateralCustodyMint,
     publicKey
   );
 
@@ -54,15 +54,14 @@ export async function changeCollateral(
   if (unwrapTx) postInstructions.push(...unwrapTx);
 
   if (tab == Tab.Add) {
-    if (position.token == TokenE.SOL) {
-      let ataIx = await createAtaIfNeeded(
-        publicKey,
-        publicKey,
-        NATIVE_MINT,
-        connection
-      );
-      if (ataIx) preInstructions.push(ataIx);
-
+    let ataIx = await createAtaIfNeeded(
+      publicKey,
+      publicKey,
+      position.collateralCustodyMint,
+      connection
+    );
+    if (ataIx) preInstructions.push(ataIx);
+    if (position.collateralToken == TokenE.SOL) {
       let wrapInstructions = await wrapSolIfNeeded(
         publicKey,
         publicKey,
@@ -89,19 +88,21 @@ export async function changeCollateral(
         position: position.address,
         custody: custody.address,
         custodyOracleAccount: custody.oracle.oracleAccount,
-        custodyTokenAccount: custody.tokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
+        collateralCustody: position.collateralCustody,
+        collateralCustodyOracleAccount: position.collateralCustodyOracleAccount,
+        collateralCustodyTokenAccount: pool.getCustodyAccount(
+          position.collateralToken
+        )?.tokenAccount!,
       });
   } else {
-    if (position.token == TokenE.SOL) {
-      let ataIx = await createAtaIfNeeded(
-        publicKey,
-        publicKey,
-        NATIVE_MINT,
-        connection
-      );
-      if (ataIx) preInstructions.push(ataIx);
-    }
+    let ataIx = await createAtaIfNeeded(
+      publicKey,
+      publicKey,
+      position.collateralCustodyMint,
+      connection
+    );
+    if (ataIx) preInstructions.push(ataIx);
 
     // Decimals are 6, since collateral is in USD
     let collateralUsd = new BN(collatNum * 10 ** 6);
@@ -118,8 +119,12 @@ export async function changeCollateral(
         position: position.address,
         custody: custody.address,
         custodyOracleAccount: custody.oracle.oracleAccount,
-        custodyTokenAccount: custody.tokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,
+        collateralCustody: position.collateralCustody,
+        collateralCustodyOracleAccount: position.collateralCustodyOracleAccount,
+        collateralCustodyTokenAccount: pool.getCustodyAccount(
+          position.collateralToken
+        )?.tokenAccount!,
       });
   }
 

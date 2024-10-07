@@ -40,7 +40,7 @@ export async function closePosition(
       : price.mul(new BN(150)).div(new BN(100));
 
   let userCustodyTokenAccount = await getAssociatedTokenAddress(
-    custody.mint,
+    position.collateralCustodyMint,
     publicKey
   );
 
@@ -49,7 +49,7 @@ export async function closePosition(
   let ataIx = await createAtaIfNeeded(
     publicKey,
     publicKey,
-    custody.mint,
+    position.collateralCustodyMint,
     connection
   );
 
@@ -72,12 +72,16 @@ export async function closePosition(
       position: position.address,
       custody: custody.address,
       custodyOracleAccount: custody.oracle.oracleAccount,
-      custodyTokenAccount: custody.tokenAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
+      collateralCustody: position.collateralCustody,
+      collateralCustodyOracleAccount: position.collateralCustodyOracleAccount,
+      collateralCustodyTokenAccount: pool.getCustodyAccount(
+        position.collateralToken
+      )?.tokenAccount!,
     })
     .preInstructions(preInstructions);
 
-  if (position.token == TokenE.SOL)
+  if (position.collateralToken == TokenE.SOL)
     methodBuilder = methodBuilder.postInstructions(postInstructions);
 
   try {

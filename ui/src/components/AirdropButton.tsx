@@ -58,7 +58,7 @@ export default function AirdropButton(props: Props) {
 
       transaction.feePayer = publicKey;
       transaction.recentBlockhash = (
-        await connection.getRecentBlockhash("finalized")
+        await connection.getLatestBlockhash("finalized")
       ).blockhash;
 
       transaction.sign(DEFAULT_PERPS_USER);

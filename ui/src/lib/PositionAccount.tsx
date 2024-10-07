@@ -8,6 +8,8 @@ export class PositionAccount {
   public owner: PublicKey;
   public pool: PublicKey;
   public custody: PublicKey;
+  public collateralCustody: PublicKey;
+  public collateralCustodyMint: PublicKey;
   public lockCustody: PublicKey;
 
   public openTime: BN;
@@ -24,8 +26,10 @@ export class PositionAccount {
   public collateralAmount: BN;
 
   public token: TokenE;
+  public collateralToken: TokenE;
   public address: PublicKey;
   public oracleAccount: PublicKey;
+  public collateralCustodyOracleAccount: PublicKey;
 
   constructor(
     position: Position,
@@ -36,7 +40,11 @@ export class PositionAccount {
     this.owner = position.owner;
     this.pool = position.pool;
     this.custody = position.custody;
+    this.collateralCustody = position.collateralCustody;
     this.lockCustody = position.lockCustody;
+
+    this.collateralCustodyMint =
+      custodies[this.collateralCustody.toString()]?.mint!;
 
     this.openTime = position.openTime;
     this.updateTime = position.updateTime;
@@ -52,9 +60,13 @@ export class PositionAccount {
     this.collateralAmount = position.collateralAmount;
 
     this.token = custodies[this.custody.toString()]?.getTokenE()!;
+    this.collateralToken =
+      custodies[this.collateralCustody.toString()]?.getTokenE()!;
     this.address = address;
     this.oracleAccount =
       custodies[this.custody.toString()]?.oracle.oracleAccount!;
+    this.collateralCustodyOracleAccount =
+      custodies[this.collateralCustody.toString()]?.oracle.oracleAccount!;
   }
 
   // TODO update leverage with pnl?

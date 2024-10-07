@@ -1,17 +1,19 @@
 [features]
 seeds = false
 skip-lint = false
-[programs.localnet]
-perpetuals = "Bmr31xzZYYVUdoHmAJL1DAp2anaitW8Tw9YfASS94MKJ"
 [programs.devnet]
-perpetuals = "Bmr31xzZYYVUdoHmAJL1DAp2anaitW8Tw9YfASS94MKJ"
+perpetuals = "GGkf4PUjpgYodf4JfMnMhjKzS5knMtsdqZnEzXUuw1t7"
+
+[programs.localnet]
+perpetuals = "GGkf4PUjpgYodf4JfMnMhjKzS5knMtsdqZnEzXUuw1t7"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "localnet"
+cluster = "Localnet"
 wallet = "~/.config/solana/id.json"
 
 [scripts]
+startup_wait = "100000"
 test = "yarn run ts-mocha -p ./tsconfig.json -t 1000000 programs/perpetuals/tests/anchor/*.ts"

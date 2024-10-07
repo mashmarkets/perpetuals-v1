@@ -1,3 +1,4 @@
+"use client";
 import { useRouter } from "next/router";
 import { TradeLayout } from "@/components/Layouts/TradeLayout";
 import { CandlestickChart } from "@/components/Chart/CandlestickChart";

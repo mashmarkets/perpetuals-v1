@@ -81,26 +81,28 @@ async function addCustody(
 ): Promise<void> {
   // to be loaded from config file
   const oracleConfig: OracleParams = {
-    maxPriceError: new BN(10_000),
-    maxPriceAgeSec: 60,
-    oracleType: { [oracleType]: {} },
+    maxPriceError: new BN(10_000), //u64 Max Price
+    maxPriceAgeSec: 36000, // 10 hours minutes. Seems we are using some old pyth oracles that often go stale
+    oracleType: { [oracleType]: {} }, // None, custom, pyth
     oracleAccount: tokenOracle,
-    oracleAuthority: PublicKey.default, // By default, permissionless oracle price update is not allowed.
+    oracleAuthority: PublicKey.default, // By default, permissionless oracle price update is not allowed. Pubkey allowed to sign permissionless off-chain price updates
+    // Only applicable for custom oracles
   };
 
+  // Figures are in BPS
   const pricingConfig: PricingParams = {
     useEma: true,
     useUnrealizedPnlInAum: true,
-    tradeSpreadLong: new BN(100),
-    tradeSpreadShort: new BN(100),
-    swapSpread: new BN(200),
-    minInitialLeverage: new BN(10_000),
-    maxInitialLeverage: new BN(1_000_000),
-    maxLeverage: new BN(1_000_000),
-    maxPayoffMult: new BN(10_000),
-    maxUtilization: new BN(10_000),
-    maxPositionLockedUsd: new BN(1_000_000_000),
-    maxTotalLockedUsd: new BN(1_000_000_000),
+    tradeSpreadLong: new BN(100), // 1%
+    tradeSpreadShort: new BN(100), // 1%
+    swapSpread: new BN(200), // 2%
+    minInitialLeverage: new BN(10_000), // 1x
+    maxInitialLeverage: new BN(1_000_000), // 100x
+    maxLeverage: new BN(1_000_000), // 100x
+    maxPayoffMult: new BN(10_000), // 100%
+    maxUtilization: new BN(10_000), // 100%
+    maxPositionLockedUsd: new BN(0), // No limit
+    maxTotalLockedUsd: new BN(0), // No limit
   };
   const permissions: Permissions = {
     allowSwap: true,
@@ -112,35 +114,51 @@ async function addCustody(
     allowCollateralWithdrawal: true,
     allowSizeChange: true,
   };
+  // TODO:- FIGURE OUT THESE PARAMS
+  // Linear
+  // if token ratio is improved:
+  //    fee = base_fee / ratio_fee
+  // otherwise:
+  //    fee = base_fee * ratio_fee
+  // where:
+  //   if new_ratio < ratios.target:
+  //     ratio_fee = 1 + custody.fees.ratio_mult * (ratios.target - new_ratio) / (ratios.target - ratios.min);
+  //   otherwise:
+  //     ratio_fee = 1 + custody.fees.ratio_mult * (new_ratio - ratios.target) / (ratios.max - ratios.target);
   const fees: Fees = {
-    mode: { linear: {} },
-    ratioMult: new BN(20_000),
-    utilizationMult: new BN(20_000),
-    swapIn: new BN(100),
-    swapOut: new BN(100),
-    stableSwapIn: new BN(100),
-    stableSwapOut: new BN(100),
-    addLiquidity: new BN(100),
-    removeLiquidity: new BN(100),
-    openPosition: new BN(100),
-    closePosition: new BN(100),
-    liquidation: new BN(100),
-    protocolShare: new BN(10),
-    feeMax: new BN(250),
-    feeOptimal: new BN(10),
+    mode: { linear: {} }, // Fixed, Linear, Optimal
+    ratioMult: new BN(20_000), // 200%
+    utilizationMult: new BN(20_000), // 200%
+    swapIn: new BN(100), // 1%
+    swapOut: new BN(100), // 1%
+    stableSwapIn: new BN(100), // 1%
+    stableSwapOut: new BN(100), // 1%
+    addLiquidity: new BN(100), // 1%
+    removeLiquidity: new BN(100), // 1%
+    openPosition: new BN(100), // 1%
+    closePosition: new BN(100), // 1%
+    liquidation: new BN(100), // 1%
+    protocolShare: new BN(10), // 0.1%
+    feeMax: new BN(250), // 2.5%
+    feeOptimal: new BN(10), // 0.1%
   };
+  // (9 decimals)
+  // if current_utilization < optimal_utilization:
+  //   rate = base_rate + (current_utilization / optimal_utilization) * slope1
+  // else:
+  //   rate = base_rate + slope1 + (current_utilization - optimal_utilization) / (1 - optimal_utilization) * slope2
   const borrowRate: BorrowRateParams = {
     baseRate: new BN(0),
-    slope1: new BN(80_000),
+    slope1: new BN(80_000), // 0.008%
     slope2: new BN(120_000),
-    optimalUtilization: new BN(800_000_000),
+    optimalUtilization: new BN(800_000_000), // 800 USDC
   };
 
   const pool = await client.getPool(poolName);
   pool.ratios.push({
-    target: new BN(5_000),
-    min: new BN(10),
-    max: new BN(10_000),
+    target: new BN(5_000), // 50%
+    min: new BN(10), // 0.1%
+    max: new BN(10_000), // 100%
   });
 
   const ratios = client.adjustTokenRatios(pool.ratios);

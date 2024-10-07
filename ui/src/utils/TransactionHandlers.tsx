@@ -167,7 +167,7 @@ export async function manualSendTransaction(
   // try {
   transaction.feePayer = publicKey;
   transaction.recentBlockhash = (
-    await connection.getRecentBlockhash("finalized")
+    await connection.getLatestBlockhash("finalized")
   ).blockhash;
 
   await sendSignedTransactionAndNotify({

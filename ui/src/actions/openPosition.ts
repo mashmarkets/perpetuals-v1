@@ -53,7 +53,7 @@ export async function openPositionBuilder(
       : new BN((price * 10 ** 6 * 90) / 100);
 
   let userCustodyTokenAccount = await getAssociatedTokenAddress(
-    positionCustody.mint,
+    payCustody.mint,
     publicKey
   );
 
@@ -73,83 +73,88 @@ export async function openPositionBuilder(
 
   let finalPayAmount = positionAmount / leverage;
 
-  if (payCustody.getTokenE() != positionCustody.getTokenE()) {
-    console.log("first swapping in open pos");
-    const View = new ViewHelper(connection, provider);
-    let swapInfo = await View.getSwapAmountAndFees(
-      payAmount,
-      pool!,
-      payCustody,
-      positionCustody
-    );
+  // if (payCustody.getTokenE() != positionCustody.getTokenE()) {
+  //   console.log("first swapping in open pos");
+  //   const View = new ViewHelper(connection, provider);
+  //   let swapInfo = await View.getSwapAmountAndFees(
+  //     payAmount,
+  //     pool!,
+  //     payCustody,
+  //     positionCustody
+  //   );
 
-    let swapAmountOut =
-      Number(swapInfo.amountOut) / 10 ** positionCustody.decimals;
+  //   let swapAmountOut =
+  //     Number(swapInfo.amountOut) / 10 ** positionCustody.decimals;
 
-    let swapFee = Number(swapInfo.feeOut) / 10 ** positionCustody.decimals;
+  //   let swapFee = Number(swapInfo.feeOut) / 10 ** positionCustody.decimals;
 
-    let recAmt = swapAmountOut - swapFee;
+  //   let recAmt = swapAmountOut - swapFee;
 
-    console.log("rec amt in swap builder", recAmt, swapAmountOut, swapFee);
+  //   console.log("rec amt in swap builder", recAmt, swapAmountOut, swapFee);
 
-    let getEntryPrice = await View.getEntryPriceAndFee(
-      recAmt,
-      positionAmount,
-      side,
-      pool!,
-      positionCustody!
-    );
+  //   let getEntryPrice = await View.getEntryPriceAndFee(
+  //     recAmt,
+  //     positionAmount,
+  //     side,
+  //     pool!,
+  //     positionCustody!
+  //   );
 
-    let entryFee = Number(getEntryPrice.fee) / 10 ** positionCustody.decimals;
+  //   let entryFee = Number(getEntryPrice.fee) / 10 ** positionCustody.decimals;
 
-    console.log("entry fee in swap builder", entryFee);
+  //   console.log("entry fee in swap builder", entryFee);
 
-    let swapInfo2 = await View.getSwapAmountAndFees(
-      payAmount + entryFee + swapFee,
-      pool!,
-      payCustody,
-      positionCustody
-    );
+  //   let swapInfo2 = await View.getSwapAmountAndFees(
+  //     payAmount + entryFee + swapFee,
+  //     pool!,
+  //     payCustody,
+  //     positionCustody
+  //   );
 
-    let swapAmountOut2 =
-      Number(swapInfo2.amountOut) / 10 ** positionCustody.decimals -
-      Number(swapInfo2.feeOut) / 10 ** positionCustody.decimals -
-      entryFee;
+  //   let swapAmountOut2 =
+  //     Number(swapInfo2.amountOut) / 10 ** positionCustody.decimals -
+  //     Number(swapInfo2.feeOut) / 10 ** positionCustody.decimals -
+  //     entryFee;
 
-    let extraSwap = 0;
+  //   let extraSwap = 0;
 
-    if (swapAmountOut2 < finalPayAmount) {
-      let difference = (finalPayAmount - swapAmountOut2) / swapAmountOut2;
-      extraSwap = difference * (payAmount + entryFee + swapFee);
-    }
+  //   if (swapAmountOut2 < finalPayAmount) {
+  //     let difference = (finalPayAmount - swapAmountOut2) / swapAmountOut2;
+  //     extraSwap = difference * (payAmount + entryFee + swapFee);
+  //   }
 
-    let { methodBuilder: swapBuilder, preInstructions: swapPreInstructions } =
-      await swapTransactionBuilder(
-        walletContextState,
-        connection,
-        pool,
-        payCustody.getTokenE(),
-        positionCustody.getTokenE(),
-        payAmount + entryFee + swapFee + extraSwap,
-        recAmt
-      );
+  //   let { methodBuilder: swapBuilder, preInstructions: swapPreInstructions } =
+  //     await swapTransactionBuilder(
+  //       walletContextState,
+  //       connection,
+  //       pool,
+  //       payCustody.getTokenE(),
+  //       positionCustody.getTokenE(),
+  //       payAmount + entryFee + swapFee + extraSwap,
+  //       recAmt
+  //     );
 
-    let ix = await swapBuilder.instruction();
-    preInstructions.push(...swapPreInstructions, ix);
-  }
+  //   let ix = await swapBuilder.instruction();
+  //   preInstructions.push(...swapPreInstructions, ix);
+  // }
+  let ataIx = await createAtaIfNeeded(
+    publicKey,
+    publicKey,
+    payCustody.mint,
+    connection
+  );
 
-  if (
-    preInstructions.length == 0 &&
-    positionCustody.getTokenE() == TokenE.SOL
-  ) {
-    let ataIx = await createAtaIfNeeded(
-      publicKey,
-      publicKey,
-      positionCustody.mint,
-      connection
-    );
+  if (ataIx) preInstructions.push(ataIx);
 
-    if (ataIx) preInstructions.push(ataIx);
+  if (payCustody.getTokenE() == TokenE.SOL) {
+    // let ataIx = await createAtaIfNeeded(
+    //   publicKey,
+    //   publicKey,
+    //   positionCustody.mint,
+    //   connection
+    // );
+
+    // if (ataIx) preInstructions.push(ataIx);
 
     let wrapInstructions = await wrapSolIfNeeded(
       publicKey,
@@ -173,6 +178,7 @@ export async function openPositionBuilder(
     side: side.toString() == "Long" ? TradeSide.Long : TradeSide.Short,
   };
 
+  console.log("fundingAccount", userCustodyTokenAccount.toString());
   let methodBuilder = perpetual_program.methods.openPosition(params).accounts({
     owner: publicKey,
     fundingAccount: userCustodyTokenAccount,
@@ -182,7 +188,9 @@ export async function openPositionBuilder(
     position: positionAccount,
     custody: positionCustody.address,
     custodyOracleAccount: positionCustody.oracle.oracleAccount,
-    custodyTokenAccount: positionCustody.tokenAccount,
+    collateralCustody: payCustody.address,
+    collateralCustodyOracleAccount: payCustody.oracle.oracleAccount,
+    collateralCustodyTokenAccount: payCustody.tokenAccount,
     systemProgram: SystemProgram.programId,
     tokenProgram: TOKEN_PROGRAM_ID,
   });
@@ -192,8 +200,8 @@ export async function openPositionBuilder(
   }
 
   if (
-    payCustody.getTokenE() == TokenE.SOL ||
-    positionCustody.getTokenE() == TokenE.SOL
+    payCustody.getTokenE() == TokenE.SOL
+    // ||  positionCustody.getTokenE() == TokenE.SOL
   ) {
     methodBuilder = methodBuilder.postInstructions(postInstructions);
   }
@@ -225,6 +233,7 @@ export async function openPosition(
   side: Side,
   leverage: number
 ) {
+  console.log({ payToken, positionToken });
   let payCustody = pool.getCustodyAccount(payToken)!;
   let positionCustody = pool.getCustodyAccount(positionToken)!;
 

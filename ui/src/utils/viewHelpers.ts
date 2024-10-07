@@ -147,6 +147,8 @@ export class ViewHelper {
         pool: pool.address,
         custody: custody.address,
         custodyOracleAccount: custody.oracle.oracleAccount,
+        collateralCustody: custody.address,
+        collateralCustodyOracleAccount: custody.oracle.oracleAccount,
       })
       .transaction();
 
@@ -228,6 +230,8 @@ export class ViewHelper {
         position: position.address,
         custody: position.custody,
         custodyOracleAccount: position.oracleAccount,
+        collateralCustody: position.collateralCustody,
+        collateralCustodyOracleAccount: position.collateralCustodyOracleAccount,
       })
       .transaction();
 
@@ -274,6 +278,8 @@ export class ViewHelper {
         position: position.address,
         custody: position.custody,
         custodyOracleAccount: position.oracleAccount,
+        collateralCustody: position.collateralCustody,
+        collateralCustodyOracleAccount: position.collateralCustodyOracleAccount,
       })
       .transaction();
 

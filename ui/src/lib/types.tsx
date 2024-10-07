@@ -172,6 +172,7 @@ export interface Position {
   pool: PublicKey;
   custody: PublicKey;
   lockCustody: PublicKey;
+  collateralCustody: PublicKey;
 
   openTime: BN;
   updateTime: BN;

@@ -1,4 +1,4 @@
-import * as PerpetualsJson from "@/target/idl/perpetuals.json";
+import PerpetualsJson from "@/target/idl/perpetuals.json";
 import { IDL as PERPETUALS_IDL, Perpetuals } from "@/target/types/perpetuals";
 import { getProvider } from "@/utils/provider";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
