@@ -1,3 +1,4 @@
+"use client";
 import PoolBackButton from "@/components/Atoms/PoolBackButton";
 import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
 import { PoolLayout } from "@/components/Layouts/PoolLayout";

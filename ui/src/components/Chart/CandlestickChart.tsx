@@ -4,9 +4,12 @@ import { getSymbol, TokenE } from "@/lib/Token";
 import dynamic from "next/dynamic";
 
 // @ts-ignore
-const TradingViewWidget = dynamic<any>(import("react-tradingview-widget"), {
-  ssr: false,
-});
+const TradingViewWidget = dynamic<any>(
+  () => import("react-tradingview-widget"),
+  {
+    ssr: false,
+  }
+);
 
 interface Props {
   className?: string;

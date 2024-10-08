@@ -1,3 +1,4 @@
+"use client";
 import { twMerge } from "tailwind-merge";
 import { useRouter } from "next/router";
 import { TableHeader } from "@/components/Molecules/PoolHeaders/TableHeader";

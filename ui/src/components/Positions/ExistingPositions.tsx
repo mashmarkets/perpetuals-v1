@@ -1,3 +1,4 @@
+"use client";
 import { NoPositions } from "@/components/Positions/NoPositions";
 import PoolPositionHeader from "@/components/Positions/PoolPositionHeader";
 import PoolPositionRow from "@/components/Positions/PoolPositionRow";

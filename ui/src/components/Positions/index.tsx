@@ -1,3 +1,4 @@
+"use client";
 import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
 import { LoadingDots } from "@/components/LoadingDots";
 import { ExistingPositions } from "@/components/Positions/ExistingPositions";
