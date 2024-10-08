@@ -38,7 +38,7 @@ export function CollateralModal(props: Props) {
 
   let payToken = props.position.collateralToken;
 
-  let payTokenBalance = userData.tokenBalances[pool.getTokenList()[0]!];
+  let payTokenBalance = userData.tokenBalances[payToken];
 
   const custodyData = useGlobalStore((state) => state.custodyData);
 
@@ -86,7 +86,7 @@ export function CollateralModal(props: Props) {
 
       let liquidationPrice = await View.getLiquidationPrice(
         props.position,
-        pool.getCustodyAccount(props.position.token)!,
+        pool.getCustodyAccount(props.position.collateralToken)!,
         depositAmount,
         withdrawAmount
       );
@@ -99,7 +99,7 @@ export function CollateralModal(props: Props) {
       if (tab === Tab.Add) {
         newCollat =
           props.position.getCollateralUsd() +
-          depositAmount * stats[props.position.token].currentPrice;
+          depositAmount * stats[props.position.collateralToken].currentPrice;
       } else {
         newCollat = props.position.getCollateralUsd() - withdrawAmount;
       }
@@ -109,7 +109,7 @@ export function CollateralModal(props: Props) {
       let newLev;
       let changeCollateral =
         tab === Tab.Add
-          ? depositAmount * stats[props.position.token].currentPrice
+          ? depositAmount * stats[props.position.collateralToken].currentPrice
           : -1 * withdrawAmount;
 
       newLev =
@@ -138,7 +138,7 @@ export function CollateralModal(props: Props) {
     if (tab === Tab.Add) {
       changeAmount =
         depositAmount *
-        10 ** pool.getCustodyAccount(props.position.token)!.decimals;
+        10 ** pool.getCustodyAccount(props.position.collateralToken)!.decimals;
     } else {
       changeAmount = withdrawAmount * 10 ** 6;
     }

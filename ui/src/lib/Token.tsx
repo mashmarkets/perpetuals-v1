@@ -20,14 +20,14 @@ export enum TokenE {
 }
 export const TOKEN_LIST = [
   TokenE.SOL,
-  TokenE.mSOL,
-  TokenE.stSOL,
+  // TokenE.mSOL,
+  // TokenE.stSOL,
   TokenE.USDC,
-  TokenE.USDT,
+  // TokenE.USDT,
   TokenE.RAY,
   TokenE.ORCA,
   TokenE.Bonk,
-  TokenE.TEST,
+  // TokenE.TEST,
 ];
 
 export function asToken(tokenStr: string): TokenE {
@@ -161,11 +161,11 @@ export function tokenAddressToToken(address: string): TokenE | null {
       return TokenE.USDC;
     case "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB":
       return TokenE.USDT;
-    case "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R":
+    case "GFz5gtptPcqJpV5dUHqiwtDwvrVamjQyKaLaFrQ9iwH2":
       return TokenE.RAY;
-    case "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE":
+    case "A5sPEFgEF2ET1Xdo6ZT8vMxwKqdBgQ6bAUaKdqoNApo8":
       return TokenE.ORCA;
-    case "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263":
+    case "Ek9RtoqksVzPfMRFN2BTgCxM7e5QoJ3rZLL18phtz2Ri":
       return TokenE.Bonk;
     case "6QGdQbaZEgpXqqbGwXJZXwbZ9xJnthfyYNZ92ARzTdAX":
       return TokenE.TEST;
@@ -183,16 +183,15 @@ export function getTokenAddress(token: TokenE) {
     case TokenE.stSOL:
       return "7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj";
     case TokenE.USDC:
-      // return "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU";
       return "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
     case TokenE.USDT:
       return "Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB";
     case TokenE.RAY:
-      return "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R";
+      return "GFz5gtptPcqJpV5dUHqiwtDwvrVamjQyKaLaFrQ9iwH2";
     case TokenE.ORCA:
-      return "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE";
+      return "A5sPEFgEF2ET1Xdo6ZT8vMxwKqdBgQ6bAUaKdqoNApo8";
     case TokenE.Bonk:
-      return "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263";
+      return "Ek9RtoqksVzPfMRFN2BTgCxM7e5QoJ3rZLL18phtz2Ri";
     case TokenE.TEST:
       return "6QGdQbaZEgpXqqbGwXJZXwbZ9xJnthfyYNZ92ARzTdAX";
   }

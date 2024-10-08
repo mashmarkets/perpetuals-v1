@@ -40,6 +40,7 @@ export async function changeCollateral(
   let publicKey = walletContextState.publicKey!;
 
   let custody = pool.getCustodyAccount(position.token)!;
+  let collateralCustody = pool.getCustodyAccount(position.collateralToken)!;
 
   let userCustodyTokenAccount = await getAssociatedTokenAddress(
     position.collateralCustodyMint,
@@ -73,7 +74,7 @@ export async function changeCollateral(
       }
     }
 
-    let collateral = new BN(collatNum * 10 ** custody.decimals);
+    let collateral = new BN(collatNum * 10 ** collateralCustody.decimals);
 
     methodBuilder = perpetual_program.methods
       .addCollateral({
@@ -131,7 +132,7 @@ export async function changeCollateral(
   if (preInstructions)
     methodBuilder = methodBuilder.preInstructions(preInstructions);
 
-  if (position.token == TokenE.SOL)
+  if (position.collateralToken == TokenE.SOL)
     methodBuilder = methodBuilder.postInstructions(postInstructions);
 
   try {

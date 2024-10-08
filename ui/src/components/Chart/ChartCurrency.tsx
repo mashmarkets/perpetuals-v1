@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { cloneElement, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { TokenE, getTokenIcon, getTokenLabel } from "@/lib/Token";
+import { TOKEN_LIST, TokenE, getTokenIcon, getTokenLabel } from "@/lib/Token";
 
 import { TokenSelectorList } from "../TokenSelectorList";
 
@@ -59,6 +59,7 @@ export function ChartCurrency(props: Props) {
       </button>
       {selectorOpen && (
         <TokenSelectorList
+          tokenList={TOKEN_LIST.filter((x) => !["USDC", "USDT"].includes(x))}
           onClose={() => setSelectorOpen(false)}
           onSelectToken={(token) => {
             router.push(`/trade/${token}-usd`);

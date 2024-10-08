@@ -14,7 +14,12 @@ import {
   SYSVAR_RENT_PUBKEY,
   AccountMeta,
 } from "@solana/web3.js";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddress,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { sha256 } from "js-sha256";
 import { encode } from "bs58";
 import { readFileSync } from "fs";
@@ -35,6 +40,7 @@ import {
   SwapAmountAndFees,
   Custody,
 } from "./types";
+import { token } from "@coral-xyz/anchor/dist/cjs/utils";
 
 export class PerpetualsClient {
   provider: AnchorProvider;
@@ -996,6 +1002,51 @@ export class PerpetualsClient {
       })
       .remainingAccounts(await this.getCustodyMetas(poolName))
       .view()
+      .catch((err) => {
+        console.error(err);
+        throw err;
+      });
+  };
+
+  withdrawFees = async ({
+    amount,
+    poolName,
+    tokenMint,
+  }: {
+    amount: BN;
+    poolName: string;
+    tokenMint: PublicKey;
+  }): Promise<void> => {
+    const receivingTokenAccount = getAssociatedTokenAddressSync(
+      tokenMint,
+      this.admin.publicKey
+    );
+    await this.program.methods
+      .withdrawFees({ amount })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.admin.publicKey, //payer
+          receivingTokenAccount,
+          this.admin.publicKey, // owner
+          tokenMint // mint
+        ),
+      ])
+      .accounts({
+        admin: this.admin.publicKey,
+        multisig: this.multisig.publicKey,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.getPoolKey(poolName),
+        custody: this.getCustodyKey(poolName, tokenMint),
+        custodyTokenAccount: this.getCustodyTokenAccountKey(
+          poolName,
+          tokenMint
+        ),
+        receivingTokenAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+      })
+      .signers([this.admin])
+      .rpc()
       .catch((err) => {
         console.error(err);
         throw err;

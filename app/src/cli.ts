@@ -428,6 +428,18 @@ async function getAum(poolName: string): Promise<void> {
   client.prettyPrint(await client.getAum(poolName));
 }
 
+async function withdrawFees(
+  poolName: string,
+  tokenMint: PublicKey,
+  amount: BN
+): Promise<void> {
+  return client.withdrawFees({
+    amount,
+    poolName,
+    tokenMint,
+  });
+}
+
 (async function main() {
   const program = new Command();
   program
@@ -841,6 +853,16 @@ async function getAum(poolName: string): Promise<void> {
     .argument("<string>", "Pool name")
     .action(async (poolName) => {
       await getAum(poolName);
+    });
+
+  program
+    .command("withdraw-fees")
+    .description("Withdraw protocol fees")
+    .argument("<string>", "Pool name")
+    .argument("<pubkey>", "Token mint in")
+    .argument("<amount>", "amount")
+    .action(async (poolName, tokenMint, amount) => {
+      await withdrawFees(poolName, new PublicKey(tokenMint), new BN(amount));
     });
 
   await program.parseAsync(process.argv);

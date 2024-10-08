@@ -178,7 +178,7 @@ export default function LiquidityCard(props: Props) {
           </SidebarTab>
         </div>
 
-        {props.pool.name == "TestPool1" &&
+        {(props.pool.name == "TestPool1" || props.pool.name == "MLP") &&
           Object.values(props.pool.custodies).map((custody) => {
             return (
               <AirdropButton

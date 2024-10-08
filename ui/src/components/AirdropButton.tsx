@@ -6,12 +6,18 @@ import { DEFAULT_PERPS_USER } from "@/utils/constants";
 import { checkIfAccountExists } from "@/utils/retrieveData";
 import {
   createAssociatedTokenAccountInstruction,
-  createMintToCheckedInstruction,
+  createMintToInstruction,
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Transaction } from "@solana/web3.js";
 import { SolidButton } from "./SolidButton";
+import {
+  manualSendTransaction,
+  sendSignedTransactionAndNotify,
+  sendTransaction,
+} from "@/utils/TransactionHandlers";
+import { toast } from "react-toastify";
 
 interface Props {
   className?: string;
@@ -29,7 +35,7 @@ export default function AirdropButton(props: Props) {
   async function handleAirdrop() {
     if (!publicKey) return;
     if (mint.toString() === "So11111111111111111111111111111111111111112") {
-      await connection.requestAirdrop(publicKey!, 1 * 10 ** 9);
+      await connection.requestAirdrop(publicKey!, 5 * 10 ** 9);
     } else {
       let transaction = new Transaction();
 
@@ -47,12 +53,11 @@ export default function AirdropButton(props: Props) {
       }
 
       transaction = transaction.add(
-        createMintToCheckedInstruction(
-          mint, // mint
-          associatedAccount, // ata
-          DEFAULT_PERPS_USER.publicKey, // payer
-          100 * 10 ** 9, // amount
-          9 // decimals
+        createMintToInstruction(
+          mint,
+          associatedAccount,
+          DEFAULT_PERPS_USER.publicKey,
+          1_000_000 * 10 ** 6
         )
       );
 
@@ -63,18 +68,27 @@ export default function AirdropButton(props: Props) {
 
       transaction.sign(DEFAULT_PERPS_USER);
 
-      transaction = await signTransaction(transaction);
-      const rawTransaction = transaction.serialize();
-      let signature = await connection.sendRawTransaction(rawTransaction, {
-        skipPreflight: false,
+      transaction = await signTransaction!(transaction);
+      await sendSignedTransactionAndNotify({
+        connection,
+        transaction,
+        successMessage: "Transaction success!",
+        failMessage: "Failed to airdrop",
+        signTransaction: () => {},
+        enableSigning: false,
       });
-      console.log(
-        `sent raw, waiting : https://explorer.solana.com/tx/${signature}?cluster=devnet`
-      );
-      await connection.confirmTransaction(signature, "confirmed");
-      console.log(
-        `sent tx!!! :https://explorer.solana.com/tx/${signature}?cluster=devnet`
-      );
+      // const rawTransaction = transaction.serialize();
+      // let signature = await connection.sendRawTransaction(rawTransaction, {
+      //   skipPreflight: false,
+      // });
+      // console.log(
+      //   `sent raw, waiting : https://explorer.solana.com/tx/${signature}?cluster=devnet`
+      // );
+      // await connection.confirmTransaction(signature, "confirmed");
+      // console.log(
+      //   `sent tx!!! :https://explorer.solana.com/tx/${signature}?cluster=devnet`
+      // );
+      // toast("You have been airdropped");
     }
 
     const userData = await getAllUserData(connection, publicKey!, poolData);

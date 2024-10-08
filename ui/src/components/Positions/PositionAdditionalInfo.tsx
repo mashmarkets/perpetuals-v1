@@ -103,7 +103,7 @@ export function PositionAdditionalInfo(props: Props) {
             <div className="text-sm text-white">
               ${formatPrice(props.position.getSizeUsd())}
             </div>
-            <CollateralModal position={props.position} pnl={props.pnl}>
+            {/* <CollateralModal position={props.position} pnl={props.pnl}>
               <button className="group ml-2">
                 <EditIcon
                   className={twMerge(
@@ -115,7 +115,7 @@ export function PositionAdditionalInfo(props: Props) {
                   )}
                 />
               </button>
-            </CollateralModal>
+            </CollateralModal> */}
           </div>
         </div>
         <div>

@@ -25,7 +25,7 @@ pub struct AddCollateral<'info> {
 
     #[account(
         mut,
-        constraint = funding_account.mint == custody.mint,
+        constraint = funding_account.mint == collateral_custody.mint,
         has_one = owner
     )]
     pub funding_account: Box<Account<'info, TokenAccount>>,
