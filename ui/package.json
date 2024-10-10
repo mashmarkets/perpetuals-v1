@@ -8,8 +8,8 @@
   },
   "dependencies": {
     "@carbon/icons-react": "^11.14.0",
-    "@coral-xyz/anchor": "^0.26.0",
-    "@coral-xyz/borsh": "^0.26.0",
+    "@coral-xyz/anchor": "^0.28.0",
+    "@coral-xyz/borsh": "^0.28.0",
     "@metaplex-foundation/js": "^0.17.12",
     "@pythnetwork/client": "^2.15.0",
     "@radix-ui/react-dialog": "^1.0.3",

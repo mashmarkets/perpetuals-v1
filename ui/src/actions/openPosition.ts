@@ -18,8 +18,8 @@ import {
 } from "@/utils/transactionHelpers";
 import { ViewHelper } from "@/utils/viewHelpers";
 import { BN } from "@coral-xyz/anchor";
-import { findProgramAddressSync } from "@coral-xyz/anchor/dist/cjs/utils/pubkey";
 import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import {
   Connection,
@@ -58,7 +58,7 @@ export async function openPositionBuilder(
     publicKey
   );
 
-  let positionAccount = findProgramAddressSync(
+  let positionAccount = PublicKey.findProgramAddressSync(
     [
       Buffer.from("position"),
       publicKey.toBuffer(),

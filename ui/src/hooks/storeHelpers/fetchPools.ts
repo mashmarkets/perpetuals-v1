@@ -3,7 +3,6 @@ import { PoolAccount } from "@/lib/PoolAccount";
 import { Pool } from "@/lib/types";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
 import { ViewHelper } from "@/utils/viewHelpers";
-import { findProgramAddressSync } from "@coral-xyz/anchor/dist/cjs/utils/pubkey";
 import { getMint } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 
@@ -25,7 +24,7 @@ export async function getPoolData(
     Object.values(fetchedPools)
       .sort((a, b) => a.account.name.localeCompare(b.account.name))
       .map(async (pool: FetchPool) => {
-        let lpTokenMint = findProgramAddressSync(
+        let lpTokenMint = PublicKey.findProgramAddressSync(
           [Buffer.from("lp_token_mint"), pool.publicKey.toBuffer()],
           perpetual_program.programId
         )[0];

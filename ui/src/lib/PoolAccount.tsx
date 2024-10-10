@@ -4,7 +4,6 @@ import { TokenE } from "@/lib/Token";
 import { AccountMeta, Pool, TokenRatios } from "@/lib/types";
 import { PERPETUALS_PROGRAM_ID } from "@/utils/constants";
 import { BN } from "@coral-xyz/anchor";
-import { findProgramAddressSync } from "@coral-xyz/anchor/dist/cjs/utils/pubkey";
 import { Mint } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 
@@ -67,14 +66,14 @@ export class PoolAccount {
   }
 
   getPoolAddress(): PublicKey {
-    return findProgramAddressSync(
+    return PublicKey.findProgramAddressSync(
       [Buffer.from("pool"), Buffer.from(this.name)],
       PERPETUALS_PROGRAM_ID
     )[0];
   }
 
   getLpTokenMint(): PublicKey {
-    return findProgramAddressSync(
+    return PublicKey.findProgramAddressSync(
       [Buffer.from("lp_token_mint"), this.getPoolAddress().toBuffer()],
       PERPETUALS_PROGRAM_ID
     )[0];

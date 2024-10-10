@@ -3,7 +3,6 @@ import { IDL as PERPETUALS_IDL, Perpetuals } from "@/target/types/perpetuals";
 import { getProvider } from "@/utils/provider";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
-import { findProgramAddressSync } from "@coral-xyz/anchor/dist/cjs/utils/pubkey";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 
@@ -65,12 +64,12 @@ export async function getPerpetualProgramAndProvider(
   return { perpetual_program, provider };
 }
 
-export const TRANSFER_AUTHORITY = findProgramAddressSync(
+export const TRANSFER_AUTHORITY = PublicKey.findProgramAddressSync(
   [Buffer.from("transfer_authority")],
   PERPETUALS_PROGRAM_ID
 )[0];
 
-export const PERPETUALS_ADDRESS = findProgramAddressSync(
+export const PERPETUALS_ADDRESS = PublicKey.findProgramAddressSync(
   [Buffer.from("perpetuals")],
   PERPETUALS_PROGRAM_ID
 )[0];

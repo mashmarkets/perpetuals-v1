@@ -9,11 +9,11 @@ dependencies:
     specifier: ^11.14.0
     version: 11.50.1(react@18.3.1)
   '@coral-xyz/anchor':
-    specifier: ^0.26.0
-    version: 0.26.0
+    specifier: ^0.28.0
+    version: 0.28.0
   '@coral-xyz/borsh':
-    specifier: ^0.26.0
-    version: 0.26.0(@solana/web3.js@1.95.3)
+    specifier: ^0.28.0
+    version: 0.28.0(@solana/web3.js@1.95.3)
   '@metaplex-foundation/js':
     specifier: ^0.17.12
     version: 0.17.12(fastestsmallesttextencoderdecoder@1.0.22)(typescript@4.9.5)
@@ -1665,11 +1665,11 @@ packages:
       prop-types: 15.8.1
       react: 18.3.1
 
-  /@coral-xyz/anchor@0.26.0:
-    resolution: {integrity: sha512-PxRl+wu5YyptWiR9F2MBHOLLibm87Z4IMUBPreX+DYBtPM+xggvcPi0KAN7+kIL4IrIhXI8ma5V0MCXxSN1pHg==}
+  /@coral-xyz/anchor@0.28.0:
+    resolution: {integrity: sha512-kQ02Hv2ZqxtWP30WN1d4xxT4QqlOXYDxmEd3k/bbneqhV3X5QMO4LAtoUFs7otxyivOgoqam5Il5qx81FuI4vw==}
     engines: {node: '>=11'}
     dependencies:
-      '@coral-xyz/borsh': 0.26.0(@solana/web3.js@1.95.3)
+      '@coral-xyz/borsh': 0.28.0(@solana/web3.js@1.95.3)
       '@solana/web3.js': 1.95.3
       base64-js: 1.5.1
       bn.js: 5.2.1
@@ -1712,17 +1712,6 @@ packages:
       - bufferutil
       - encoding
       - utf-8-validate
-    dev: false
-
-  /@coral-xyz/borsh@0.26.0(@solana/web3.js@1.95.3):
-    resolution: {integrity: sha512-uCZ0xus0CszQPHYfWAqKS5swS1UxvePu83oOF+TWpUkedsNlg6p2p4azxZNSSqwXb9uXMFgxhuMBX9r3Xoi0vQ==}
-    engines: {node: '>=10'}
-    peerDependencies:
-      '@solana/web3.js': ^1.68.0
-    dependencies:
-      '@solana/web3.js': 1.95.3
-      bn.js: 5.2.1
-      buffer-layout: 1.2.2
     dev: false
 
   /@coral-xyz/borsh@0.28.0(@solana/web3.js@1.95.3):
