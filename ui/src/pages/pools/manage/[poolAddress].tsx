@@ -1,11 +1,13 @@
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import { useState } from "react";
-import { addCustody as addCustodyFn } from "src/actions/pool";
+import { toast } from "react-toastify";
+import { addCustody as addCustodyFn } from "src/actions/perpetuals";
 
 import AddCustodyForm, { AddCustodyParams } from "@/components/AddCustodyForm";
+import { notify } from "@/components/Notify";
 import { useCustodies, usePool } from "@/hooks/perpetuals";
 import { useProgram } from "@/hooks/useProgram";
 
@@ -72,14 +74,30 @@ function stringify(v: any): any {
   return v;
 }
 
+const getPublicKey = (key: unknown): PublicKey | undefined => {
+  try {
+    return new PublicKey(key as string);
+  } catch {
+    return undefined;
+  }
+};
+
 const ManagePoolPage = () => {
   const router = useRouter();
   const program = useProgram();
-  const { poolName } = router.query;
-  const { data: pool, isLoading } = usePool(poolName as string);
+  const queryClient = useQueryClient();
+  const { poolAddress } = router.query;
+  const { data: pool, isLoading } = usePool(getPublicKey(poolAddress));
   const custodies = useCustodies(pool?.custodies || []);
 
   const addCustody = useMutation({
+    onSuccess: (sig) => {
+      console.log("Custody created with: ", sig);
+      queryClient.invalidateQueries({
+        queryKey: ["pool", poolAddress!],
+      });
+      toast.success("Custody created successfully");
+    },
     onError: (error) => {
       console.log(error);
     },
@@ -130,7 +148,7 @@ const ManagePoolPage = () => {
 
   return (
     <div className="container mx-auto mt-12 rounded-lg bg-zinc-900 p-6">
-      <h1 className="mb-4 text-2xl font-bold text-white">Manage {poolName}</h1>
+      <h1 className="mb-4 text-2xl font-bold text-white">Manage {pool.name}</h1>
 
       <div className="text-white">
         <Accordion title="Pool Details">

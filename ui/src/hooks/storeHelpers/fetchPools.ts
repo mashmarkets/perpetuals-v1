@@ -6,6 +6,7 @@ import { PoolAccount } from "@/lib/PoolAccount";
 import { Pool } from "@/lib/types";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
 import { ViewHelper } from "@/utils/viewHelpers";
+import { sleep } from "@/utils/TransactionHandlers";
 
 interface FetchPool {
   account: Pool;
@@ -62,6 +63,7 @@ export async function getPoolData(
               poolObjs[pool.publicKey.toString()],
             );
             loopStatus = false;
+            await sleep(2000);
           } catch (error) {}
         }
 

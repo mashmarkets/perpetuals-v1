@@ -10,6 +10,7 @@ import LiquidityCard from "@/components/PoolModal/LiquidityCard";
 import PoolGeneralStats from "@/components/PoolModal/PoolGeneralStats";
 import PoolTokenStats from "@/components/PoolModal/PoolTokenStats";
 import { useGlobalStore } from "@/stores/store";
+import Link from "next/link";
 
 export default function SinglePool() {
   const router = useRouter();
@@ -24,11 +25,19 @@ export default function SinglePool() {
       <PoolLayout className="text-white">
         <div>
           <PoolBackButton className="mb-6" />
+          <div className="flex align-center justify-start mb-8">
+
           <TitleHeader
             pool={pool!}
             iconClassName="w-10 h-10"
-            className="mb-8"
+            // className="mb-8"
           />
+          <Link href="/pools/manage/[poolAddress]" as={`/pools/manage/${router.query.poolName}`}>
+            <div className="text-slate-200 px-4 py-2 rounded-lg text-white">
+              Admin ↗️
+            </div>
+          </Link>
+          </div>
         </div>
         <div className="flex w-full flex-col">
           <PoolGeneralStats pool={pool!} className="mb-8" />

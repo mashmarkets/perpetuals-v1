@@ -1,6 +1,6 @@
 import { useRouter } from "next/router";
 import React, { useState } from "react";
-import { addPool } from "src/actions/pool";
+import { addPool, findPerpetualsAddressSync } from "src/actions/perpetuals";
 
 import { useProgram } from "@/hooks/useProgram";
 
@@ -21,7 +21,7 @@ const CreatePool: React.FC = () => {
 
     try {
       await addPool(program, { name });
-      router.push(`/pools/manage/${name}`); // Redirect to pools list page after successful creation
+      router.push(`/pools/manage/${findPerpetualsAddressSync("pool", name)}`); // Redirect to pools list page after successful creation
     } catch (err) {
       setError(`Failed to create pool: ${err.message}`);
     }

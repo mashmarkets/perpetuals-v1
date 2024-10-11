@@ -33,7 +33,7 @@ export const addCustodySchema = z.object({
   oracleType: z
     .enum(["pyth", "custom"])
     .transform((x) => ({ [x]: {} }) as { pyth: {} } | { custom: {} }),
-  maxPriceError: z.string().transform(transformToBN(0)),
+  maxPriceError: z.string().transform(transformToBN(4 - 2)),
   maxPriceAgeSec: z.string().transform((x) => parseInt(x)),
   oracleAuthority: z.string().transform((x) => new PublicKey(x)),
   pricingConfig: z.object({
@@ -166,7 +166,7 @@ const AddCustodyForm = ({
     isStable: false,
     isVirtual: false,
     oracleType: "pyth",
-    maxPriceError: "10000" as string,
+    maxPriceError: "100.00" as string,
     maxPriceAgeSec: "60",
     oracleAuthority: PublicKey.default.toString(),
     pricingConfig: {
@@ -332,7 +332,7 @@ const AddCustodyForm = ({
         </div>
         <div>
           <label htmlFor="maxPriceError" className="mb-1 block text-white">
-            Max Price Error ?????:
+            Max Price Error (%)
           </label>
           <input
             id="maxPriceError"
@@ -340,6 +340,8 @@ const AddCustodyForm = ({
             {...register("maxPriceError")}
             className="w-full rounded border p-2"
             required
+            step="0.01"
+            min="0"
           />
         </div>
         <div>

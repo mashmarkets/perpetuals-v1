@@ -10,22 +10,12 @@ import { PerpetualsProgram, useProgram } from "./useProgram";
 
 export type Pool = IdlAccounts<Perpetuals>["pool"];
 export type Custody = IdlAccounts<Perpetuals>["custody"];
-export const usePool = (poolName: string) => {
+export const usePool = (pool: PublicKey | undefined) => {
   const program = useProgram();
   return useQuery<Pool>({
-    queryKey: ["pool", poolName],
-    enabled: !!program,
-    queryFn: () => {
-      const [poolKey] = PublicKey.findProgramAddressSync(
-        [
-          Buffer.from(utils.bytes.utf8.encode("pool")),
-          Buffer.from(utils.bytes.utf8.encode(poolName)),
-        ],
-        program.programId,
-      );
-
-      return program.account.pool.fetch(poolKey);
-    },
+    queryKey: ["pool", pool?.toString()],
+    enabled: !!program || !!pool,
+    queryFn: () => program.account.pool.fetch(pool!),
   });
 };
 
