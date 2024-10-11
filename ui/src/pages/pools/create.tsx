@@ -1,25 +1,26 @@
 import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { PerpetualsClient } from "@/app/client";
+import { useProgram } from "@/hooks/useProgram";
+import { addPool } from "src/actions/pool";
 
 const CreatePool: React.FC = () => {
-  const [poolName, setPoolName] = useState("");
+  const [name, setPool] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const program = useProgram();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError("");
 
-    if (!poolName.trim()) {
+    if (!name.trim()) {
       setError("Pool name is required");
       return;
     }
 
     try {
-      // const client = new PerpetualsClient(); // You might need to pass appropriate parameters here
-      // await client.addPool(poolName);
-      router.push("/pools"); // Redirect to pools list page after successful creation
+      await addPool(program, { name });
+      router.push(`/pools/manage/${name}`); // Redirect to pools list page after successful creation
     } catch (err) {
       setError(`Failed to create pool: ${err.message}`);
     }
@@ -39,8 +40,8 @@ const CreatePool: React.FC = () => {
           <input
             type="text"
             id="poolName"
-            value={poolName}
-            onChange={(e) => setPoolName(e.target.value)}
+            value={name}
+            onChange={(e) => setPool(e.target.value)}
             className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
             required
           />

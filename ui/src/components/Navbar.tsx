@@ -42,8 +42,11 @@ export const Navbar = () => {
         <NavbarLink href="/pools" icon={<StoragePoolIcon />}>
           Pools
         </NavbarLink>
-        <NavbarLink href="/admin" icon={<UserAdmin />}>
-          Admin
+        <NavbarLink href="/pools/create" icon={<UserAdmin />}>
+          Create
+        </NavbarLink>
+        <NavbarLink href="/positions" icon={<UserAdmin />}>
+          Positions
         </NavbarLink>
       </div>
       <div className="flex flex-row items-center">

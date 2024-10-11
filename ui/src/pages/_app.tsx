@@ -31,6 +31,8 @@ require("@solana/wallet-adapter-react-ui/styles.css");
 
 import { Navbar } from "@/components/Navbar";
 import { useHydrateStore } from "@/hooks/useHydrateStore";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+const queryClient = new QueryClient();
 
 const StoreUpdater = () => {
   useHydrateStore();
@@ -39,22 +41,24 @@ const StoreUpdater = () => {
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <Context>
-      <ToastContainer
-        position="top-right"
-        autoClose={5000}
-        hideProgressBar={false}
-        newestOnTop={false}
-        closeOnClick
-        rtl={false}
-        pauseOnFocusLoss
-        draggable
-        pauseOnHover
-      />
-      <Navbar />
-      <StoreUpdater />
-      <Component {...pageProps} />
-    </Context>
+    <QueryClientProvider client={queryClient}>
+      <Context>
+        <ToastContainer
+          position="top-right"
+          autoClose={5000}
+          hideProgressBar={false}
+          newestOnTop={false}
+          closeOnClick
+          rtl={false}
+          pauseOnFocusLoss
+          draggable
+          pauseOnHover
+        />
+        <Navbar />
+        <StoreUpdater />
+        <Component {...pageProps} />
+      </Context>
+    </QueryClientProvider>
   );
 }
 

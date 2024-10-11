@@ -32,7 +32,6 @@
     "incremental": true,
     "baseUrl": ".",
     "paths": {
-      "@/app/*": ["./src/app/*"],
       "@/components/*": ["./src/components/*"],
       "@/utils/*": ["./src/utils/*"],
       "@/styles/*": ["./src/styles/*"],
@@ -40,8 +39,13 @@
       "@/target/*": ["./src/target/*"],
       "@/lib/*": ["src/lib/*"],
       "@/stores/*": ["src/stores/*"]
-    }
+    },
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ]
   },
   "exclude": ["./out/**/*", "./node_modules/**/*", "**/*.test.ts"],
-  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"]
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"]
 }

@@ -14,6 +14,9 @@ dependencies:
   '@coral-xyz/borsh':
     specifier: ^0.28.0
     version: 0.28.0(@solana/web3.js@1.95.3)
+  '@hookform/resolvers':
+    specifier: 3.9.0
+    version: 3.9.0(react-hook-form@7.52.0)
   '@metaplex-foundation/js':
     specifier: ^0.17.12
     version: 0.17.12(fastestsmallesttextencoderdecoder@1.0.22)(typescript@4.9.5)
@@ -50,15 +53,27 @@ dependencies:
   '@tailwindcss/nesting':
     specifier: ^0.0.0-insiders.565cd3e
     version: 0.0.0-insiders.565cd3e(postcss@8.4.47)
+  '@tanstack/react-query':
+    specifier: ^5.59.8
+    version: 5.59.8(react@18.3.1)
+  '@yornaath/batshit':
+    specifier: ^0.10.1
+    version: 0.10.1
   axios:
     specifier: ^1.2.2
     version: 1.7.7
+  bignumber.js:
+    specifier: ^9.1.2
+    version: 9.1.2
   bs58:
     specifier: ^5.0.0
     version: 5.0.0
   date-fns:
-    specifier: ^2.29.3
+    specifier: ^2.30.0
     version: 2.30.0
+  lodash-es:
+    specifier: ^4.17.21
+    version: 4.17.21
   next:
     specifier: 14.2.14
     version: 14.2.14(@babel/core@7.25.7)(react-dom@18.3.1)(react@18.3.1)
@@ -74,6 +89,9 @@ dependencies:
   react-dom:
     specifier: 18.3.1
     version: 18.3.1(react@18.3.1)
+  react-hook-form:
+    specifier: 7.52.0
+    version: 7.52.0(react@18.3.1)
   react-icons:
     specifier: ^4.4.0
     version: 4.12.0(react@18.3.1)
@@ -86,6 +104,9 @@ dependencies:
   tailwind-merge:
     specifier: ^1.8.1
     version: 1.14.0
+  zod:
+    specifier: 3.23.8
+    version: 3.23.8
   zustand:
     specifier: ^4.3.3
     version: 4.5.5(@types/react@18.3.11)(react@18.3.1)
@@ -2223,6 +2244,14 @@ packages:
     resolution: {integrity: sha512-foQZKJig7Ob0BMAYBfcJk8d77QtOe7Wo4ox7ff1lQYoNNAb6jwcY1ncdoy2e9wQZzvNy7ODZCYJkK8kzmcAnAg==}
     dependencies:
       '@hapi/hoek': 9.3.0
+    dev: false
+
+  /@hookform/resolvers@3.9.0(react-hook-form@7.52.0):
+    resolution: {integrity: sha512-bU0Gr4EepJ/EQsH/IwEzYLsT/PEj5C0ynLQ4m+GSHS+xKH4TfSelhluTgOaoc4kA5s7eCsQbM4wvZLzELmWzUg==}
+    peerDependencies:
+      react-hook-form: ^7.0.0
+    dependencies:
+      react-hook-form: 7.52.0(react@18.3.1)
     dev: false
 
   /@humanwhocodes/config-array@0.13.0:
@@ -5074,6 +5103,19 @@ packages:
       postcss-nested: 5.0.6(postcss@8.4.47)
     dev: false
 
+  /@tanstack/query-core@5.59.6:
+    resolution: {integrity: sha512-g58YTHe4ClRrjJ50GY9fas/0zARJVozY0Hs+hcSBOmwZaeKY+to0/LX8wKnnH/EJiLYcC1sHmE11CAS3ncfZBg==}
+    dev: false
+
+  /@tanstack/react-query@5.59.8(react@18.3.1):
+    resolution: {integrity: sha512-jkvObpbjBL6P/PHFIjvNGG19XyhI8sjP6/Mw7CbmgT6SAps/5fZY5pxDicRwAt1YGCiEQvwrJQ6IdbZ8j5CVfw==}
+    peerDependencies:
+      react: ^18 || ^19
+    dependencies:
+      '@tanstack/query-core': 5.59.6
+      react: 18.3.1
+    dev: false
+
   /@toruslabs/base-controllers@2.9.0(@babel/runtime@7.25.7):
     resolution: {integrity: sha512-rKc+bR4QB/wdbH0CxLZC5e2PUZcIgkr9yY7TMd3oIffDklaYBnsuC5ES2/rgK1aRUDRWz+qWbTwLqsY6PlT37Q==}
     peerDependencies:
@@ -6098,6 +6140,16 @@ packages:
     dependencies:
       '@walletconnect/window-getters': 1.0.1
       tslib: 1.14.1
+    dev: false
+
+  /@yornaath/batshit-devtools@1.7.1:
+    resolution: {integrity: sha512-AyttV1Njj5ug+XqEWY1smV45dTWMlWKtj1B8jcFYgBKUFyUlF/qEhD+iP1E5UaRYW6hQRYD9T2WNDwFTrOMWzQ==}
+    dev: false
+
+  /@yornaath/batshit@0.10.1:
+    resolution: {integrity: sha512-WGZ1WNoiVN6CLf28O73+6SCf+2lUn4U7TLGM9f4zOad0pn9mdoXIq8cwu3Kpf7N2OTYgWGK4eQPTflwFlduDGA==}
+    dependencies:
+      '@yornaath/batshit-devtools': 1.7.1
     dev: false
 
   /JSONStream@1.3.5:
@@ -11439,6 +11491,15 @@ packages:
       scheduler: 0.23.2
     dev: false
 
+  /react-hook-form@7.52.0(react@18.3.1):
+    resolution: {integrity: sha512-mJX506Xc6mirzLsmXUJyqlAI3Kj9Ph2RhplYhUVffeOQSnubK2uVqBFOBJmvKikvbFV91pxVXmDiR+QMF19x6A==}
+    engines: {node: '>=12.22.0'}
+    peerDependencies:
+      react: ^16.8.0 || ^17 || ^18 || ^19
+    dependencies:
+      react: 18.3.1
+    dev: false
+
   /react-icons@4.12.0(react@18.3.1):
     resolution: {integrity: sha512-IBaDuHiShdZqmfc/TwHu6+d6k2ltNCf3AszxNmjJc1KUfXdEeRJOKyNvLmAHaarhzGmTSVygNdyu8/opXv2gaw==}
     peerDependencies:
@@ -13493,6 +13554,10 @@ packages:
   /yocto-queue@0.1.0:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
+
+  /zod@3.23.8:
+    resolution: {integrity: sha512-XBx9AXhXktjUqnepgTiE5flcKIYWi/rme0Eaj+5Y0lftuGBq+jyRu/md4WnuxqgP1ubdpNCsYEYPxrzVHD8d6g==}
+    dev: false
 
   /zustand@4.5.5(@types/react@18.3.11)(react@18.3.1):
     resolution: {integrity: sha512-+0PALYNJNgK6hldkgDq2vLrw5f6g/jCInz52n9RTpropGgeAf/ioFUCdtsjCqu4gNhW9D01rUQBROoRjdzyn2Q==}
