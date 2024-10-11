@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import { cloneElement, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { TOKEN_LIST, TokenE, getTokenIcon, getTokenLabel } from "@/lib/Token";
+import { getTokenIcon, getTokenLabel, TOKEN_LIST, TokenE } from "@/lib/Token";
 
 import { TokenSelectorList } from "../TokenSelectorList";
 
@@ -26,7 +26,7 @@ export function ChartCurrency(props: Props) {
           "group",
           "items-center",
           "space-x-2",
-          props.className
+          props.className,
         )}
         onClick={() => setSelectorOpen((cur) => !cur)}
       >
@@ -50,7 +50,7 @@ export function ChartCurrency(props: Props) {
               "rounded-full",
               "transition-colors",
               "w-6",
-              "group-hover:border-white"
+              "group-hover:border-white",
             )}
           >
             <ChevronDownIcon className="h-4 w-4 fill-white" />

@@ -1,19 +1,21 @@
-import { useRouter } from "next/router";
-import { useProgram } from "@/hooks/useProgram";
-import { PublicKey } from "@solana/web3.js";
 import { BN } from "@coral-xyz/anchor";
-import { useState } from "react";
-import { useCustodies, usePool } from "@/hooks/perpetuals";
-import AddCustodyForm, { AddCustodyParams } from "@/components/AddCustodyForm";
-import { addCustody as addCustodyFn } from "src/actions/pool";
+import { PublicKey } from "@solana/web3.js";
 import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/router";
+import { useState } from "react";
+import { addCustody as addCustodyFn } from "src/actions/pool";
+
+import AddCustodyForm, { AddCustodyParams } from "@/components/AddCustodyForm";
+import { useCustodies, usePool } from "@/hooks/perpetuals";
+import { useProgram } from "@/hooks/useProgram";
+
 const Accordion = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <div className="mt-8">
       <button
-        className="text-xl font-bold p-2 w-full text-white text-left rounded-lg focus:outline-none bg-zinc-800"
+        className="w-full rounded-lg bg-zinc-800 p-2 text-left text-xl font-bold text-white focus:outline-none"
         onClick={() => setIsOpen(!isOpen)}
       >
         {isOpen ? "▼" : "►"} {title}
@@ -93,7 +95,7 @@ const ManagePoolPage = () => {
   // TODO:- Custodies passed into Add Parameters needs to be mints (or fetch inside component)
   if (isLoading || pool === undefined || custodies.some((x) => !x.isFetched)) {
     return (
-      <div className="container mx-auto p-6 text-white bg-zinc-900 mt-12 rounded-lg">
+      <div className="container mx-auto mt-12 rounded-lg bg-zinc-900 p-6 text-white">
         Loading...
       </div>
     );
@@ -127,8 +129,8 @@ const ManagePoolPage = () => {
   };
 
   return (
-    <div className="container mx-auto p-6 bg-zinc-900 mt-12 rounded-lg">
-      <h1 className="text-2xl font-bold mb-4 text-white">Manage {poolName}</h1>
+    <div className="container mx-auto mt-12 rounded-lg bg-zinc-900 p-6">
+      <h1 className="mb-4 text-2xl font-bold text-white">Manage {poolName}</h1>
 
       <div className="text-white">
         <Accordion title="Pool Details">

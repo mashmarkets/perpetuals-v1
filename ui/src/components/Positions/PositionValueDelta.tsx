@@ -1,8 +1,9 @@
+import { twMerge } from "tailwind-merge";
+
 import {
   formatValueDelta,
   formatValueDeltaPercentage,
 } from "@/utils/formatters";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -17,7 +18,7 @@ export function PositionValueDelta(props: Props) {
         className={twMerge(
           "text-sm",
           "font-medium",
-          props.valueDelta > 0 ? "text-emerald-400" : "text-rose-400"
+          props.valueDelta > 0 ? "text-emerald-400" : "text-rose-400",
         )}
       >
         {props.valueDelta > 0 && "+"}
@@ -30,7 +31,7 @@ export function PositionValueDelta(props: Props) {
           "rounded",
           "text-black",
           "text-sm",
-          props.valueDeltaPercentage > 0 ? "bg-emerald-400" : "bg-rose-400"
+          props.valueDeltaPercentage > 0 ? "bg-emerald-400" : "bg-rose-400",
         )}
       >
         {props.valueDeltaPercentage > 0 && "+"}

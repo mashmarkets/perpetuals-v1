@@ -15,7 +15,7 @@ export default function PoolBackButton(props: Props) {
         "cursor-pointer",
         "items-center",
         "space-x-1.5",
-        props.className
+        props.className,
       )}
       onClick={() => router.push("/pools")}
     >

@@ -1,12 +1,12 @@
-import BigNumber from "bignumber.js";
-
-import { useForm } from "react-hook-form";
-import { PublicKey } from "@solana/web3.js";
-import { z } from "zod";
-import { parseUnits } from "@/utils/viem";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { Pool } from "@/hooks/perpetuals";
+import { PublicKey } from "@solana/web3.js";
+import BigNumber from "bignumber.js";
 import { BN } from "bn.js";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+
+import { Pool } from "@/hooks/perpetuals";
+import { parseUnits } from "@/utils/viem";
 
 const transformToBN = (decimals: number) => (x: string) =>
   new BN(parseUnits(x, decimals).toString());
@@ -32,7 +32,7 @@ export const addCustodySchema = z.object({
   tokenOracle: z.string().transform(transformToPublicKey),
   oracleType: z
     .enum(["pyth", "custom"])
-    .transform((x) => ({ [x]: {} } as { pyth: {} } | { custom: {} })),
+    .transform((x) => ({ [x]: {} }) as { pyth: {} } | { custom: {} }),
   maxPriceError: z.string().transform(transformToBN(0)),
   maxPriceAgeSec: z.string().transform((x) => parseInt(x)),
   oracleAuthority: z.string().transform((x) => new PublicKey(x)),
@@ -64,7 +64,8 @@ export const addCustodySchema = z.object({
     mode: z
       .enum(["fixed", "linear", "optimal"])
       .transform(
-        (x) => ({ [x]: {} } as { fixed: {} } | { linear: {} } | { optimal: {} })
+        (x) =>
+          ({ [x]: {} }) as { fixed: {} } | { linear: {} } | { optimal: {} },
       ),
     ratioMult: z.string().transform(transformToBN(4 - 2)),
     utilizationMult: z.string().transform(transformToBN(4 - 2)),
@@ -93,17 +94,17 @@ export const addCustodySchema = z.object({
         target: z.string().transform(transformToBN(4 - 2)),
         min: z.string().transform(transformToBN(4 - 2)),
         max: z.string().transform(transformToBN(4 - 2)),
-      })
+      }),
     )
     .refine(
       (vals) => {
         return new BN("10000").eq(
-          vals.reduce((acc, val) => acc.add(val.target), new BN(0))
+          vals.reduce((acc, val) => acc.add(val.target), new BN(0)),
         );
       },
       {
         message: "Target ratios don't add up to 100%",
-      }
+      },
     ),
 });
 
@@ -241,7 +242,7 @@ const AddCustodyForm = ({
   const feeMode = watch("fees.mode");
   const tokenMint = watch("tokenMint");
   return (
-    <div className="container mx-auto p-4 bg-zinc-900">
+    <div className="container mx-auto bg-zinc-900 p-4">
       <div>
         <select
           id="tokenSelect"
@@ -252,7 +253,7 @@ const AddCustodyForm = ({
               setValue(key as keyof typeof defaultValues, value as any);
             });
           }}
-          className="w-full p-2 border rounded mb-4"
+          className="mb-4 w-full rounded border p-2"
         >
           <option value="">Prefill For</option>
           {Object.entries(prefills).map(([key, value]) => {
@@ -271,26 +272,26 @@ const AddCustodyForm = ({
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         {/* Basic Info */}
         <div>
-          <label htmlFor="tokenMint" className="block mb-1 text-white">
+          <label htmlFor="tokenMint" className="mb-1 block text-white">
             Token Mint:
           </label>
           <input
             id="tokenMint"
             type="text"
             {...register("tokenMint")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
           />
         </div>
         <div>
-          <label htmlFor="tokenOracle" className="block mb-1 text-white">
+          <label htmlFor="tokenOracle" className="mb-1 block text-white">
             Token Oracle:
           </label>
           <input
             id="tokenOracle"
             type="text"
             {...register("tokenOracle")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
           />
         </div>
@@ -312,17 +313,17 @@ const AddCustodyForm = ({
         </div>
 
         {/* Oracle Config */}
-        <h2 className="text-xl font-semibold mt-4 text-white">
+        <h2 className="mt-4 text-xl font-semibold text-white">
           Oracle Configuration
         </h2>
         <div>
-          <label htmlFor="oracleType" className="block mb-1 text-white">
+          <label htmlFor="oracleType" className="mb-1 block text-white">
             Oracle Type:
           </label>
           <select
             id="oracleType"
             {...register("oracleType")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
           >
             <option value="custom">Custom</option>
             <option value="pyth">Pyth</option>
@@ -330,19 +331,19 @@ const AddCustodyForm = ({
           </select>
         </div>
         <div>
-          <label htmlFor="maxPriceError" className="block mb-1 text-white">
+          <label htmlFor="maxPriceError" className="mb-1 block text-white">
             Max Price Error ?????:
           </label>
           <input
             id="maxPriceError"
             type="number"
             {...register("maxPriceError")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
           />
         </div>
         <div>
-          <label htmlFor="maxPriceAgeSec" className="block mb-1 text-white">
+          <label htmlFor="maxPriceAgeSec" className="mb-1 block text-white">
             Max Price Age (seconds):
           </label>
           <input
@@ -350,31 +351,31 @@ const AddCustodyForm = ({
             type="number"
             min="0"
             {...register("maxPriceAgeSec")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
           />
         </div>
         {oracleType === "custom" && (
           <div>
-            <label htmlFor="oracleAuthority" className="block mb-1 text-white">
+            <label htmlFor="oracleAuthority" className="mb-1 block text-white">
               Oracle Authority:
             </label>
             <input
               id="oracleAuthority"
               type="text"
               {...register("oracleAuthority")}
-              className="w-full p-2 border rounded"
+              className="w-full rounded border p-2"
               required
             />
           </div>
         )}
 
         {/* Pricing Config */}
-        <h2 className="text-white text-xl font-semibold mt-4">
+        <h2 className="mt-4 text-xl font-semibold text-white">
           Pricing Configuration
         </h2>
         <div>
-          <label className="text-white flex items-center">
+          <label className="flex items-center text-white">
             <input
               type="checkbox"
               {...register("pricingConfig.useEma")}
@@ -384,7 +385,7 @@ const AddCustodyForm = ({
           </label>
         </div>
         <div>
-          <label className="text-white flex items-center">
+          <label className="flex items-center text-white">
             <input
               type="checkbox"
               {...register("pricingConfig.useUnrealizedPnlInAum")}
@@ -394,7 +395,7 @@ const AddCustodyForm = ({
           </label>
         </div>
         <div>
-          <label htmlFor="tradeSpreadLong" className="text-white block mb-1">
+          <label htmlFor="tradeSpreadLong" className="mb-1 block text-white">
             Trade Spread Long (%):
           </label>
           <input
@@ -402,104 +403,104 @@ const AddCustodyForm = ({
             type="number"
             min="0"
             {...register("pricingConfig.tradeSpreadLong")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.01"
           />
         </div>
         <div>
-          <label htmlFor="tradeSpreadShort" className="text-white block mb-1">
+          <label htmlFor="tradeSpreadShort" className="mb-1 block text-white">
             Trade Spread Short (%):
           </label>
           <input
             id="tradeSpreadShort"
             type="number"
             {...register("pricingConfig.tradeSpreadShort")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.01"
             min="0"
           />
         </div>
         <div>
-          <label htmlFor="swapSpread" className="text-white block mb-1">
+          <label htmlFor="swapSpread" className="mb-1 block text-white">
             Swap Spread (%):
           </label>
           <input
             id="swapSpread"
             type="number"
             {...register("pricingConfig.swapSpread")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.01"
             min="0"
           />
         </div>
         <div>
-          <label htmlFor="minInitialLeverage" className="text-white block mb-1">
+          <label htmlFor="minInitialLeverage" className="mb-1 block text-white">
             Min Initial Leverage (x):
           </label>
           <input
             id="minInitialLeverage"
             type="number"
             {...register("pricingConfig.minInitialLeverage")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.0001"
             min="0"
           />
         </div>
         <div>
-          <label htmlFor="maxInitialLeverage" className="text-white block mb-1">
+          <label htmlFor="maxInitialLeverage" className="mb-1 block text-white">
             Max Initial Leverage (x):
           </label>
           <input
             id="maxInitialLeverage"
             type="number"
             {...register("pricingConfig.maxInitialLeverage")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.0001"
             min="0"
           />
         </div>
         <div>
-          <label htmlFor="maxLeverage" className="text-white block mb-1">
+          <label htmlFor="maxLeverage" className="mb-1 block text-white">
             Max Leverage (x):
           </label>
           <input
             id="maxLeverage"
             type="number"
             {...register("pricingConfig.maxLeverage")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.0001"
             min="0"
           />
         </div>
         <div>
-          <label htmlFor="maxPayoffMult" className="text-white block mb-1">
+          <label htmlFor="maxPayoffMult" className="mb-1 block text-white">
             Max Payoff Mult (%):
           </label>
           <input
             id="maxPayoffMult"
             type="number"
             {...register("pricingConfig.maxPayoffMult")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.01"
             min="0"
           />
         </div>
         <div>
-          <label htmlFor="maxUtilization" className="text-white block mb-1">
+          <label htmlFor="maxUtilization" className="mb-1 block text-white">
             Max Utilization (%):
           </label>
           <input
             id="maxUtilization"
             type="number"
             {...register("pricingConfig.maxUtilization")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.01"
             min="0"
@@ -508,7 +509,7 @@ const AddCustodyForm = ({
         <div>
           <label
             htmlFor="maxPositionLockedUsd"
-            className="text-white block mb-1"
+            className="mb-1 block text-white"
           >
             Max Position Locked (USD):
           </label>
@@ -516,21 +517,21 @@ const AddCustodyForm = ({
             id="maxPositionLockedUsd"
             type="number"
             {...register("pricingConfig.maxPositionLockedUsd")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.000001"
             min="0"
           />
         </div>
         <div>
-          <label htmlFor="maxTotalLockedUsd" className="text-white block mb-1">
+          <label htmlFor="maxTotalLockedUsd" className="mb-1 block text-white">
             Max Total Locked (USD):
           </label>
           <input
             id="maxTotalLockedUsd"
             type="number"
             {...register("pricingConfig.maxTotalLockedUsd")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
             required
             step="0.000001"
             min="0"
@@ -538,14 +539,14 @@ const AddCustodyForm = ({
         </div>
 
         {/* Permissions */}
-        <h2 className="text-white text-xl font-semibold mt-4">Permissions</h2>
+        <h2 className="mt-4 text-xl font-semibold text-white">Permissions</h2>
         {Object.entries(defaultValues.permissions).map(([key, value]) => {
           if (["allowPnlWithdrawal", "allowSizeChange"].includes(key)) {
             return null;
           }
           return (
             <div key={key}>
-              <label className="text-white flex items-center">
+              <label className="flex items-center text-white">
                 <input
                   type="checkbox"
                   {...register(`permissions.${key}`)}
@@ -560,15 +561,15 @@ const AddCustodyForm = ({
         })}
 
         {/* Fees */}
-        <h2 className="text-white text-xl font-semibold mt-4">Fees</h2>
+        <h2 className="mt-4 text-xl font-semibold text-white">Fees</h2>
         <div>
-          <label htmlFor="feeMode" className="text-white block mb-1">
+          <label htmlFor="feeMode" className="mb-1 block text-white">
             Fee Mode:
           </label>
           <select
             id="feeMode"
             {...register("fees.mode")}
-            className="w-full p-2 border rounded"
+            className="w-full rounded border p-2"
           >
             <option value="fixed">Fixed</option>
             <option value="linear">Linear</option>
@@ -585,7 +586,7 @@ const AddCustodyForm = ({
           }
           return (
             <div key={key}>
-              <label htmlFor={key} className="text-white block mb-1">
+              <label htmlFor={key} className="mb-1 block text-white">
                 {key
                   .replace(/([A-Z])/g, " $1")
                   .replace(/^./, (str) => str.toUpperCase())}{" "}
@@ -595,7 +596,7 @@ const AddCustodyForm = ({
                 id={key}
                 type="number"
                 {...register(`fees.${key}`)}
-                className="w-full p-2 border rounded"
+                className="w-full rounded border p-2"
                 required
                 step="0.01"
                 min="0"
@@ -605,10 +606,10 @@ const AddCustodyForm = ({
         })}
 
         {/* Borrow Rate */}
-        <h2 className="text-xl font-semibold mt-4 text-white">Borrow Rate</h2>
+        <h2 className="mt-4 text-xl font-semibold text-white">Borrow Rate</h2>
         {Object.entries(defaultValues.borrowRate).map(([key, value]) => (
           <div key={key}>
-            <label htmlFor={key} className="text-white block mb-1">
+            <label htmlFor={key} className="mb-1 block text-white">
               {key
                 .replace(/([A-Z])/g, " $1")
                 .replace(/^./, (str) => str.toUpperCase())}{" "}
@@ -618,7 +619,7 @@ const AddCustodyForm = ({
               id={key}
               type="number"
               {...register(`borrowRate.${key}`)}
-              className="w-full p-2 border rounded"
+              className="w-full rounded border p-2"
               required
               step="0.0000001"
               min="0"
@@ -626,7 +627,7 @@ const AddCustodyForm = ({
           </div>
         ))}
 
-        <h2 className="text-xl font-semibold mt-4 text-white">Ratios</h2>
+        <h2 className="mt-4 text-xl font-semibold text-white">Ratios</h2>
         <table className="w-full text-white">
           <thead>
             <tr>
@@ -644,7 +645,7 @@ const AddCustodyForm = ({
                   <input
                     type="number"
                     // defaultValue={ratio.target}
-                    className="w-full p-2 border rounded bg-gray-700 text-white"
+                    className="w-full rounded border bg-gray-700 p-2 text-white"
                     {...register(`ratios.${i}.target`)}
                     step="0.01"
                     min="0"
@@ -655,7 +656,7 @@ const AddCustodyForm = ({
                   <input
                     type="number"
                     {...register(`ratios.${i}.min`)}
-                    className="w-full p-2 border rounded bg-gray-700 text-white"
+                    className="w-full rounded border bg-gray-700 p-2 text-white"
                     step="0.01"
                     min="0"
                     max="100"
@@ -664,7 +665,7 @@ const AddCustodyForm = ({
                 <td>
                   <input
                     type="number"
-                    className="w-full p-2 border rounded bg-gray-700 text-white"
+                    className="w-full rounded border bg-gray-700 p-2 text-white"
                     {...register(`ratios.${i}.max`)}
                     step="0.01"
                     min="0"
@@ -678,7 +679,7 @@ const AddCustodyForm = ({
 
         <button
           type="submit"
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
           disabled={!isValid}
         >
           Add Custody

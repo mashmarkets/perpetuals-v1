@@ -1,4 +1,5 @@
 import "@/styles/globals.css";
+
 import { WalletAdapterNetwork } from "@solana/wallet-adapter-base";
 import {
   ConnectionProvider,
@@ -25,13 +26,16 @@ import { clusterApiUrl } from "@solana/web3.js";
 import { AppProps } from "next/app";
 import React, { FC, ReactNode, useMemo } from "react";
 import { ToastContainer } from "react-toastify";
+
 import "react-toastify/dist/ReactToastify.css";
 
-require("@solana/wallet-adapter-react-ui/styles.css");
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Navbar } from "@/components/Navbar";
 import { useHydrateStore } from "@/hooks/useHydrateStore";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+require("@solana/wallet-adapter-react-ui/styles.css");
+
 const queryClient = new QueryClient();
 
 const StoreUpdater = () => {
@@ -85,7 +89,7 @@ const Context: FC<{ children: ReactNode }> = ({ children }) => {
       // new SolongWalletAdapter(),
       // new TrustWalletAdapter(),
     ],
-    []
+    [],
   );
 
   return (

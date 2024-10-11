@@ -6,7 +6,7 @@ export class UserAccount {
 
   constructor(
     lpBalances: Record<string, number> = {},
-    tokenBalances: Record<string, number> = {}
+    tokenBalances: Record<string, number> = {},
   ) {
     this.lpBalances = lpBalances;
     this.tokenBalances = tokenBalances;

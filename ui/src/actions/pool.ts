@@ -1,10 +1,10 @@
-import IDL from "@/target/idl/perpetuals.json";
 import { Program, utils } from "@coral-xyz/anchor";
-
-import { Perpetuals } from "@/target/types/perpetuals";
-import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { PublicKey, SystemProgram, SYSVAR_RENT_PUBKEY } from "@solana/web3.js";
+
 import { AddCustodyParams } from "@/components/AddCustodyForm";
+import IDL from "@/target/idl/perpetuals.json";
+import { Perpetuals } from "@/target/types/perpetuals";
 
 const findPerpetualsAddressSync = (
   ...seeds: Array<Buffer | string | PublicKey>
@@ -19,7 +19,7 @@ const findPerpetualsAddressSync = (
       }
       return x;
     }),
-    new PublicKey(IDL.metadata.address)
+    new PublicKey(IDL.metadata.address),
   )[0];
 };
 
@@ -29,7 +29,7 @@ const transferAuthority = findPerpetualsAddressSync("transfer_authority");
 
 export async function addPool(
   program: Program<Perpetuals>,
-  { name }: { name: string }
+  { name }: { name: string },
 ) {
   const admin = program.provider.publicKey;
   const pool = findPerpetualsAddressSync("pool", name);
@@ -53,7 +53,7 @@ export async function addPool(
 
 export async function addCustody(
   program: Program<Perpetuals>,
-  params: AddCustodyParams
+  params: AddCustodyParams,
 ) {
   const pool = findPerpetualsAddressSync("pool", params.poolName);
 
@@ -84,7 +84,7 @@ export async function addCustody(
       custodyTokenAccount: findPerpetualsAddressSync(
         "custody_token_account",
         pool,
-        params.tokenMint
+        params.tokenMint,
       ),
       custodyTokenMint: params.tokenMint,
       systemProgram: SystemProgram.programId,

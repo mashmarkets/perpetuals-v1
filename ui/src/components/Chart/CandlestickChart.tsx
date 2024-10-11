@@ -1,14 +1,15 @@
+import dynamic from "next/dynamic";
+
 import { ChartCurrency } from "@/components/Chart/ChartCurrency";
 import { DailyStats } from "@/components/Chart/DailyStats";
 import { getSymbol, TokenE } from "@/lib/Token";
-import dynamic from "next/dynamic";
 
 // @ts-ignore
 const TradingViewWidget = dynamic<any>(
   () => import("react-tradingview-widget"),
   {
     ssr: false,
-  }
+  },
 );
 
 interface Props {
@@ -36,7 +37,7 @@ export function CandlestickChart(props: Props) {
         <div className="items-center text-center">
           <a
             href={`https://www.tradingview.com/symbols/${getSymbol(
-              props.token
+              props.token,
             )}/?exchange=COINBASE`}
             className="text-xs text-white underline"
           >

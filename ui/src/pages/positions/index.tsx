@@ -1,4 +1,5 @@
 "use client";
+
 import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
 import { ExistingPositions } from "@/components/Positions/ExistingPositions";
 import { useGlobalStore } from "@/stores/store";

@@ -1,3 +1,12 @@
+import Add from "@carbon/icons-react/lib/Add";
+import ArrowRight from "@carbon/icons-react/lib/ArrowRight";
+import Subtract from "@carbon/icons-react/lib/Subtract";
+import * as Dialog from "@radix-ui/react-dialog";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useEffect, useRef, useState } from "react";
+import { changeCollateral } from "src/actions/changeCollateral";
+import { twMerge } from "tailwind-merge";
+
 import { LpSelector } from "@/components/PoolModal/LpSelector";
 import { SidebarTab } from "@/components/SidebarTab";
 import { SolidButton } from "@/components/SolidButton";
@@ -9,14 +18,6 @@ import { useGlobalStore } from "@/stores/store";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
 import { formatNumberCommas } from "@/utils/formatters";
 import { ViewHelper } from "@/utils/viewHelpers";
-import Add from "@carbon/icons-react/lib/Add";
-import ArrowRight from "@carbon/icons-react/lib/ArrowRight";
-import Subtract from "@carbon/icons-react/lib/Subtract";
-import * as Dialog from "@radix-ui/react-dialog";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useEffect, useRef, useState } from "react";
-import { changeCollateral } from "src/actions/changeCollateral";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -57,13 +58,12 @@ export function CollateralModal(props: Props) {
 
   useEffect(() => {
     async function fetchNewStats() {
-      let { perpetual_program } = await getPerpetualProgramAndProvider(
-        walletContextState
-      );
+      let { perpetual_program } =
+        await getPerpetualProgramAndProvider(walletContextState);
 
       const View = new ViewHelper(
         perpetual_program.provider.connection,
-        perpetual_program.provider
+        perpetual_program.provider,
       );
 
       let fetchedOldLiq = await View.getLiquidationPrice(props.position);
@@ -88,7 +88,7 @@ export function CollateralModal(props: Props) {
         props.position,
         pool.getCustodyAccount(props.position.collateralToken)!,
         depositAmount,
-        withdrawAmount
+        withdrawAmount,
       );
 
       let newLiq = Math.round((liquidationPrice / 10 ** 6) * 100) / 100;
@@ -149,7 +149,7 @@ export function CollateralModal(props: Props) {
       pool,
       props.position,
       tab === Tab.Add ? depositAmount : withdrawAmount,
-      tab
+      tab,
     );
 
     const positionInfos = await getPositionData(custodyData);
@@ -167,7 +167,7 @@ export function CollateralModal(props: Props) {
     >
       <Dialog.Trigger asChild>{props.children}</Dialog.Trigger>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed top-0 bottom-0 left-0 right-0 grid place-items-center bg-black/80 text-white">
+        <Dialog.Overlay className="fixed bottom-0 left-0 right-0 top-0 grid place-items-center bg-black/80 text-white">
           <Dialog.Content className="max-w-s mt-6 rounded bg-zinc-800 p-4">
             <div className="mb-2 grid grid-cols-2 gap-x-1 rounded bg-black p-1">
               <SidebarTab
@@ -244,7 +244,7 @@ export function CollateralModal(props: Props) {
                 {
                   label: "Collateral",
                   value: `$${formatNumberCommas(
-                    props.position.getCollateralUsd()
+                    props.position.getCollateralUsd(),
                   )}`,
                   newValue: `$${newCollateral}`,
                 },
@@ -253,7 +253,7 @@ export function CollateralModal(props: Props) {
                   value: `$${
                     stats[props.position.token] != undefined
                       ? formatNumberCommas(
-                          stats[props.position.token].currentPrice
+                          stats[props.position.token].currentPrice,
                         )
                       : 0
                   }`,
@@ -278,7 +278,7 @@ export function CollateralModal(props: Props) {
                     "border-zinc-700",
                     "pb-2",
                     i < 6 && "border-b",
-                    i > 3 && "col-span-2"
+                    i > 3 && "col-span-2",
                   )}
                   key={i}
                 >

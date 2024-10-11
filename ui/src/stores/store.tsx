@@ -1,10 +1,11 @@
+import { create } from "zustand";
+import { devtools } from "zustand/middleware";
+
 import { PositionRequest } from "@/hooks/storeHelpers/fetchPositions";
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { Custody, PriceStats } from "@/lib/types";
 import { UserAccount } from "@/lib/UserAccount";
-import { create } from "zustand";
-import { devtools } from "zustand/middleware";
 
 interface StoreState {
   positionData: PositionRequest;
@@ -46,5 +47,5 @@ export const useGlobalStore = create<StoreState>()(
 
     priceStats: {},
     setPriceStats: (stats: PriceStats) => set({ priceStats: stats }),
-  }))
+  })),
 );

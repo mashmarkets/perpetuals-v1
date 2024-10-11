@@ -17,7 +17,7 @@ export function TradeLayout(props: Props) {
         "lg:grid-cols-[424px,1fr]",
         "lg:grid",
         "lg:px-16",
-        props.className
+        props.className,
       )}
     >
       <div>{props.children[0]}</div>

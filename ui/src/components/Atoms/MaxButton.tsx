@@ -15,7 +15,7 @@ export function MaxButton(props: Props) {
           "rounded",
           "py-1",
           "px-2",
-          "text-white"
+          "text-white",
         )}
         onClick={() => props.onChangeAmount(props.maxBalance)}
       >

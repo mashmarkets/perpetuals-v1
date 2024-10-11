@@ -1,3 +1,8 @@
+import { BN } from "@coral-xyz/anchor";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { WalletContextState } from "@solana/wallet-adapter-react";
+import { Connection, TransactionInstruction } from "@solana/web3.js";
+
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { PositionAccount } from "@/lib/PositionAccount";
@@ -15,10 +20,6 @@ import {
   createAtaIfNeeded,
   unwrapSolIfNeeded,
 } from "@/utils/transactionHelpers";
-import { BN } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { WalletContextState } from "@solana/wallet-adapter-react";
-import { Connection, TransactionInstruction } from "@solana/web3.js";
 
 export async function closePosition(
   walletContextState: WalletContextState,
@@ -26,11 +27,10 @@ export async function closePosition(
   pool: PoolAccount,
   position: PositionAccount,
   custody: CustodyAccount,
-  price: BN
+  price: BN,
 ) {
-  let { perpetual_program } = await getPerpetualProgramAndProvider(
-    walletContextState
-  );
+  let { perpetual_program } =
+    await getPerpetualProgramAndProvider(walletContextState);
   let publicKey = walletContextState.publicKey!;
 
   // TODO: need to take slippage as param , this is now for testing
@@ -41,7 +41,7 @@ export async function closePosition(
 
   let userCustodyTokenAccount = await getAssociatedTokenAddress(
     position.collateralCustodyMint,
-    publicKey
+    publicKey,
   );
 
   let preInstructions: TransactionInstruction[] = [];
@@ -50,7 +50,7 @@ export async function closePosition(
     publicKey,
     publicKey,
     position.collateralCustodyMint,
-    connection
+    connection,
   );
 
   if (ataIx) preInstructions.push(ataIx);
@@ -76,7 +76,7 @@ export async function closePosition(
       collateralCustody: position.collateralCustody,
       collateralCustodyOracleAccount: position.collateralCustodyOracleAccount,
       collateralCustodyTokenAccount: pool.getCustodyAccount(
-        position.collateralToken
+        position.collateralToken,
       )?.tokenAccount!,
     })
     .preInstructions(preInstructions);
@@ -94,7 +94,7 @@ export async function closePosition(
       tx,
       publicKey,
       connection,
-      walletContextState.signTransaction
+      walletContextState.signTransaction,
     );
   } catch (err) {
     console.log(err);

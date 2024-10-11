@@ -1,11 +1,12 @@
-import { SidebarTab } from "@/components/SidebarTab";
-import { TradePosition } from "@/components/TradeSidebar/TradePosition";
-import { TradeSwap } from "@/components/TradeSidebar/TradeSwap";
-import { Side } from "@/lib/types";
 import ArrowsHorizontalIcon from "@carbon/icons-react/lib/ArrowsHorizontal";
 import GrowthIcon from "@carbon/icons-react/lib/Growth";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
+
+import { SidebarTab } from "@/components/SidebarTab";
+import { TradePosition } from "@/components/TradeSidebar/TradePosition";
+import { TradeSwap } from "@/components/TradeSidebar/TradeSwap";
+import { Side } from "@/lib/types";
 
 interface Props {
   className?: string;

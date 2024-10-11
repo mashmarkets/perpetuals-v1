@@ -1,6 +1,7 @@
+import { useWallet } from "@solana/wallet-adapter-react";
+
 import { TokenE } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
-import { useWallet } from "@solana/wallet-adapter-react";
 
 interface Props {
   token: TokenE;

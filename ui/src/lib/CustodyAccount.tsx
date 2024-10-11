@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+
 import { tokenAddressToToken, TokenE } from "./Token";
 import {
   Assets,
@@ -7,13 +8,13 @@ import {
   Custody,
   Fees,
   OracleParams,
+  Permissions,
   PositionStats,
+  PriceStat,
+  PriceStats,
   PricingParams,
   Stats,
   TradeStats,
-  Permissions,
-  PriceStat,
-  PriceStats,
 } from "./types";
 
 export class CustodyAccount {

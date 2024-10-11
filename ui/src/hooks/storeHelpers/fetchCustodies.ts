@@ -1,7 +1,8 @@
+import { PublicKey } from "@solana/web3.js";
+
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { Custody } from "@/lib/types";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
-import { PublicKey } from "@solana/web3.js";
 
 interface FetchCustody {
   account: Custody;
@@ -21,7 +22,7 @@ export async function getCustodyData(): Promise<
     (acc: Record<string, CustodyAccount>, { account, publicKey }) => (
       (acc[publicKey.toString()] = new CustodyAccount(account, publicKey)), acc
     ),
-    {}
+    {},
   );
 
   return custodyInfos;

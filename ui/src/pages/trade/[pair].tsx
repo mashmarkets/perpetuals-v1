@@ -1,10 +1,12 @@
 "use client";
+
 import { useRouter } from "next/router";
-import { TradeLayout } from "@/components/Layouts/TradeLayout";
+
 import { CandlestickChart } from "@/components/Chart/CandlestickChart";
+import { TradeLayout } from "@/components/Layouts/TradeLayout";
+import { Positions } from "@/components/Positions";
 import { TradeSidebar } from "@/components/TradeSidebar";
 import { asToken } from "@/lib/Token";
-import { Positions } from "@/components/Positions";
 
 function getToken(pair: string) {
   const [token, _] = pair.split("-");
@@ -44,7 +46,7 @@ export default function Page() {
       </div>
       <div>
         <CandlestickChart comparisonCurrency={currency} token={token} />
-        <Positions className="mt-8 " />
+        <Positions className="mt-8" />
       </div>
     </TradeLayout>
   );

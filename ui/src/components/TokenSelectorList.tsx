@@ -1,7 +1,8 @@
-import { twMerge } from "tailwind-merge";
 import CloseIcon from "@carbon/icons-react/lib/Close";
 import { cloneElement } from "react";
-import { TokenE, getTokenLabel, getTokenIcon, TOKEN_LIST } from "@/lib/Token";
+import { twMerge } from "tailwind-merge";
+
+import { getTokenIcon, getTokenLabel, TOKEN_LIST, TokenE } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
 
 function formatNumber(num: number) {
@@ -24,11 +25,11 @@ export function TokenSelectorList(props: Props) {
 
   return (
     <div
-      className="fixed top-0 left-0 right-0 bottom-0 z-20 bg-black/40"
+      className="fixed bottom-0 left-0 right-0 top-0 z-20 bg-black/40"
       onClick={props.onClose}
     >
       <div
-        className="absolute top-0 bottom-0 left-0 w-[424px] bg-zinc-900 p-4"
+        className="absolute bottom-0 left-0 top-0 w-[424px] bg-zinc-900 p-4"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between">
@@ -53,7 +54,7 @@ export function TokenSelectorList(props: Props) {
                   "p-2.5",
                   "rounded",
                   "w-full",
-                  "hover:bg-zinc-800"
+                  "hover:bg-zinc-800",
                 )}
                 onClick={() => {
                   props.onSelectToken?.(token);

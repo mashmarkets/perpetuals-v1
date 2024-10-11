@@ -1,9 +1,9 @@
-import { Program, AnchorProvider, Wallet } from "@coral-xyz/anchor";
-import { useConnection, useAnchorWallet } from "@solana/wallet-adapter-react";
+import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
+import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 
 import PerpetualsJson from "@/target/idl/perpetuals.json";
 import { IDL, Perpetuals } from "@/target/types/perpetuals";
-import { PublicKey } from "@solana/web3.js";
 
 export type PerpetualsProgram = Program<Perpetuals>;
 export const useProgram = () => {

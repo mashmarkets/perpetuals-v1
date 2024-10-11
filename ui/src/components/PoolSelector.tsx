@@ -1,12 +1,13 @@
-import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
-import { PoolTokens } from "@/components/PoolTokens";
-import { PoolAccount } from "@/lib/PoolAccount";
-import { useGlobalStore } from "@/stores/store";
 import CheckmarkIcon from "@carbon/icons-react/lib/Checkmark";
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
+
+import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
+import { PoolTokens } from "@/components/PoolTokens";
+import { PoolAccount } from "@/lib/PoolAccount";
+import { useGlobalStore } from "@/stores/store";
 
 interface Props {
   className?: string;
@@ -38,7 +39,7 @@ export function PoolSelector(props: Props) {
           "rounded",
           "text-left",
           "w-full",
-          props.className
+          props.className,
         )}
       >
         <PoolTokens tokens={props.pool.getTokenList()} className="h-5 w-5" />
@@ -55,10 +56,10 @@ export function PoolSelector(props: Props) {
             "px-4",
             "rounded",
             "text-left",
-            "w-full"
+            "w-full",
           )}
         >
-          <ChevronDownIcon className="fill-slate-500  transition-colors group-hover:fill-white" />
+          <ChevronDownIcon className="fill-slate-500 transition-colors group-hover:fill-white" />
         </div>
       </Dropdown.Trigger>
       <Dropdown.Portal>
@@ -81,7 +82,7 @@ export function PoolSelector(props: Props) {
                 "text-left",
                 "transition-colors",
                 "w-full",
-                "hover:bg-zinc-700"
+                "hover:bg-zinc-700",
               )}
               key={pool.address.toString()}
               onClick={() => props.onSelectPool?.(pool)}

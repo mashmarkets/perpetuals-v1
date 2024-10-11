@@ -14,7 +14,7 @@ export function LoadingDots(props: Props) {
         "flex",
         "items-center",
         "justify-center",
-        "gap-x-[0.25em]"
+        "gap-x-[0.25em]",
       )}
     >
       {Array.from({ length: props.numDots }).map((_, i) => (
@@ -27,7 +27,7 @@ export function LoadingDots(props: Props) {
             "flex-shrink-0",
             "h-[0.33em]",
             "rounded-full",
-            "w-[0.33em]"
+            "w-[0.33em]",
           )}
           key={i}
           style={{

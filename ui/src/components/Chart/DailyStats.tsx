@@ -1,7 +1,8 @@
+import { twMerge } from "tailwind-merge";
+
 import { TokenE } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
 import { formatNumberCommas } from "@/utils/formatters";
-import { twMerge } from "tailwind-merge";
 
 interface DailyStatsProps {
   className?: string;
@@ -30,7 +31,7 @@ export function DailyStats(props: DailyStatsProps) {
             "text-sm",
             stats[props.token].change24hr < 0 && "text-rose-400",
             stats[props.token].change24hr === 0 && "text-white",
-            stats[props.token].change24hr > 0 && "text-emerald-400"
+            stats[props.token].change24hr > 0 && "text-emerald-400",
           )}
         >
           ${formatNumberCommas(stats[props.token].change24hr)}

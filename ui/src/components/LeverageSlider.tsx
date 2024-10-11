@@ -21,7 +21,7 @@ export function LeverageSlider(props: Props) {
         "grid",
         "grid-cols-[max-content,max-content,1fr,max-content,max-content]",
         "items-center",
-        props.className
+        props.className,
       )}
     >
       <div className="text-xs text-zinc-400">Leverage</div>
@@ -49,7 +49,7 @@ export function LeverageSlider(props: Props) {
                 "w-2",
                 "hover:outline",
                 "hover:outline-[3px]",
-                "hover:outline-white/20"
+                "hover:outline-white/20",
               )}
             />
           </Slider.Track>
@@ -67,7 +67,7 @@ export function LeverageSlider(props: Props) {
           "px-3",
           "py-2",
           "rounded",
-          "w-20"
+          "w-20",
         )}
       >
         <input
@@ -78,14 +78,14 @@ export function LeverageSlider(props: Props) {
             const text = e.currentTarget.value;
             const number = parseFloat(text);
             props.onChange?.(
-              Number.isNaN(number) ? 0 : clamp(number, 1, props.maxLeverage)
+              Number.isNaN(number) ? 0 : clamp(number, 1, props.maxLeverage),
             );
           }}
           onBlur={(e) => {
             const text = e.currentTarget.value;
             const number = parseFloat(text);
             props.onChange?.(
-              Number.isNaN(number) ? 1 : clamp(number, 1, props.maxLeverage)
+              Number.isNaN(number) ? 1 : clamp(number, 1, props.maxLeverage),
             );
           }}
         />
@@ -96,7 +96,7 @@ export function LeverageSlider(props: Props) {
               "h-4",
               "transition-colors",
               "w-4",
-              "hover:fill-white"
+              "hover:fill-white",
             )}
           />
         </button>

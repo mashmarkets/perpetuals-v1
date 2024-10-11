@@ -14,7 +14,7 @@ export function PoolLayout(props: Props) {
         "px-4",
         "lg:px-16",
         "mt-7",
-        props.className
+        props.className,
       )}
     >
       <div>{props.children[0]}</div>
@@ -24,7 +24,7 @@ export function PoolLayout(props: Props) {
           "w-full",
           "lg:gap-x-16",
           "lg:grid-cols-[1fr,424px]",
-          "lg:grid"
+          "lg:grid",
         )}
       >
         <div>{props.children[1]}</div>

@@ -1,8 +1,9 @@
+import NewTab from "@carbon/icons-react/lib/NewTab";
+import { twMerge } from "tailwind-merge";
+
 import { PoolTokens } from "@/components/PoolTokens";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
-import NewTab from "@carbon/icons-react/lib/NewTab";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;

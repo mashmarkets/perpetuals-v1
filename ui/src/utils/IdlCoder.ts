@@ -1,19 +1,19 @@
-import camelCase from "camelcase";
-// @ts-ignore
-import { Layout } from "buffer-layout";
-import * as borsh from "@coral-xyz/borsh";
 import { IdlError } from "@coral-xyz/anchor";
 import {
-  IdlField,
-  IdlTypeDef,
   IdlEnumVariant,
+  IdlField,
   IdlType,
+  IdlTypeDef,
 } from "@coral-xyz/anchor/dist/cjs/idl";
+import * as borsh from "@coral-xyz/borsh";
+// @ts-ignore
+import { Layout } from "buffer-layout";
+import camelCase from "camelcase";
 
 export class IdlCoder {
   public static fieldLayout(
     field: { name?: string } & Pick<IdlField, "type">,
-    types?: IdlTypeDef[]
+    types?: IdlTypeDef[],
   ): Layout {
     const fieldName =
       field.name !== undefined ? camelCase(field.name) : undefined;
@@ -80,9 +80,9 @@ export class IdlCoder {
                 name: undefined,
                 type: field.type.vec,
               },
-              types
+              types,
             ),
-            fieldName
+            fieldName,
           );
         } else if ("option" in field.type) {
           return borsh.option(
@@ -91,9 +91,9 @@ export class IdlCoder {
                 name: undefined,
                 type: field.type.option,
               },
-              types
+              types,
             ),
-            fieldName
+            fieldName,
           );
         } else if ("defined" in field.type) {
           const defined = field.type.defined;
@@ -114,7 +114,7 @@ export class IdlCoder {
               name: undefined,
               type: arrayTy,
             },
-            types
+            types,
           );
           return borsh.array(innerLayout, arrayLen, fieldName);
         } else {
@@ -127,7 +127,7 @@ export class IdlCoder {
   public static typeDefLayout(
     typeDef: IdlTypeDef,
     types: IdlTypeDef[] = [],
-    name?: string
+    name?: string,
   ): Layout {
     if (typeDef.type.kind === "struct") {
       const fieldLayouts = typeDef.type.fields.map((field) => {
@@ -146,7 +146,7 @@ export class IdlCoder {
             if (!f.hasOwnProperty("name")) {
               return IdlCoder.fieldLayout(
                 { type: f as IdlType, name: i.toString() },
-                types
+                types,
               );
             }
             // this typescript conversion is ok
@@ -154,7 +154,7 @@ export class IdlCoder {
             // (that does not have a name property)
             // the check before would've errored
             return IdlCoder.fieldLayout(f as IdlField, types);
-          }
+          },
         );
         return borsh.struct(fieldLayouts, name);
       });

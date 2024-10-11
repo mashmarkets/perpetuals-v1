@@ -1,7 +1,8 @@
-import React, { useState } from "react";
 import { useRouter } from "next/router";
-import { useProgram } from "@/hooks/useProgram";
+import React, { useState } from "react";
 import { addPool } from "src/actions/pool";
+
+import { useProgram } from "@/hooks/useProgram";
 
 const CreatePool: React.FC = () => {
   const [name, setPool] = useState("");
@@ -27,8 +28,8 @@ const CreatePool: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto max-w-md mt-10">
-      <h1 className="text-3xl font-bold mb-6">Create New Pool</h1>
+    <div className="container mx-auto mt-10 max-w-md">
+      <h1 className="mb-6 text-3xl font-bold">Create New Pool</h1>
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
           <label
@@ -46,10 +47,10 @@ const CreatePool: React.FC = () => {
             required
           />
         </div>
-        {error && <p className="text-red-500 text-sm mt-2">{error}</p>}
+        {error && <p className="mt-2 text-sm text-red-500">{error}</p>}
         <button
           type="submit"
-          className="w-full py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          className="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
         >
           Create Pool
         </button>

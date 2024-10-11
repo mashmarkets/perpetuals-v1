@@ -1,6 +1,7 @@
-import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
 import { forwardRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
+
+import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   pending?: boolean;
@@ -43,7 +44,7 @@ export const SolidButton = forwardRef<HTMLButtonElement, Props>(
           "disabled:bg-zinc-300",
           "disabled:cursor-not-allowed",
           !loading && "hover:bg-purple-400",
-          loading && "cursor-not-allowed"
+          loading && "cursor-not-allowed",
         )}
         onClick={(e) => {
           handleClick(e);
@@ -58,7 +59,7 @@ export const SolidButton = forwardRef<HTMLButtonElement, Props>(
             "text-sm",
             "transition-all",
             "group-disabled:text-neutral-400",
-            loading ? "opacity-0" : "opacity-100"
+            loading ? "opacity-0" : "opacity-100",
           )}
         >
           {rest.children}
@@ -66,5 +67,5 @@ export const SolidButton = forwardRef<HTMLButtonElement, Props>(
         {loading && <LoadingSpinner className="absolute text-4xl" />}
       </button>
     );
-  }
+  },
 );

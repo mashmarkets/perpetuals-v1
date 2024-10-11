@@ -1,20 +1,21 @@
+import { Connection, PublicKey } from "@solana/web3.js";
+
 import { PoolAccount } from "@/lib/PoolAccount";
 import { TokenE } from "@/lib/Token";
 import { UserAccount } from "@/lib/UserAccount";
 import { fetchLPBalance, fetchTokenBalance } from "@/utils/retrieveData";
-import { Connection, PublicKey } from "@solana/web3.js";
 
 export default async function getUserLpAll(
   connection: Connection,
   publicKey: PublicKey,
-  poolData: Record<string, PoolAccount>
+  poolData: Record<string, PoolAccount>,
 ): Promise<Record<string, number>> {
   let lpTokenAccounts: Record<string, number> = {};
   let promises = Object.values(poolData).map(async (pool) => {
     lpTokenAccounts[pool.address.toString()] = await fetchLPBalance(
       pool.getLpTokenMint(),
       publicKey,
-      connection
+      connection,
     );
   });
 
@@ -28,7 +29,7 @@ export async function getUserLpSingle() {}
 export async function getUserTokenAll(
   connection: Connection,
   publicKey: PublicKey,
-  poolData: Record<string, PoolAccount>
+  poolData: Record<string, PoolAccount>,
 ): Promise<Record<TokenE, number>> {
   let tokens: TokenE[] = [];
 
@@ -44,7 +45,7 @@ export async function getUserTokenAll(
     tokenBalances[token] = await fetchTokenBalance(
       token,
       publicKey,
-      connection
+      connection,
     );
   });
   await Promise.all(promises);
@@ -57,7 +58,7 @@ export async function getUserTokenSingle() {}
 export async function getAllUserData(
   connection: Connection,
   publicKey: PublicKey,
-  poolData: Record<string, PoolAccount>
+  poolData: Record<string, PoolAccount>,
 ): Promise<UserAccount> {
   let lpBalances = await getUserLpAll(connection, publicKey, poolData);
 

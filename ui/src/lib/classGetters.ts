@@ -5,7 +5,7 @@ import { PriceStats } from "@/lib/types";
 export function getCurrentWeight(
   pool: PoolAccount,
   custody: CustodyAccount,
-  stats: PriceStats
+  stats: PriceStats,
 ): number {
   let token = custody.getTokenE();
   const custodyAmount = Number(custody.assets.owned) / 10 ** custody.decimals;

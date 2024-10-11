@@ -1,3 +1,12 @@
+import { BN } from "@coral-xyz/anchor";
+import {
+  getAssociatedTokenAddress,
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { WalletContextState } from "@solana/wallet-adapter-react";
+import { Connection, TransactionInstruction } from "@solana/web3.js";
+
 import { PoolAccount } from "@/lib/PoolAccount";
 import { PositionAccount } from "@/lib/PositionAccount";
 import { TokenE } from "@/lib/Token";
@@ -16,14 +25,6 @@ import {
   unwrapSolIfNeeded,
   wrapSolIfNeeded,
 } from "@/utils/transactionHelpers";
-import { BN } from "@coral-xyz/anchor";
-import {
-  getAssociatedTokenAddress,
-  NATIVE_MINT,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
-import { WalletContextState } from "@solana/wallet-adapter-react";
-import { Connection, TransactionInstruction } from "@solana/web3.js";
 
 export async function changeCollateral(
   walletContextState: WalletContextState,
@@ -31,11 +32,10 @@ export async function changeCollateral(
   pool: PoolAccount,
   position: PositionAccount,
   collatNum: number,
-  tab: Tab
+  tab: Tab,
 ) {
-  let { perpetual_program } = await getPerpetualProgramAndProvider(
-    walletContextState
-  );
+  let { perpetual_program } =
+    await getPerpetualProgramAndProvider(walletContextState);
 
   let publicKey = walletContextState.publicKey!;
 
@@ -44,7 +44,7 @@ export async function changeCollateral(
 
   let userCustodyTokenAccount = await getAssociatedTokenAddress(
     position.collateralCustodyMint,
-    publicKey
+    publicKey,
   );
 
   let preInstructions: TransactionInstruction[] = [];
@@ -59,7 +59,7 @@ export async function changeCollateral(
       publicKey,
       publicKey,
       position.collateralCustodyMint,
-      connection
+      connection,
     );
     if (ataIx) preInstructions.push(ataIx);
     if (position.collateralToken == TokenE.SOL) {
@@ -67,7 +67,7 @@ export async function changeCollateral(
         publicKey,
         publicKey,
         connection,
-        collatNum
+        collatNum,
       );
       if (wrapInstructions) {
         preInstructions.push(...wrapInstructions);
@@ -93,7 +93,7 @@ export async function changeCollateral(
         collateralCustody: position.collateralCustody,
         collateralCustodyOracleAccount: position.collateralCustodyOracleAccount,
         collateralCustodyTokenAccount: pool.getCustodyAccount(
-          position.collateralToken
+          position.collateralToken,
         )?.tokenAccount!,
       });
   } else {
@@ -101,7 +101,7 @@ export async function changeCollateral(
       publicKey,
       publicKey,
       position.collateralCustodyMint,
-      connection
+      connection,
     );
     if (ataIx) preInstructions.push(ataIx);
 
@@ -124,7 +124,7 @@ export async function changeCollateral(
         collateralCustody: position.collateralCustody,
         collateralCustodyOracleAccount: position.collateralCustodyOracleAccount,
         collateralCustodyTokenAccount: pool.getCustodyAccount(
-          position.collateralToken
+          position.collateralToken,
         )?.tokenAccount!,
       });
   }
@@ -141,7 +141,7 @@ export async function changeCollateral(
       tx,
       publicKey,
       connection,
-      walletContextState.signTransaction
+      walletContextState.signTransaction,
     );
     // await automaticSendTransaction(
     //   methodBuilder,

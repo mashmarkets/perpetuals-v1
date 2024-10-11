@@ -1,3 +1,12 @@
+import { BN } from "@coral-xyz/anchor";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { WalletContextState } from "@solana/wallet-adapter-react";
+import {
+  Connection,
+  LAMPORTS_PER_SOL,
+  TransactionInstruction,
+} from "@solana/web3.js";
+
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { TokenE } from "@/lib/Token";
@@ -16,14 +25,6 @@ import {
   unwrapSolIfNeeded,
   wrapSolIfNeeded,
 } from "@/utils/transactionHelpers";
-import { BN } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { WalletContextState } from "@solana/wallet-adapter-react";
-import {
-  Connection,
-  LAMPORTS_PER_SOL,
-  TransactionInstruction,
-} from "@solana/web3.js";
 
 export async function changeLiquidity(
   walletContextState: WalletContextState,
@@ -32,21 +33,20 @@ export async function changeLiquidity(
   custody: CustodyAccount,
   tokenAmount: number,
   liquidityAmount: number,
-  tab: Tab
+  tab: Tab,
 ) {
-  let { perpetual_program } = await getPerpetualProgramAndProvider(
-    walletContextState
-  );
+  let { perpetual_program } =
+    await getPerpetualProgramAndProvider(walletContextState);
   let publicKey = walletContextState.publicKey!;
 
   let lpTokenAccount = await getAssociatedTokenAddress(
     pool.getLpTokenMint(),
-    publicKey
+    publicKey,
   );
 
   let userCustodyTokenAccount = await getAssociatedTokenAddress(
     custody.mint,
-    publicKey
+    publicKey,
   );
 
   let preInstructions: TransactionInstruction[] = [];
@@ -55,7 +55,7 @@ export async function changeLiquidity(
     publicKey,
     publicKey,
     pool.getLpTokenMint(),
-    connection
+    connection,
   );
 
   if (ataIx) preInstructions.push(ataIx);
@@ -65,7 +65,7 @@ export async function changeLiquidity(
       publicKey,
       publicKey,
       custody.mint,
-      connection
+      connection,
     );
 
     if (ataIx) preInstructions.push(ataIx);
@@ -74,7 +74,7 @@ export async function changeLiquidity(
       publicKey,
       publicKey,
       connection,
-      tokenAmount
+      tokenAmount,
     );
     if (wrapInstructions) {
       preInstructions.push(...wrapInstructions);
@@ -91,7 +91,7 @@ export async function changeLiquidity(
     console.log("in add liq", tokenAmount);
     let amountIn;
     let minLpAmountOut = new BN(
-      liquidityAmount * 10 ** pool.lpData.decimals * 0.8
+      liquidityAmount * 10 ** pool.lpData.decimals * 0.8,
     );
     if (custody.getTokenE() === TokenE.SOL) {
       amountIn = new BN(tokenAmount * LAMPORTS_PER_SOL);
@@ -163,7 +163,7 @@ export async function changeLiquidity(
       tx,
       publicKey,
       connection,
-      walletContextState.signTransaction
+      walletContextState.signTransaction,
     );
   } catch (err) {
     console.log(err);

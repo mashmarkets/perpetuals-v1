@@ -1,9 +1,3 @@
-import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
-import { CustodyAccount } from "@/lib/CustodyAccount";
-import { getTokenLabel, TokenE } from "@/lib/Token";
-import { useGlobalStore } from "@/stores/store";
-import { DEFAULT_PERPS_USER } from "@/utils/constants";
-import { checkIfAccountExists } from "@/utils/retrieveData";
 import {
   createAssociatedTokenAccountInstruction,
   createMintToInstruction,
@@ -11,13 +5,21 @@ import {
 } from "@solana/spl-token";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { Transaction } from "@solana/web3.js";
-import { SolidButton } from "./SolidButton";
+import { toast } from "react-toastify";
+
+import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
+import { CustodyAccount } from "@/lib/CustodyAccount";
+import { getTokenLabel, TokenE } from "@/lib/Token";
+import { useGlobalStore } from "@/stores/store";
+import { DEFAULT_PERPS_USER } from "@/utils/constants";
+import { checkIfAccountExists } from "@/utils/retrieveData";
 import {
   manualSendTransaction,
   sendSignedTransactionAndNotify,
   sendTransaction,
 } from "@/utils/TransactionHandlers";
-import { toast } from "react-toastify";
+
+import { SolidButton } from "./SolidButton";
 
 interface Props {
   className?: string;
@@ -47,8 +49,8 @@ export default function AirdropButton(props: Props) {
             publicKey,
             associatedAccount,
             publicKey,
-            mint
-          )
+            mint,
+          ),
         );
       }
 
@@ -57,8 +59,8 @@ export default function AirdropButton(props: Props) {
           mint,
           associatedAccount,
           DEFAULT_PERPS_USER.publicKey,
-          1_000_000 * 10 ** 6
-        )
+          1_000_000 * 10 ** 6,
+        ),
       );
 
       transaction.feePayer = publicKey;

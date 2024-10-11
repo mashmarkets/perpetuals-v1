@@ -1,5 +1,6 @@
-import { MaxButton } from "@/components/Atoms/MaxButton";
 import { twMerge } from "tailwind-merge";
+
+import { MaxButton } from "@/components/Atoms/MaxButton";
 
 interface Props {
   className?: string;
@@ -23,7 +24,7 @@ export const LpSelector = (props: Props) => {
           "p-4",
           "rounded",
           "w-full",
-          props.className
+          props.className,
         )}
       >
         <div className="flex items-center space-x-2">
@@ -53,7 +54,7 @@ export const LpSelector = (props: Props) => {
                   : "cursor-none",
                 typeof props.onChangeAmount === "function"
                   ? "pointer-events-auto"
-                  : "pointer-events-none"
+                  : "pointer-events-none",
               )}
               placeholder="0"
               type="number"

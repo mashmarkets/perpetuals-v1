@@ -18,7 +18,7 @@ export const getUnixTs = () => {
 
 export async function automaticSendTransaction(
   methodBuilder: MethodsBuilder,
-  connection: Connection
+  connection: Connection,
 ) {
   let successMessage = "Transaction success!";
   let failMessage = "Transaction Failed";
@@ -53,7 +53,7 @@ export async function sendAnchorTransactionAndNotify({
           console.log("post rpc");
           await connection.confirmTransaction(txid, "confirmed");
           console.log(
-            `XEN:: - TRX :: https://explorer.solana.com/tx/${txid}?cluster=devnet`
+            `XEN:: - TRX :: https://explorer.solana.com/tx/${txid}?cluster=devnet`,
           );
           resolve(true);
         } catch (error) {
@@ -148,7 +148,7 @@ export async function sendAnchorTransactionAndNotify({
           },
           icon: false,
         },
-      }
+      },
     );
   });
 
@@ -162,7 +162,7 @@ export async function manualSendTransaction(
   signTransaction: any,
   otherSigner?: Keypair,
   successMessage?: string,
-  failMessage?: string
+  failMessage?: string,
 ) {
   // try {
   transaction.feePayer = publicKey;
@@ -342,7 +342,7 @@ export const sendSignedTransactionAndNotify = async ({
     enableSigning,
   });
   console.log(
-    `XEN:: - TRX :: https://explorer.solana.com/tx/${txid}?cluster=devnet`
+    `XEN:: - TRX :: https://explorer.solana.com/tx/${txid}?cluster=devnet`,
   );
 
   await new Promise(function (resolve, reject) {
@@ -442,7 +442,7 @@ export const sendSignedTransactionAndNotify = async ({
         position: "bottom-left",
         autoClose: 4000,
         className: "processing-transaction",
-      }
+      },
     );
   });
   return txid;

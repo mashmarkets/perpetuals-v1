@@ -1,8 +1,9 @@
+import { BN } from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
+
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { TokenE } from "@/lib/Token";
 import { Position, Side } from "@/lib/types";
-import { BN } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
 
 export class PositionAccount {
   public owner: PublicKey;
@@ -34,7 +35,7 @@ export class PositionAccount {
   constructor(
     position: Position,
     address: PublicKey,
-    custodies: Record<string, CustodyAccount>
+    custodies: Record<string, CustodyAccount>,
   ) {
     // console.log("printing entier new consturcture", position.openTime);
     this.owner = position.owner;

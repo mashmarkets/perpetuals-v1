@@ -28,7 +28,7 @@ export function SidebarTab(props: Props) {
         props.selected && "font-bold",
         props.selected && "fill-rose-400",
         props.selected && "text-rose-400",
-        props.className
+        props.className,
       )}
       onClick={props.onClick}
     >

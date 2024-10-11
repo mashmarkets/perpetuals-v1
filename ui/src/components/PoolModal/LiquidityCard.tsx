@@ -1,3 +1,10 @@
+import Add from "@carbon/icons-react/lib/Add";
+import Subtract from "@carbon/icons-react/lib/Subtract";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useEffect, useRef, useState } from "react";
+import { changeLiquidity } from "src/actions/changeLiquidity";
+import { twMerge } from "tailwind-merge";
+
 import AirdropButton from "@/components/AirdropButton";
 import { LpSelector } from "@/components/PoolModal/LpSelector";
 import { SidebarTab } from "@/components/SidebarTab";
@@ -11,12 +18,6 @@ import { Tab } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
 import { ViewHelper } from "@/utils/viewHelpers";
-import Add from "@carbon/icons-react/lib/Add";
-import Subtract from "@carbon/icons-react/lib/Subtract";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useEffect, useRef, useState } from "react";
-import { changeLiquidity } from "src/actions/changeLiquidity";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -60,7 +61,7 @@ export default function LiquidityCard(props: Props) {
       props.pool.getCustodyAccount(payToken!),
       tokenAmount,
       liqAmount,
-      tab
+      tab,
     );
 
     const custodyData = await getCustodyData();
@@ -88,7 +89,7 @@ export default function LiquidityCard(props: Props) {
         liqInfo = await View.getAddLiquidityAmountAndFees(
           tokenAmount,
           props.pool!,
-          props.pool!.getCustodyAccount(payToken!)!
+          props.pool!.getCustodyAccount(payToken!)!,
         );
 
         setLiqAmount(Number(liqInfo.amount) / 10 ** props.pool.lpData.decimals);
@@ -103,11 +104,11 @@ export default function LiquidityCard(props: Props) {
         liqInfo = await View.getRemoveLiquidityAmountAndFees(
           liqAmount,
           props.pool!,
-          props.pool!.getCustodyAccount(payToken!)!
+          props.pool!.getCustodyAccount(payToken!)!,
         );
         setTokenAmount(
           Number(liqInfo.amount) /
-            10 ** props.pool.getCustodyAccount(payToken!)!.decimals
+            10 ** props.pool.getCustodyAccount(payToken!)!.decimals,
         );
         setPrevLiqAmount(liqAmount);
       }
@@ -284,18 +285,12 @@ export default function LiquidityCard(props: Props) {
           {tab == Tab.Add ? "Add" : "Remove"} Liquidity
         </SolidButton>
         {!publicKey && (
-          <p
-            className="mt-2 text-center text-xs text-orange-500
-      "
-          >
+          <p className="mt-2 text-center text-xs text-orange-500">
             Please connect wallet to add liquidity
           </p>
         )}
         {!tokenAmount && (
-          <p
-            className="mt-2 text-center text-xs text-orange-500
-      "
-          >
+          <p className="mt-2 text-center text-xs text-orange-500">
             Please enter a valid amount of tokens to{" "}
             {tab === Tab.Add ? "add" : "remove"} liquidity
           </p>

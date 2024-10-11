@@ -1,3 +1,10 @@
+import CloseIcon from "@carbon/icons-react/lib/Close";
+import EditIcon from "@carbon/icons-react/lib/Edit";
+import { BN } from "@coral-xyz/anchor";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { closePosition } from "src/actions/closePosition";
+import { twMerge } from "tailwind-merge";
+
 import { CollateralModal } from "@/components/Positions/CollateralModal";
 import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/SolidButton";
@@ -7,12 +14,6 @@ import { PositionAccount } from "@/lib/PositionAccount";
 import { Side } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
 import { formatPrice } from "@/utils/formatters";
-import CloseIcon from "@carbon/icons-react/lib/Close";
-import EditIcon from "@carbon/icons-react/lib/Edit";
-import { BN } from "@coral-xyz/anchor";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { closePosition } from "src/actions/closePosition";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -44,7 +45,7 @@ export function PositionAdditionalInfo(props: Props) {
       positionPool,
       props.position,
       positionCustody,
-      new BN(stats[props.position.token].currentPrice * 10 ** 6)
+      new BN(stats[props.position.token].currentPrice * 10 ** 6),
     );
 
     const positionInfos = await getPositionData(custodyData);
@@ -64,7 +65,7 @@ export function PositionAdditionalInfo(props: Props) {
         "gap-x-8",
         "items-center",
         "pr-4",
-        props.className
+        props.className,
       )}
     >
       <div />
@@ -78,7 +79,7 @@ export function PositionAdditionalInfo(props: Props) {
           "items-center",
           "px-3",
           "rounded",
-          "w-full"
+          "w-full",
         )}
       >
         <div>
@@ -125,7 +126,7 @@ export function PositionAdditionalInfo(props: Props) {
             {formatPrice(
               props.position.side === Side.Long
                 ? stats[props.position.token].currentPrice - props.liqPrice
-                : props.liqPrice - stats[props.position.token].currentPrice
+                : props.liqPrice - stats[props.position.token].currentPrice,
             )}
           </div>
         </div>

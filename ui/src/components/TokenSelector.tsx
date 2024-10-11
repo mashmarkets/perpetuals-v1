@@ -1,10 +1,11 @@
-import { MaxButton } from "@/components/Atoms/MaxButton";
-import { TokenSelectorList } from "@/components/TokenSelectorList";
-import { TokenE, getTokenIcon } from "@/lib/Token";
-import { useGlobalStore } from "@/stores/store";
 import ChevronRightIcon from "@carbon/icons-react/lib/ChevronRight";
 import { cloneElement, useState } from "react";
 import { twMerge } from "tailwind-merge";
+
+import { MaxButton } from "@/components/Atoms/MaxButton";
+import { TokenSelectorList } from "@/components/TokenSelectorList";
+import { getTokenIcon, TokenE } from "@/lib/Token";
+import { useGlobalStore } from "@/stores/store";
 
 function formatNumber(num: number) {
   const formatter = Intl.NumberFormat("en", {
@@ -41,7 +42,7 @@ export function TokenSelector(props: Props) {
           "p-4",
           "rounded",
           "w-full",
-          props.className
+          props.className,
         )}
       >
         <p>no Tokens</p>
@@ -61,7 +62,7 @@ export function TokenSelector(props: Props) {
           "p-4",
           "rounded",
           "w-full",
-          props.className
+          props.className,
         )}
       >
         <div className="flex items-center">
@@ -101,7 +102,7 @@ export function TokenSelector(props: Props) {
                   : "cursor-none",
                 typeof props.onChangeAmount === "function"
                   ? "pointer-events-auto"
-                  : "pointer-events-none"
+                  : "pointer-events-none",
               )}
               placeholder=""
               type="number"

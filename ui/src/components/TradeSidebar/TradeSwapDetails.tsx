@@ -1,5 +1,6 @@
-import { TokenE } from "@/lib/Token";
 import { twMerge } from "tailwind-merge";
+
+import { TokenE } from "@/lib/Token";
 
 function formatPrice(num: number) {
   const formatter = Intl.NumberFormat("en", {
@@ -40,7 +41,7 @@ export function TradeSwapDetails(props: Props) {
             className={twMerge(
               "border-zinc-700",
               i < 2 && "pb-4",
-              i < 2 && "border-b"
+              i < 2 && "border-b",
             )}
             key={i}
           >

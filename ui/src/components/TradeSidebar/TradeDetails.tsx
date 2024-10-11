@@ -1,3 +1,6 @@
+import { cloneElement } from "react";
+import { twMerge } from "tailwind-merge";
+
 import { getTokenIcon, TokenE } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import {
@@ -6,8 +9,6 @@ import {
   formatNumberLessThan,
   formatPrice,
 } from "@/utils/formatters";
-import { cloneElement } from "react";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -72,7 +73,7 @@ export function TradeDetails(props: Props) {
             className={twMerge(
               "border-zinc-700",
               i < 4 && "pb-4",
-              i < 4 && "border-b"
+              i < 4 && "border-b",
             )}
             key={i}
           >

@@ -1,3 +1,9 @@
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
+import { openPosition } from "src/actions/openPosition";
+import { twMerge } from "tailwind-merge";
+
 import { UserBalance } from "@/components/Atoms/UserBalance";
 import { LeverageSlider } from "@/components/LeverageSlider";
 import { LoadingDots } from "@/components/LoadingDots";
@@ -8,17 +14,12 @@ import { TradeDetails } from "@/components/TradeSidebar/TradeDetails";
 import { getPositionData } from "@/hooks/storeHelpers/fetchPositions";
 import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
 import { PoolAccount } from "@/lib/PoolAccount";
-import { TokenE, asToken } from "@/lib/Token";
+import { asToken, TokenE } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
 import { getUserPositionTokens } from "@/utils/organizers";
 import { ViewHelper } from "@/utils/viewHelpers";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
-import { openPosition } from "src/actions/openPosition";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -76,7 +77,7 @@ export function TradePosition(props: Props) {
       positionAmount,
       stats[positionToken]?.currentPrice,
       props.side,
-      leverage
+      leverage,
     );
     const positionInfos = await getPositionData(custodyData);
     setPositionData(positionInfos);
@@ -103,23 +104,22 @@ export function TradePosition(props: Props) {
   useEffect(() => {
     async function getConversionRatio() {
       if (payToken != positionToken) {
-        let { perpetual_program } = await getPerpetualProgramAndProvider(
-          walletContextState
-        );
+        let { perpetual_program } =
+          await getPerpetualProgramAndProvider(walletContextState);
 
         let payCustody = pool!.getCustodyAccount(payToken)!;
         let positionCustody = pool!.getCustodyAccount(positionToken)!;
 
         const View = new ViewHelper(
           perpetual_program.provider.connection,
-          perpetual_program.provider
+          perpetual_program.provider,
         );
 
         let swapInfo = await View.getSwapAmountAndFees(
           1,
           pool!,
           payCustody,
-          positionCustody
+          positionCustody,
         );
 
         let f =
@@ -172,13 +172,12 @@ export function TradePosition(props: Props) {
 
       // console.log("after check in trade amounts", payAmount, positionAmount);
 
-      let { perpetual_program } = await getPerpetualProgramAndProvider(
-        walletContextState
-      );
+      let { perpetual_program } =
+        await getPerpetualProgramAndProvider(walletContextState);
 
       const View = new ViewHelper(
         perpetual_program.provider.connection,
-        perpetual_program.provider
+        perpetual_program.provider,
       );
 
       let getEntryPrice = await View.getEntryPriceAndFee(
@@ -186,7 +185,7 @@ export function TradePosition(props: Props) {
         positionAmount,
         props.side,
         pool!,
-        pool!.getCustodyAccount(positionToken)!
+        pool!.getCustodyAccount(positionToken)!,
       );
 
       // console.log("get entry values", getEntryPrice);
@@ -223,7 +222,7 @@ export function TradePosition(props: Props) {
     if (!positionToken || !publicKey) return false;
     try {
       return Object.keys(
-        getUserPositionTokens(positionData, publicKey)
+        getUserPositionTokens(positionData, publicKey),
       ).includes(positionToken);
     } catch {
       return false;
@@ -247,7 +246,7 @@ export function TradePosition(props: Props) {
 
   return (
     <div className={props.className}>
-      <div className="flex items-center justify-between text-sm ">
+      <div className="flex items-center justify-between text-sm">
         <div className="font-medium text-white">Your Collateral</div>
         <UserBalance token={payToken} />
       </div>
@@ -292,16 +291,16 @@ export function TradePosition(props: Props) {
         value={leverage}
         minLeverage={Number(
           pool.getCustodyAccount(positionToken)?.pricing.minInitialLeverage /
-            10000
+            10000,
         )}
         maxLeverage={Number(
-          pool.getCustodyAccount(positionToken)?.pricing.maxLeverage / 10000
+          pool.getCustodyAccount(positionToken)?.pricing.maxLeverage / 10000,
         )}
         onChange={(e) => {
           setLeverage(e);
         }}
       />
-      <p className="mt-2 text-center text-xs text-orange-500 ">
+      <p className="mt-2 text-center text-xs text-orange-500">
         Leverage current only works until 25x due to immediate loss from fees
       </p>
       <SolidButton
@@ -323,24 +322,24 @@ export function TradePosition(props: Props) {
         </p>
       )}
       {!payAmount && (
-        <p className="mt-2 text-center text-xs text-orange-500 ">
+        <p className="mt-2 text-center text-xs text-orange-500">
           Specify a valid nonzero amount to pay
         </p>
       )}
       {isLiquityExceeded() && (
-        <p className="mt-2 text-center text-xs text-orange-500 ">
+        <p className="mt-2 text-center text-xs text-orange-500">
           This position exceeds pool liquidity, reduce your position size or
           leverage
         </p>
       )}
       {!isBalanceValid() && (
-        <p className="mt-2 text-center text-xs text-orange-500 ">
+        <p className="mt-2 text-center text-xs text-orange-500">
           Insufficient balance
         </p>
       )}
 
       {isPositionAlreadyOpen() && (
-        <p className="mt-2 text-center text-xs text-orange-500 ">
+        <p className="mt-2 text-center text-xs text-orange-500">
           Position exists, modify or close current holding
         </p>
       )}
@@ -352,7 +351,7 @@ export function TradePosition(props: Props) {
           "mt-4",
           "pb-5",
           "pt-4",
-          "px-4"
+          "px-4",
         )}
         collateralToken={payToken!}
         positionToken={positionToken!}
@@ -364,7 +363,8 @@ export function TradePosition(props: Props) {
         }
         borrowRate={
           Number(
-            pool.getCustodyAccount(positionToken!!)?.borrowRateState.currentRate
+            pool.getCustodyAccount(positionToken!!)?.borrowRateState
+              .currentRate,
           ) /
           10 ** 9
         }

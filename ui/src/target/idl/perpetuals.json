@@ -29,9 +29,7 @@
           "name": "perpetualsProgramData",
           "isMut": false,
           "isSigner": false,
-          "docs": [
-            "FIXME"
-          ]
+          "docs": ["FIXME"]
         },
         {
           "name": "perpetualsProgram",
@@ -1955,19 +1953,13 @@
           {
             "name": "signers",
             "type": {
-              "array": [
-                "publicKey",
-                6
-              ]
+              "array": ["publicKey", 6]
             }
           },
           {
             "name": "signed",
             "type": {
-              "array": [
-                "u8",
-                6
-              ]
+              "array": ["u8", 6]
             }
           },
           {

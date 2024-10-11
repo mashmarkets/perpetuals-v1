@@ -1,3 +1,9 @@
+import { BN } from "@coral-xyz/anchor";
+import { MethodsBuilder } from "@coral-xyz/anchor/dist/cjs/program/namespace/methods";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { WalletContextState } from "@solana/wallet-adapter-react";
+import { Connection, TransactionInstruction } from "@solana/web3.js";
+
 import { PoolAccount } from "@/lib/PoolAccount";
 import { TokenE } from "@/lib/Token";
 import {
@@ -14,11 +20,6 @@ import {
   unwrapSolIfNeeded,
   wrapSolIfNeeded,
 } from "@/utils/transactionHelpers";
-import { BN } from "@coral-xyz/anchor";
-import { MethodsBuilder } from "@coral-xyz/anchor/dist/cjs/program/namespace/methods";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { WalletContextState } from "@solana/wallet-adapter-react";
-import { Connection, TransactionInstruction } from "@solana/web3.js";
 
 export async function swapTransactionBuilder(
   walletContextState: WalletContextState,
@@ -27,7 +28,7 @@ export async function swapTransactionBuilder(
   topToken: TokenE,
   bottomToken: TokenE,
   amtInNumber: number,
-  minAmtOutNumber?: number
+  minAmtOutNumber?: number,
   // @ts-ignore
 ): Promise<{
   methodBuilder: MethodsBuilder;
@@ -35,16 +36,15 @@ export async function swapTransactionBuilder(
   postInstructions: TransactionInstruction[];
 }> {
   console.log("in swap builder");
-  let { perpetual_program } = await getPerpetualProgramAndProvider(
-    walletContextState
-  );
+  let { perpetual_program } =
+    await getPerpetualProgramAndProvider(walletContextState);
   let publicKey = walletContextState.publicKey!;
 
   const receivingCustody = pool.getCustodyAccount(topToken)!;
 
   let fundingAccount = await getAssociatedTokenAddress(
     receivingCustody.mint,
-    publicKey
+    publicKey,
   );
 
   const dispensingCustody = pool.getCustodyAccount(bottomToken)!;
@@ -52,7 +52,7 @@ export async function swapTransactionBuilder(
   console.log("receiving accoutn", dispensingCustody.getTokenE());
   let receivingAccount = await getAssociatedTokenAddress(
     dispensingCustody.mint,
-    publicKey
+    publicKey,
   );
 
   let preInstructions: TransactionInstruction[] = [];
@@ -63,7 +63,7 @@ export async function swapTransactionBuilder(
       publicKey,
       publicKey,
       receivingCustody.mint,
-      connection
+      connection,
     );
 
     if (ataIx) preInstructions.push(ataIx);
@@ -72,7 +72,7 @@ export async function swapTransactionBuilder(
       publicKey,
       publicKey,
       connection,
-      amtInNumber
+      amtInNumber,
     );
     if (wrapInstructions) {
       preInstructions.push(...wrapInstructions);
@@ -88,7 +88,7 @@ export async function swapTransactionBuilder(
     publicKey,
     publicKey,
     dispensingCustody.mint,
-    connection
+    connection,
   );
 
   if (ataIx) preInstructions.push(ataIx);
@@ -124,7 +124,7 @@ export async function swapTransactionBuilder(
   console.log(
     "swap params",
     Number(params.amountIn),
-    Number(params.minAmountOut)
+    Number(params.minAmountOut),
   );
 
   // console.log(
@@ -174,7 +174,7 @@ export async function swap(
   topToken: TokenE,
   bottomToken: TokenE,
   amtInNumber: number,
-  minAmtOutNumber?: number
+  minAmtOutNumber?: number,
 ) {
   let { methodBuilder } = await swapTransactionBuilder(
     walletContextState,
@@ -183,7 +183,7 @@ export async function swap(
     topToken,
     bottomToken,
     amtInNumber,
-    minAmtOutNumber
+    minAmtOutNumber,
   );
 
   let publicKey = walletContextState.publicKey!;
@@ -196,7 +196,7 @@ export async function swap(
       tx,
       publicKey,
       connection,
-      walletContextState.signTransaction
+      walletContextState.signTransaction,
     );
   } catch (err) {
     console.log(err);

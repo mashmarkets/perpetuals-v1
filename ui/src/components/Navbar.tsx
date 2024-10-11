@@ -1,17 +1,17 @@
 import ChartCandlestickIcon from "@carbon/icons-react/lib/ChartCandlestick";
 import CircleDash from "@carbon/icons-react/lib/CircleDash";
 import StoragePoolIcon from "@carbon/icons-react/lib/StoragePool";
+import UserAdmin from "@carbon/icons-react/lib/UserAdmin";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { twMerge } from "tailwind-merge";
 
-import UserAdmin from "@carbon/icons-react/lib/UserAdmin";
 import { NavbarLink } from "./NavbarLink";
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
     (await import("@solana/wallet-adapter-react-ui")).WalletMultiButton,
-  { ssr: false }
+  { ssr: false },
 );
 
 export const Navbar = () => {
@@ -28,7 +28,7 @@ export const Navbar = () => {
         "px-4",
         "right-0",
         "top-0",
-        "z-20"
+        "z-20",
       )}
     >
       <Link className="hidden items-center space-x-2 md:flex" href="/">

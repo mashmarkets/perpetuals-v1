@@ -1,3 +1,10 @@
+import ArrowsVertical from "@carbon/icons-react/lib/ArrowsVertical";
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useRouter } from "next/router";
+import { useEffect, useRef, useState } from "react";
+import { swap } from "src/actions/swap";
+import { twMerge } from "tailwind-merge";
+
 import { UserBalance } from "@/components/Atoms/UserBalance";
 import { LoadingDots } from "@/components/LoadingDots";
 import { PoolSelector } from "@/components/PoolSelector";
@@ -10,12 +17,6 @@ import { TokenE } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
 import { ViewHelper } from "@/utils/viewHelpers";
-import ArrowsVertical from "@carbon/icons-react/lib/ArrowsVertical";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useRouter } from "next/router";
-import { useEffect, useRef, useState } from "react";
-import { swap } from "src/actions/swap";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -82,7 +83,7 @@ export function TradeSwap(props: Props) {
         payAmount,
         pool!,
         payCustody,
-        receiveCustody
+        receiveCustody,
       );
 
       let f =
@@ -131,7 +132,7 @@ export function TradeSwap(props: Props) {
       payToken,
       receiveToken,
       payAmount,
-      receiveAmount
+      receiveAmount,
     );
 
     const userData = await getAllUserData(connection, publicKey!, poolData);
@@ -170,7 +171,7 @@ export function TradeSwap(props: Props) {
         tokenList={pool.getTokenList()}
       />
       <div
-        className="mt-4 mb-2 flex justify-center"
+        className="mb-2 mt-4 flex justify-center"
         onClick={() => {
           setPayToken(receiveToken);
           setReceiveToken(payToken);
@@ -183,7 +184,7 @@ export function TradeSwap(props: Props) {
             "h-5",
             "transition-colors",
             "w-5",
-            "hover:fill-white"
+            "hover:fill-white",
           )}
         />
       </div>
@@ -233,24 +234,18 @@ export function TradeSwap(props: Props) {
         Swap
       </SolidButton>
       {!publicKey && (
-        <p
-          className="mt-2 text-center text-xs text-orange-500
-      "
-        >
+        <p className="mt-2 text-center text-xs text-orange-500">
           Please connect wallet to execute order
         </p>
       )}
       {!payAmount && (
-        <p
-          className="mt-2 text-center text-xs text-orange-500
-      "
-        >
+        <p className="mt-2 text-center text-xs text-orange-500">
           Please specify a valid nonzero amount to swap
         </p>
       )}
       {receiveAmount * stats[receiveToken].currentPrice >
         pool.getCustodyAccount(receiveToken!)?.getCustodyLiquidity(stats!)! && (
-        <p className="mt-2 text-center text-xs text-orange-500 ">
+        <p className="mt-2 text-center text-xs text-orange-500">
           This swap exceeds pool liquidity, reduce your swap size
         </p>
       )}
@@ -263,7 +258,7 @@ export function TradeSwap(props: Props) {
           "mt-4",
           "pb-5",
           "pt-4",
-          "px-4"
+          "px-4",
         )}
         payToken={payToken}
         availableLiquidity={pool

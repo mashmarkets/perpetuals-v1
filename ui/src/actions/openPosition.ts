@@ -1,32 +1,33 @@
+import { BN } from "@coral-xyz/anchor";
+import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { WalletContextState } from "@solana/wallet-adapter-react";
+import {
+  Connection,
+  PublicKey,
+  SystemProgram,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import { swapTransactionBuilder } from "src/actions/swap";
+
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { TokenE } from "@/lib/Token";
 import { Side, TradeSide } from "@/lib/types";
 import {
+  getPerpetualProgramAndProvider,
+  PERPETUALS_ADDRESS,
+  TRANSFER_AUTHORITY,
+} from "@/utils/constants";
+import {
   automaticSendTransaction,
   manualSendTransaction,
 } from "@/utils/TransactionHandlers";
-import {
-  PERPETUALS_ADDRESS,
-  TRANSFER_AUTHORITY,
-  getPerpetualProgramAndProvider,
-} from "@/utils/constants";
 import {
   createAtaIfNeeded,
   unwrapSolIfNeeded,
   wrapSolIfNeeded,
 } from "@/utils/transactionHelpers";
 import { ViewHelper } from "@/utils/viewHelpers";
-import { BN } from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID, getAssociatedTokenAddress } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
-import { WalletContextState } from "@solana/wallet-adapter-react";
-import {
-  Connection,
-  SystemProgram,
-  TransactionInstruction,
-} from "@solana/web3.js";
-import { swapTransactionBuilder } from "src/actions/swap";
 
 export async function openPositionBuilder(
   walletContextState: WalletContextState,
@@ -39,12 +40,11 @@ export async function openPositionBuilder(
   positionAmount: number,
   price: number,
   side: Side,
-  leverage: number
+  leverage: number,
 ) {
   // console.log("in open position");
-  let { perpetual_program, provider } = await getPerpetualProgramAndProvider(
-    walletContextState
-  );
+  let { perpetual_program, provider } =
+    await getPerpetualProgramAndProvider(walletContextState);
   let publicKey = walletContextState.publicKey!;
 
   // TODO: need to take slippage as param , this is now for testing
@@ -55,7 +55,7 @@ export async function openPositionBuilder(
 
   let userCustodyTokenAccount = await getAssociatedTokenAddress(
     collateralCustody.mint,
-    publicKey
+    publicKey,
   );
 
   let positionAccount = PublicKey.findProgramAddressSync(
@@ -67,7 +67,7 @@ export async function openPositionBuilder(
       // @ts-ignore
       side.toString() == "Long" ? [1] : [2],
     ],
-    perpetual_program.programId
+    perpetual_program.programId,
   )[0];
 
   let preInstructions: TransactionInstruction[] = [];
@@ -81,7 +81,7 @@ export async function openPositionBuilder(
       payAmount,
       pool!,
       payCustody,
-      collateralCustody
+      collateralCustody,
     );
 
     let swapAmountOut =
@@ -99,7 +99,7 @@ export async function openPositionBuilder(
       positionAmount,
       side,
       pool!,
-      collateralCustody!
+      collateralCustody!,
     );
 
     let entryFee = Number(getEntryPrice.fee) / 10 ** collateralCustody.decimals;
@@ -110,7 +110,7 @@ export async function openPositionBuilder(
       payAmount + entryFee + swapFee,
       pool!,
       payCustody,
-      collateralCustody
+      collateralCustody,
     );
 
     let swapAmountOut2 =
@@ -133,7 +133,7 @@ export async function openPositionBuilder(
         payCustody.getTokenE(),
         collateralCustody.getTokenE(),
         payAmount + entryFee + swapFee + extraSwap,
-        recAmt
+        recAmt,
       );
 
     let ix = await swapBuilder.instruction();
@@ -144,7 +144,7 @@ export async function openPositionBuilder(
     publicKey,
     publicKey,
     collateralCustody.mint,
-    connection
+    connection,
   );
 
   if (ataIx) preInstructions.push(ataIx);
@@ -163,7 +163,7 @@ export async function openPositionBuilder(
       publicKey,
       publicKey,
       connection,
-      payAmount
+      payAmount,
     );
     if (wrapInstructions) {
       preInstructions.push(...wrapInstructions);
@@ -216,7 +216,7 @@ export async function openPositionBuilder(
       tx,
       publicKey,
       connection,
-      walletContextState.signTransaction
+      walletContextState.signTransaction,
     );
   } catch (err) {
     console.log(err);
@@ -234,7 +234,7 @@ export async function openPosition(
   positionAmount: number,
   price: number,
   side: Side,
-  leverage: number
+  leverage: number,
 ) {
   console.log({ payToken, positionToken, payAmount, positionAmount });
   let payCustody = pool.getCustodyAccount(payToken)!;
@@ -255,6 +255,6 @@ export async function openPosition(
     positionAmount,
     price,
     side,
-    leverage
+    leverage,
   );
 }

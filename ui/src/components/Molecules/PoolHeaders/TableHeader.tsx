@@ -1,6 +1,7 @@
+import { twMerge } from "tailwind-merge";
+
 import { PoolTokens } from "@/components/PoolTokens";
 import { PoolAccount } from "@/lib/PoolAccount";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   iconClassName?: string;

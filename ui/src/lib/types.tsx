@@ -1,6 +1,7 @@
-import { TokenE } from "@/lib/Token";
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
+
+import { TokenE } from "@/lib/Token";
 
 export interface Pool {
   name: string;
@@ -100,7 +101,7 @@ export interface Fees {
 export enum FeesMode {
   Fixed,
   Linear,
-  Optimal
+  Optimal,
 }
 
 export interface OracleParams {

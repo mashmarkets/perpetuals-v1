@@ -1,4 +1,7 @@
 "use client";
+
+import { useRouter } from "next/router";
+
 import PoolBackButton from "@/components/Atoms/PoolBackButton";
 import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
 import { PoolLayout } from "@/components/Layouts/PoolLayout";
@@ -7,7 +10,6 @@ import LiquidityCard from "@/components/PoolModal/LiquidityCard";
 import PoolGeneralStats from "@/components/PoolModal/PoolGeneralStats";
 import PoolTokenStats from "@/components/PoolModal/PoolTokenStats";
 import { useGlobalStore } from "@/stores/store";
-import { useRouter } from "next/router";
 
 export default function SinglePool() {
   const router = useRouter();

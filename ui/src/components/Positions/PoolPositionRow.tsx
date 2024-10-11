@@ -1,3 +1,7 @@
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useEffect, useState } from "react";
+import { twMerge } from "tailwind-merge";
+
 import { LoadingDots } from "@/components/LoadingDots";
 import { PositionAdditionalInfo } from "@/components/Positions/PositionAdditionalInfo";
 import PositionBasicInfo from "@/components/Positions/PositionBasicInfo";
@@ -5,9 +9,6 @@ import { PositionAccount } from "@/lib/PositionAccount";
 import { useGlobalStore } from "@/stores/store";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
 import { ViewHelper } from "@/utils/viewHelpers";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useEffect, useState } from "react";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -66,7 +67,7 @@ export default function PoolPositionRow(props: Props) {
           "transition-all",
           expanded ? "opacity-100" : "opacity-0",
           expanded ? "py-5" : "py-0",
-          expanded ? "h-auto" : "h-0"
+          expanded ? "h-auto" : "h-0",
         )}
         position={props.position}
         pnl={pnl}

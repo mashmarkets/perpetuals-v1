@@ -31,7 +31,7 @@ export function NavbarLink(props: Props) {
         selected && "text-white",
         selected && "border-b",
         selected && "border-purple-500",
-        props.className
+        props.className,
       )}
     >
       <div className="hidden md:block">{props.children}</div>
@@ -42,7 +42,7 @@ export function NavbarLink(props: Props) {
           "fill-current",
           "h-4",
           "w-4",
-          "md:hidden"
+          "md:hidden",
         ),
       })}
     </Link>

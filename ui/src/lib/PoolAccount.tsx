@@ -1,11 +1,12 @@
+import { BN } from "@coral-xyz/anchor";
+import { Mint } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+
 import { PriceStats } from "@/hooks/storeHelpers/fetchPrices";
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { TokenE } from "@/lib/Token";
 import { AccountMeta, Pool, TokenRatios } from "@/lib/types";
 import { PERPETUALS_PROGRAM_ID } from "@/utils/constants";
-import { BN } from "@coral-xyz/anchor";
-import { Mint } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
 
 export class PoolAccount {
   public name: string;
@@ -25,7 +26,7 @@ export class PoolAccount {
     pool: Pool,
     custodyData: Record<string, CustodyAccount>,
     address: PublicKey,
-    lpData: Mint
+    lpData: Mint,
   ) {
     this.name = pool.name;
     this.aumUsd = pool.aumUsd;
@@ -60,7 +61,7 @@ export class PoolAccount {
   getCustodyAccount(token: TokenE): CustodyAccount | null {
     return (
       Object.values(this.custodies).find(
-        (custody) => custody.getTokenE() === token
+        (custody) => custody.getTokenE() === token,
       ) ?? null
     );
   }
@@ -68,14 +69,14 @@ export class PoolAccount {
   getPoolAddress(): PublicKey {
     return PublicKey.findProgramAddressSync(
       [Buffer.from("pool"), Buffer.from(this.name)],
-      PERPETUALS_PROGRAM_ID
+      PERPETUALS_PROGRAM_ID,
     )[0];
   }
 
   getLpTokenMint(): PublicKey {
     return PublicKey.findProgramAddressSync(
       [Buffer.from("lp_token_mint"), this.getPoolAddress().toBuffer()],
-      PERPETUALS_PROGRAM_ID
+      PERPETUALS_PROGRAM_ID,
     )[0];
   }
 
@@ -120,11 +121,11 @@ export class PoolAccount {
         return (
           acc +
           Object.values(tokenCustody.volumeStats).reduce(
-            (acc, val) => Number(acc) + Number(val)
+            (acc, val) => Number(acc) + Number(val),
           )
         );
       },
-      0
+      0,
     );
 
     return totalAmount / 10 ** 6;
@@ -135,7 +136,7 @@ export class PoolAccount {
       (acc: number, tokenCustody: CustodyAccount) => {
         return Number(acc) + Number(tokenCustody.tradeStats.oiLongUsd);
       },
-      0
+      0,
     );
 
     return totalAmount / 10 ** 6;
@@ -146,7 +147,7 @@ export class PoolAccount {
       (acc: number, tokenCustody: CustodyAccount) => {
         return Number(acc) + Number(tokenCustody.tradeStats.oiShortUsd);
       },
-      0
+      0,
     );
 
     return totalAmount / 10 ** 6;
@@ -158,11 +159,11 @@ export class PoolAccount {
         return (
           acc +
           Object.values(tokenCustody.collectedFees).reduce(
-            (acc, val) => Number(acc) + Number(val)
+            (acc, val) => Number(acc) + Number(val),
           )
         );
       },
-      0
+      0,
     );
 
     return totalAmount / 10 ** 6;

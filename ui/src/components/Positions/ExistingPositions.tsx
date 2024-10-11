@@ -1,11 +1,13 @@
 "use client";
+
+import { useWallet } from "@solana/wallet-adapter-react";
+import { twMerge } from "tailwind-merge";
+
 import { NoPositions } from "@/components/Positions/NoPositions";
 import PoolPositionHeader from "@/components/Positions/PoolPositionHeader";
 import PoolPositionRow from "@/components/Positions/PoolPositionRow";
 import { useGlobalStore } from "@/stores/store";
 import { countDictList, getPoolSortedPositions } from "@/utils/organizers";
-import { useWallet } from "@solana/wallet-adapter-react";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   className?: string;
@@ -40,7 +42,7 @@ export function ExistingPositions(props: Props) {
               "flex",
               "items-center",
               "text-xs",
-              "text-zinc-500"
+              "text-zinc-500",
             )}
           >
             {/* We cannot use a real grid layout here since we have nested grids.
@@ -53,7 +55,7 @@ export function ExistingPositions(props: Props) {
             <PoolPositionRow
               className={twMerge(
                 "border-zinc-700",
-                index < positions.length - 1 && "border-b"
+                index < positions.length - 1 && "border-b",
               )}
               position={position}
               key={index}

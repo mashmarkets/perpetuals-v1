@@ -1,13 +1,14 @@
-import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
-import { PoolAccount } from "@/lib/PoolAccount";
-import { getTokenIcon, getTokenLabel } from "@/lib/Token";
-import { getCurrentWeight } from "@/lib/classGetters";
-import { useGlobalStore } from "@/stores/store";
-import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
-import { formatNumberCommas } from "@/utils/formatters";
 import NewTab from "@carbon/icons-react/lib/NewTab";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
+
+import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
+import { getCurrentWeight } from "@/lib/classGetters";
+import { PoolAccount } from "@/lib/PoolAccount";
+import { getTokenIcon, getTokenLabel } from "@/lib/Token";
+import { useGlobalStore } from "@/stores/store";
+import { formatNumberCommas } from "@/utils/formatters";
+import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 
 interface Props {
   className?: string;
@@ -22,7 +23,7 @@ export default function PoolTokenStats(props: Props) {
     return <LoadingSpinner className="absolute text-4xl" />;
   } else {
     return (
-      <div className="w-full ">
+      <div className="w-full">
         <div className="bg-zinc-900 p-8">
           <table className={twMerge("table-auto", "text-white", "w-full")}>
             <thead className={twMerge("text-xs", "text-zinc-500", "p-10")}>
@@ -77,7 +78,7 @@ export default function PoolTokenStats(props: Props) {
                     <td>{formatNumberCommas(custody.getAmount())}</td>
                     <td>
                       {formatNumberCommas(
-                        getCurrentWeight(props.pool, custody, stats)
+                        getCurrentWeight(props.pool, custody, stats),
                       )}
                       % /{" "}
                       {Number(pool?.getRatioStruct(custody.address)!.target) /

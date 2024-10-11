@@ -1,11 +1,12 @@
-import { PoolAccount } from "@/lib/PoolAccount";
-import { getTokenAddress, TokenE } from "@/lib/Token";
 import { getAssociatedTokenAddress, Mint } from "@solana/spl-token";
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
+import { PoolAccount } from "@/lib/PoolAccount";
+import { getTokenAddress, TokenE } from "@/lib/Token";
+
 export async function checkIfAccountExists(
   account: PublicKey,
-  connection: Connection
+  connection: Connection,
 ): Promise<boolean> {
   let bal = await connection.getBalance(account);
   if (bal > 0) {
@@ -18,12 +19,12 @@ export async function checkIfAccountExists(
 export async function fetchTokenBalance(
   payToken: TokenE,
   publicKey: PublicKey,
-  connection: Connection
+  connection: Connection,
 ): Promise<number> {
   console.log("fetching user token", payToken);
   let tokenATA = await getAssociatedTokenAddress(
     new PublicKey(getTokenAddress(payToken)),
-    publicKey
+    publicKey,
   );
   let balance = 0;
 
@@ -44,7 +45,7 @@ export async function fetchTokenBalance(
 export async function fetchLPBalance(
   address: PublicKey,
   publicKey: PublicKey,
-  connection: Connection
+  connection: Connection,
 ): Promise<number> {
   let lpTokenAccount = await getAssociatedTokenAddress(address, publicKey);
   if (!(await checkIfAccountExists(lpTokenAccount, connection))) {
@@ -58,7 +59,7 @@ export async function fetchLPBalance(
 export function getLiquidityBalance(
   pool: PoolAccount,
   userLpBalance: number,
-  stats: Record<string, any>
+  stats: Record<string, any>,
 ): number {
   let lpSupply = Number(pool.lpData.supply) / 10 ** pool.lpData.decimals;
   let userLiquidity = (userLpBalance! / lpSupply) * pool.getLiquidities(stats)!;
@@ -72,7 +73,7 @@ export function getLiquidityBalance(
 
 export function getLiquidityShare(
   pool: PoolAccount,
-  userLpBalance: number
+  userLpBalance: number,
 ): number {
   let lpSupply = Number(pool.lpData.supply) / 10 ** pool.lpData.decimals;
 

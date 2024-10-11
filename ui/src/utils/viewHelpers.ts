@@ -1,3 +1,13 @@
+import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
+import { decode } from "@coral-xyz/anchor/dist/cjs/utils/bytes/base64";
+import {
+  Connection,
+  PublicKey,
+  RpcResponseAndContext,
+  SimulatedTransactionResponse,
+  Transaction,
+} from "@solana/web3.js";
+
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { PositionAccount } from "@/lib/PositionAccount";
@@ -10,15 +20,6 @@ import {
   PERPETUALS_PROGRAM_ID,
 } from "@/utils/constants";
 import { IdlCoder } from "@/utils/IdlCoder";
-import { AnchorProvider, BN, Program } from "@coral-xyz/anchor";
-import { decode } from "@coral-xyz/anchor/dist/cjs/utils/bytes/base64";
-import {
-  Connection,
-  PublicKey,
-  RpcResponseAndContext,
-  SimulatedTransactionResponse,
-  Transaction,
-} from "@solana/web3.js";
 
 export type PositionSide = "long" | "short";
 
@@ -64,7 +65,7 @@ export class ViewHelper {
 
   // may need to add blockhash and also probably use VersionedTransactions
   simulateTransaction = async (
-    transaction: Transaction
+    transaction: Transaction,
   ): Promise<RpcResponseAndContext<SimulatedTransactionResponse>> => {
     transaction.feePayer = DEFAULT_PERPS_USER.publicKey;
     return this.connection.simulateTransaction(transaction);
@@ -72,13 +73,13 @@ export class ViewHelper {
 
   decodeLogs<T>(
     data: RpcResponseAndContext<SimulatedTransactionResponse>,
-    instructionNumber: number
+    instructionNumber: number,
   ): T {
     const returnPrefix = `Program return: ${PERPETUALS_PROGRAM_ID} `;
     // console.log("Data:", data);
     if (data.value.logs && data.value.err === null) {
       let returnLog = data.value.logs.find((l: any) =>
-        l.startsWith(returnPrefix)
+        l.startsWith(returnPrefix),
       );
       if (!returnLog) {
         throw new Error("View expected return log");
@@ -92,7 +93,7 @@ export class ViewHelper {
       }
       const coder = IdlCoder.fieldLayout(
         { type: returnType },
-        Array.from([...(IDL.accounts ?? []), ...(IDL.types ?? [])])
+        Array.from([...(IDL.accounts ?? []), ...(IDL.types ?? [])]),
       );
       // console.log("coder.decode(returnData); ::: ", coder.decode(returnData));
       return coder.decode(returnData);
@@ -117,7 +118,7 @@ export class ViewHelper {
     const result = await this.simulateTransaction(transaction);
     // console.log("result in aum fetch", result);
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getAssetsUnderManagement"
+      (f) => f.name === "getAssetsUnderManagement",
     );
     return this.decodeLogs(result, index);
   };
@@ -127,7 +128,7 @@ export class ViewHelper {
     positionAmount: number,
     side: Side,
     pool: PoolAccount,
-    custody: CustodyAccount
+    custody: CustodyAccount,
   ): Promise<PriceAndFee> => {
     let program = new Program(IDL, PERPETUALS_PROGRAM_ID, this.provider);
 
@@ -155,7 +156,7 @@ export class ViewHelper {
     const result = await this.simulateTransaction(transaction);
     console.log("got entry result", result);
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getEntryPriceAndFee"
+      (f) => f.name === "getEntryPriceAndFee",
     );
     const res: any = this.decodeLogs(result, index);
     console.log("res in entry price and fee", res);
@@ -185,7 +186,7 @@ export class ViewHelper {
 
     const result = await this.simulateTransaction(transaction);
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getExitPriceAndFee"
+      (f) => f.name === "getExitPriceAndFee",
     );
     const res: any = this.decodeLogs(result, index);
 
@@ -199,7 +200,7 @@ export class ViewHelper {
     position: PositionAccount,
     custody?: CustodyAccount,
     addCollat?: number,
-    removeCollat?: number
+    removeCollat?: number,
   ): Promise<BN> => {
     let program = new Program(IDL, PERPETUALS_PROGRAM_ID, this.provider);
 
@@ -219,7 +220,7 @@ export class ViewHelper {
     console.log(
       "final params",
       Number(params["addCollateral"]),
-      Number(params["removeCollateral"])
+      Number(params["removeCollateral"]),
     );
     const transaction = await program.methods
       // @ts-ignore
@@ -238,7 +239,7 @@ export class ViewHelper {
     const result = await this.simulateTransaction(transaction);
 
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getLiquidationPrice"
+      (f) => f.name === "getLiquidationPrice",
     );
     console.log("results in liquidation price", result);
     console.log("decode logs", Number(this.decodeLogs(result, index)));
@@ -263,7 +264,7 @@ export class ViewHelper {
 
     const result = await this.simulateTransaction(transaction);
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getLiquidationState"
+      (f) => f.name === "getLiquidationState",
     );
     return this.decodeLogs(result, index);
   };
@@ -296,7 +297,7 @@ export class ViewHelper {
     amtIn: number,
     pool: PoolAccount,
     receivingCustody: CustodyAccount,
-    dispensingCustody: CustodyAccount
+    dispensingCustody: CustodyAccount,
   ): Promise<SwapAmountAndFees> => {
     let program = new Program(IDL, PERPETUALS_PROGRAM_ID, this.provider);
     let amountIn = new BN(amtIn * 10 ** receivingCustody.decimals);
@@ -320,7 +321,7 @@ export class ViewHelper {
     const result = await this.simulateTransaction(transaction);
     // console.log("result in swap  fetch", result);
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getSwapAmountAndFees"
+      (f) => f.name === "getSwapAmountAndFees",
     );
     const res: any = this.decodeLogs(result, index);
 
@@ -334,7 +335,7 @@ export class ViewHelper {
   getAddLiquidityAmountAndFees = async (
     amtIn: number,
     pool: PoolAccount,
-    custody: CustodyAccount
+    custody: CustodyAccount,
   ): Promise<AddLiquidityAmountAndFees> => {
     let program = new Program(IDL, PERPETUALS_PROGRAM_ID, this.provider);
     let amountIn = new BN(amtIn * 10 ** custody.decimals);
@@ -355,7 +356,7 @@ export class ViewHelper {
 
     // console.log("result", result);
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getAddLiquidityAmountAndFee"
+      (f) => f.name === "getAddLiquidityAmountAndFee",
     );
     const res: any = this.decodeLogs(result, index);
     return {
@@ -367,7 +368,7 @@ export class ViewHelper {
   getRemoveLiquidityAmountAndFees = async (
     lpIn: number,
     pool: PoolAccount,
-    custody: CustodyAccount
+    custody: CustodyAccount,
   ): Promise<RemoveLiquidityAmountAndFees> => {
     let program = new Program(IDL, PERPETUALS_PROGRAM_ID, this.provider);
 
@@ -388,7 +389,7 @@ export class ViewHelper {
       .transaction();
     const result = await this.simulateTransaction(transaction);
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getRemoveLiquidityAmountAndFee"
+      (f) => f.name === "getRemoveLiquidityAmountAndFee",
     );
     const res: any = this.decodeLogs(result, index);
     return {
@@ -400,7 +401,7 @@ export class ViewHelper {
   getOraclePrice = async (
     pool: PoolAccount,
     ema: boolean,
-    custody: CustodyAccount
+    custody: CustodyAccount,
   ): Promise<BN> => {
     const transaction = await this.program.methods
       .getOraclePrice({
@@ -417,7 +418,7 @@ export class ViewHelper {
     const result = await this.simulateTransaction(transaction);
     // console.log("oracle result", result);
     const index = IDL.instructions.findIndex(
-      (f) => f.name === "getOraclePrice"
+      (f) => f.name === "getOraclePrice",
     );
     return this.decodeLogs<BN>(result, index);
   };

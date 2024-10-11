@@ -4,7 +4,7 @@ import { toast } from "react-toastify";
 export const notify = (
   text: string | JSX.Element,
   type = "success",
-  hideProgressBar = false
+  hideProgressBar = false,
 ) =>
   toast[type](text, {
     position: "bottom-left",

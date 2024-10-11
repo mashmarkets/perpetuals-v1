@@ -1,8 +1,9 @@
+import { PublicKey } from "@solana/web3.js";
+
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PositionAccount } from "@/lib/PositionAccount";
 import { Position } from "@/lib/types";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
-import { PublicKey } from "@solana/web3.js";
 
 interface Pending {
   status: "pending";
@@ -26,7 +27,7 @@ interface FetchPosition {
 export type PositionRequest = Pending | Failure | Success;
 
 export async function getPositionData(
-  custodyInfos: Record<string, CustodyAccount>
+  custodyInfos: Record<string, CustodyAccount>,
 ): Promise<PositionRequest> {
   let { perpetual_program } = await getPerpetualProgramAndProvider();
 
@@ -39,11 +40,11 @@ export async function getPositionData(
       (acc[position.publicKey.toString()] = new PositionAccount(
         position.account,
         position.publicKey,
-        custodyInfos
+        custodyInfos,
       )),
       acc
     ),
-    {}
+    {},
   );
 
   return {

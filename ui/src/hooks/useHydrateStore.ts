@@ -1,8 +1,10 @@
+import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useEffect } from "react";
+
 import { fetchAllStats } from "@/hooks/storeHelpers/fetchPrices";
 import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
 import { useGlobalStore } from "@/stores/store";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useEffect } from "react";
+
 import { getCustodyData } from "./storeHelpers/fetchCustodies";
 import { getPoolData } from "./storeHelpers/fetchPools";
 import { getPositionData } from "./storeHelpers/fetchPositions";

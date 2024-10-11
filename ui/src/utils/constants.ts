@@ -1,13 +1,14 @@
-import PerpetualsJson from "@/target/idl/perpetuals.json";
-import { IDL as PERPETUALS_IDL, Perpetuals } from "@/target/types/perpetuals";
-import { getProvider } from "@/utils/provider";
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import NodeWallet from "@coral-xyz/anchor/dist/cjs/nodewallet";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Keypair, PublicKey, Transaction } from "@solana/web3.js";
 
+import PerpetualsJson from "@/target/idl/perpetuals.json";
+import { Perpetuals, IDL as PERPETUALS_IDL } from "@/target/types/perpetuals";
+import { getProvider } from "@/utils/provider";
+
 export const PERPETUALS_PROGRAM_ID = new PublicKey(
-  PerpetualsJson["metadata"]["address"]
+  PerpetualsJson["metadata"]["address"],
 );
 
 class DefaultWallet implements Wallet {
@@ -31,7 +32,7 @@ class DefaultWallet implements Wallet {
 }
 
 export async function getPerpetualProgramAndProvider(
-  walletContextState?: WalletContextState
+  walletContextState?: WalletContextState,
 ): Promise<{
   perpetual_program: Program<Perpetuals>;
   provider: AnchorProvider;
@@ -58,7 +59,7 @@ export async function getPerpetualProgramAndProvider(
   perpetual_program = new Program(
     PERPETUALS_IDL,
     PERPETUALS_PROGRAM_ID,
-    provider
+    provider,
   );
 
   return { perpetual_program, provider };
@@ -66,12 +67,12 @@ export async function getPerpetualProgramAndProvider(
 
 export const TRANSFER_AUTHORITY = PublicKey.findProgramAddressSync(
   [Buffer.from("transfer_authority")],
-  PERPETUALS_PROGRAM_ID
+  PERPETUALS_PROGRAM_ID,
 )[0];
 
 export const PERPETUALS_ADDRESS = PublicKey.findProgramAddressSync(
   [Buffer.from("perpetuals")],
-  PERPETUALS_PROGRAM_ID
+  PERPETUALS_PROGRAM_ID,
 )[0];
 
 // default user to launch show basic pool data, etc
@@ -81,5 +82,5 @@ export const DEFAULT_PERPS_USER = Keypair.fromSecretKey(
     132, 119, 244, 40, 40, 201, 182, 195, 179, 90, 172, 51, 27, 110, 208, 61,
     23, 43, 217, 131, 209, 127, 113, 93, 139, 35, 156, 34, 16, 94, 236, 175,
     232, 174, 79, 209, 223, 86, 131, 148, 188, 126, 217, 19, 248, 236, 107,
-  ])
+  ]),
 );

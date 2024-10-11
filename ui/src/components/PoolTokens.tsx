@@ -1,6 +1,7 @@
-import { getTokenIcon, TokenE } from "@/lib/Token";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
+
+import { getTokenIcon, TokenE } from "@/lib/Token";
 
 interface Props {
   className?: string;
@@ -21,7 +22,7 @@ export function PoolTokens(props: Props) {
             "border",
             "rounded-full",
             "relative",
-            "shrink-0"
+            "shrink-0",
           ),
           style: { zIndex: 3 - i },
           key: i,

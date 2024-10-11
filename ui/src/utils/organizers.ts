@@ -1,10 +1,11 @@
+import { PublicKey } from "@solana/web3.js";
+
 import { PositionRequest } from "@/hooks/storeHelpers/fetchPositions";
 import { PositionAccount } from "@/lib/PositionAccount";
-import { PublicKey } from "@solana/web3.js";
 
 export function getPoolSortedPositions(
   positionData: PositionRequest,
-  user?: PublicKey
+  user?: PublicKey,
 ) {
   let sortedPositions: Record<string, PositionAccount[]> = {};
 
@@ -32,7 +33,7 @@ export function getPoolSortedPositions(
 
 export function getUserPositionTokens(
   positionData: PositionRequest,
-  user: PublicKey
+  user: PublicKey,
 ): Record<string, number> {
   let positionTokens: Record<string, number> = {};
 

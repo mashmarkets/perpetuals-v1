@@ -11,8 +11,8 @@ import { PositionAccount } from "@/lib/PositionAccount";
 import { getTokenIcon, getTokenLabel } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
-import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 import { formatNumberCommas } from "@/utils/formatters";
+import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 
 interface Props {
   className?: string;
@@ -37,7 +37,7 @@ export default function PositionBasicInfo(props: Props) {
             "grid",
             "items-center",
             "overflow-hidden",
-            "pl-3"
+            "pl-3",
           )}
         >
           {cloneElement(tokenIcon, {
@@ -45,7 +45,7 @@ export default function PositionBasicInfo(props: Props) {
               tokenIcon.props.className,
               "flex-shrink-0",
               "h-8",
-              "w-8"
+              "w-8",
             ),
           })}
           <div className="pr-2">
@@ -68,7 +68,7 @@ export default function PositionBasicInfo(props: Props) {
             "space-x-1",
             props.position.side === Side.Long
               ? "text-emerald-400"
-              : "text-rose-400"
+              : "text-rose-400",
           )}
         >
           {props.position.side === Side.Long ? (
@@ -99,7 +99,7 @@ export default function PositionBasicInfo(props: Props) {
                   "h-4",
                   "transition-colors",
                   "w-4",
-                  "group-hover:fill-white"
+                  "group-hover:fill-white",
                 )}
               />
             </button>
@@ -142,7 +142,7 @@ export default function PositionBasicInfo(props: Props) {
                 "transition-all",
                 "w-6",
                 "hover:bg-zinc-700",
-                props.expanded && "-rotate-180"
+                props.expanded && "-rotate-180",
               )}
               onClick={() => props.onClickExpand?.()}
             >

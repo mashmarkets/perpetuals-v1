@@ -1,9 +1,10 @@
+import { twMerge } from "tailwind-merge";
+
 import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { useGlobalStore } from "@/stores/store";
 import { formatNumberCommas } from "@/utils/formatters";
 import { getLiquidityBalance, getLiquidityShare } from "@/utils/retrieveData";
-import { twMerge } from "tailwind-merge";
 
 interface Props {
   pool: PoolAccount;
@@ -25,7 +26,7 @@ export default function PoolGeneralStats(props: Props) {
           "grid-cols-4",
           "gap-x-4",
           "gap-y-8",
-          props.className
+          props.className,
         )}
       >
         {[
@@ -60,8 +61,8 @@ export default function PoolGeneralStats(props: Props) {
               getLiquidityBalance(
                 props.pool,
                 userData.getUserLpBalance(props.pool.address.toString()),
-                stats
-              )
+                stats,
+              ),
             )}`,
           },
           {
@@ -70,9 +71,9 @@ export default function PoolGeneralStats(props: Props) {
               Number(
                 getLiquidityShare(
                   props.pool,
-                  userData.getUserLpBalance(props.pool.address.toString())
-                )
-              )
+                  userData.getUserLpBalance(props.pool.address.toString()),
+                ),
+              ),
             )}%`,
           },
         ].map(({ label, value }, i) => (

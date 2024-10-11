@@ -1,10 +1,11 @@
+import { getMint } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
+
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { Pool } from "@/lib/types";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
 import { ViewHelper } from "@/utils/viewHelpers";
-import { getMint } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
 
 interface FetchPool {
   account: Pool;
@@ -12,7 +13,7 @@ interface FetchPool {
 }
 
 export async function getPoolData(
-  custodyInfos: Record<string, CustodyAccount>
+  custodyInfos: Record<string, CustodyAccount>,
 ): Promise<Record<string, PoolAccount>> {
   let { perpetual_program, provider } = await getPerpetualProgramAndProvider();
 
@@ -26,7 +27,7 @@ export async function getPoolData(
       .map(async (pool: FetchPool) => {
         let lpTokenMint = PublicKey.findProgramAddressSync(
           [Buffer.from("lp_token_mint"), pool.publicKey.toBuffer()],
-          perpetual_program.programId
+          perpetual_program.programId,
         )[0];
 
         const lpData = await getMint(provider.connection, lpTokenMint);
@@ -49,7 +50,7 @@ export async function getPoolData(
           poolData,
           custodyInfos,
           pool.publicKey,
-          lpData
+          lpData,
         );
         let fetchedAum;
 
@@ -58,14 +59,14 @@ export async function getPoolData(
         while (loopStatus) {
           try {
             fetchedAum = await View.getAssetsUnderManagement(
-              poolObjs[pool.publicKey.toString()]
+              poolObjs[pool.publicKey.toString()],
             );
             loopStatus = false;
           } catch (error) {}
         }
 
         poolObjs[pool.publicKey.toString()].setAum(fetchedAum);
-      })
+      }),
   );
 
   return poolObjs;

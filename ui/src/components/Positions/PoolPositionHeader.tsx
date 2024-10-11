@@ -22,7 +22,7 @@ export default function PoolPositionHeader(props: Props) {
   return (
     <>
       <PositionColumn num={1}>
-        <div className="flex max-w-fit items-center rounded-t bg-zinc-800 py-1.5 px-2">
+        <div className="flex max-w-fit items-center rounded-t bg-zinc-800 px-2 py-1.5">
           <PoolTokens tokens={tokens} />
           <div className="ml-1 text-sm font-medium text-white">
             {poolData[props.positions[0].pool.toString()]?.name}

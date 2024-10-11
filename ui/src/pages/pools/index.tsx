@@ -1,12 +1,14 @@
 "use client";
-import { twMerge } from "tailwind-merge";
+
 import { useRouter } from "next/router";
-import { TableHeader } from "@/components/Molecules/PoolHeaders/TableHeader";
-import { formatNumberCommas } from "@/utils/formatters";
-import { useGlobalStore } from "@/stores/store";
-import { getLiquidityBalance, getLiquidityShare } from "@/utils/retrieveData";
+import { twMerge } from "tailwind-merge";
+
 import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
+import { TableHeader } from "@/components/Molecules/PoolHeaders/TableHeader";
 import { NoPositions } from "@/components/Positions/NoPositions";
+import { useGlobalStore } from "@/stores/store";
+import { formatNumberCommas } from "@/utils/formatters";
+import { getLiquidityBalance, getLiquidityShare } from "@/utils/retrieveData";
 
 export default function Pools() {
   const poolData = useGlobalStore((state) => state.poolData);
@@ -24,16 +26,16 @@ export default function Pools() {
 
   return (
     <div className="px-16 py-6">
-      <div className="flex items-baseline space-x-3 pb-8 ">
+      <div className="flex items-baseline space-x-3 pb-8">
         <h1 className="m-0 text-4xl text-white">Liquidity Pools</h1>
         <div className="flex flex-row space-x-2 text-sm">
-          <p className="text-zinc-500 ">TVL</p>
+          <p className="text-zinc-500">TVL</p>
           <p className="text-white">
             $
             {formatNumberCommas(
               Object.values(poolData).reduce((acc, pool) => {
                 return acc + Number(pool.getLiquidities(stats));
-              }, 0)
+              }, 0),
             )}
           </p>
         </div>
@@ -49,7 +51,7 @@ export default function Pools() {
               "text-zinc-500",
               "border-b",
               "border-zinc-700",
-              "pb-2"
+              "pb-2",
             )}
           >
             <tr className="">
@@ -70,7 +72,7 @@ export default function Pools() {
                 key={poolName}
                 onClick={() => router.push(`/pools/${poolName}`)}
               >
-                <td className="py-4 px-2">
+                <td className="px-2 py-4">
                   <TableHeader
                     pool={pool}
                     iconClassName="w-6 h-6"
@@ -85,7 +87,7 @@ export default function Pools() {
                 {getLiquidityBalance(
                   pool,
                   userData.getUserLpBalance(pool.address.toString()),
-                  stats
+                  stats,
                 ) > 0 ? (
                   <td>
                     $
@@ -93,8 +95,8 @@ export default function Pools() {
                       getLiquidityBalance(
                         pool,
                         userData.getUserLpBalance(pool.address.toString()),
-                        stats
-                      )
+                        stats,
+                      ),
                     )}
                   </td>
                 ) : (
@@ -102,14 +104,14 @@ export default function Pools() {
                 )}
                 {getLiquidityShare(
                   pool,
-                  userData.getUserLpBalance(pool.address.toString())
+                  userData.getUserLpBalance(pool.address.toString()),
                 ) > 0 ? (
                   <td>
                     {formatNumberCommas(
                       getLiquidityShare(
                         pool,
-                        userData.getUserLpBalance(pool.address.toString())
-                      )
+                        userData.getUserLpBalance(pool.address.toString()),
+                      ),
                     )}
                     %
                   </td>

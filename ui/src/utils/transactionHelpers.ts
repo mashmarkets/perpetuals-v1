@@ -1,4 +1,3 @@
-import { checkIfAccountExists } from "@/utils/retrieveData";
 import {
   createAssociatedTokenAccountInstruction,
   createCloseAccountInstruction,
@@ -15,15 +14,17 @@ import {
   TransactionInstruction,
 } from "@solana/web3.js";
 
+import { checkIfAccountExists } from "@/utils/retrieveData";
+
 export async function createAtaIfNeeded(
   publicKey: PublicKey,
   payer: PublicKey,
   mint: PublicKey,
-  connection: Connection
+  connection: Connection,
 ): Promise<TransactionInstruction | null> {
   const associatedTokenAccount = await getAssociatedTokenAddress(
     mint,
-    publicKey
+    publicKey,
   );
 
   console.log("creating ata", associatedTokenAccount.toString());
@@ -33,7 +34,7 @@ export async function createAtaIfNeeded(
       payer,
       associatedTokenAccount,
       publicKey,
-      mint
+      mint,
     );
   }
 
@@ -44,14 +45,14 @@ export async function wrapSolIfNeeded(
   publicKey: PublicKey,
   payer: PublicKey,
   connection: Connection,
-  payAmount: number
+  payAmount: number,
 ): Promise<TransactionInstruction[] | null> {
   console.log("in wrap sol if needed");
   let preInstructions: TransactionInstruction[] = [];
 
   const associatedTokenAccount = await getAssociatedTokenAddress(
     NATIVE_MINT,
-    publicKey
+    publicKey,
   );
 
   const balance =
@@ -65,10 +66,10 @@ export async function wrapSolIfNeeded(
         fromPubkey: publicKey,
         toPubkey: associatedTokenAccount,
         lamports: Math.floor((payAmount - balance) * LAMPORTS_PER_SOL * 3),
-      })
+      }),
     );
     preInstructions.push(
-      createSyncNativeInstruction(associatedTokenAccount, TOKEN_PROGRAM_ID)
+      createSyncNativeInstruction(associatedTokenAccount, TOKEN_PROGRAM_ID),
     );
   }
 
@@ -78,14 +79,14 @@ export async function wrapSolIfNeeded(
 export async function unwrapSolIfNeeded(
   publicKey: PublicKey,
   payer: PublicKey,
-  connection: Connection
+  connection: Connection,
 ): Promise<TransactionInstruction[] | null> {
   console.log("in unwrap sol if needed");
   let preInstructions: TransactionInstruction[] = [];
 
   const associatedTokenAccount = await getAssociatedTokenAddress(
     NATIVE_MINT,
-    publicKey
+    publicKey,
   );
 
   // const balance =
@@ -97,8 +98,8 @@ export async function unwrapSolIfNeeded(
       createCloseAccountInstruction(
         associatedTokenAccount,
         publicKey,
-        publicKey
-      )
+        publicKey,
+      ),
     );
   }
 
