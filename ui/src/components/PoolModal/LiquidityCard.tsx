@@ -179,15 +179,11 @@ export default function LiquidityCard(props: Props) {
           </SidebarTab>
         </div>
 
-        {
-          Object.values(props.pool.custodies).map((custody) => {
-            return (
-              <AirdropButton
-                key={custody.address.toString()}
-                custody={custody}
-              />
-            );
-          })}
+        {Object.values(props.pool.custodies).map((custody) => {
+          return (
+            <AirdropButton key={custody.address.toString()} custody={custody} />
+          );
+        })}
 
         <div>
           <div className="flex items-center justify-between">

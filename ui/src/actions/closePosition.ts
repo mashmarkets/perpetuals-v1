@@ -16,10 +16,7 @@ import {
   automaticSendTransaction,
   manualSendTransaction,
 } from "@/utils/TransactionHandlers";
-import {
-  createAtaIfNeeded,
-  unwrapSolIfNeeded,
-} from "@/utils/transactionHelpers";
+import { createAtaIfNeeded, unwrapSol } from "@/utils/transactionHelpers";
 
 export async function closePosition(
   walletContextState: WalletContextState,
@@ -56,7 +53,7 @@ export async function closePosition(
   if (ataIx) preInstructions.push(ataIx);
 
   let postInstructions: TransactionInstruction[] = [];
-  let unwrapTx = await unwrapSolIfNeeded(publicKey, publicKey, connection);
+  let unwrapTx = await unwrapSol(publicKey, publicKey, connection);
   if (unwrapTx) postInstructions.push(...unwrapTx);
 
   let methodBuilder = await perpetual_program.methods

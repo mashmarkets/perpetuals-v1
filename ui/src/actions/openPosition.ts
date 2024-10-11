@@ -24,8 +24,8 @@ import {
 } from "@/utils/TransactionHandlers";
 import {
   createAtaIfNeeded,
-  unwrapSolIfNeeded,
-  wrapSolIfNeeded,
+  unwrapSol,
+  wrapSol,
 } from "@/utils/transactionHelpers";
 import { ViewHelper } from "@/utils/viewHelpers";
 
@@ -159,7 +159,7 @@ export async function openPositionBuilder(
 
     // if (ataIx) preInstructions.push(ataIx);
 
-    let wrapInstructions = await wrapSolIfNeeded(
+    let wrapInstructions = await wrapSol(
       publicKey,
       publicKey,
       connection,
@@ -171,7 +171,7 @@ export async function openPositionBuilder(
   }
 
   let postInstructions: TransactionInstruction[] = [];
-  let unwrapTx = await unwrapSolIfNeeded(publicKey, publicKey, connection);
+  let unwrapTx = await unwrapSol(publicKey, publicKey, connection);
   if (unwrapTx) postInstructions.push(...unwrapTx);
 
   const params: any = {

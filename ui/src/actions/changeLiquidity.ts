@@ -22,8 +22,8 @@ import {
 } from "@/utils/TransactionHandlers";
 import {
   createAtaIfNeeded,
-  unwrapSolIfNeeded,
-  wrapSolIfNeeded,
+  unwrapSol,
+  wrapSol,
 } from "@/utils/transactionHelpers";
 
 export async function changeLiquidity(
@@ -70,7 +70,7 @@ export async function changeLiquidity(
 
     if (ataIx) preInstructions.push(ataIx);
 
-    let wrapInstructions = await wrapSolIfNeeded(
+    let wrapInstructions = await wrapSol(
       publicKey,
       publicKey,
       connection,
@@ -82,7 +82,7 @@ export async function changeLiquidity(
   }
 
   let postInstructions: TransactionInstruction[] = [];
-  let unwrapTx = await unwrapSolIfNeeded(publicKey, publicKey, connection);
+  let unwrapTx = await unwrapSol(publicKey, publicKey, connection);
   if (unwrapTx) postInstructions.push(...unwrapTx);
 
   let methodBuilder;
@@ -98,7 +98,10 @@ export async function changeLiquidity(
     } else {
       amountIn = new BN(tokenAmount * 10 ** custody.decimals);
     }
-    console.log("min lp out", Number(minLpAmountOut));
+    console.log("Adding Liquidity with Params: ", {
+      amountIn: amountIn.toString(),
+      minLpAmountOut: minLpAmountOut.toString(),
+    });
     methodBuilder = await perpetual_program.methods
       .addLiquidity({ amountIn, minLpAmountOut })
       .accounts({

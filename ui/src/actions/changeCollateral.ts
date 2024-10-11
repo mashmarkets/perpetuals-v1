@@ -22,8 +22,8 @@ import {
 } from "@/utils/TransactionHandlers";
 import {
   createAtaIfNeeded,
-  unwrapSolIfNeeded,
-  wrapSolIfNeeded,
+  unwrapSol,
+  wrapSol,
 } from "@/utils/transactionHelpers";
 
 export async function changeCollateral(
@@ -51,7 +51,7 @@ export async function changeCollateral(
 
   let methodBuilder;
   let postInstructions: TransactionInstruction[] = [];
-  let unwrapTx = await unwrapSolIfNeeded(publicKey, publicKey, connection);
+  let unwrapTx = await unwrapSol(publicKey, publicKey, connection);
   if (unwrapTx) postInstructions.push(...unwrapTx);
 
   if (tab == Tab.Add) {
@@ -63,7 +63,7 @@ export async function changeCollateral(
     );
     if (ataIx) preInstructions.push(ataIx);
     if (position.collateralToken == TokenE.SOL) {
-      let wrapInstructions = await wrapSolIfNeeded(
+      let wrapInstructions = await wrapSol(
         publicKey,
         publicKey,
         connection,

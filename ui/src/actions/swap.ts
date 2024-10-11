@@ -17,8 +17,8 @@ import {
 } from "@/utils/TransactionHandlers";
 import {
   createAtaIfNeeded,
-  unwrapSolIfNeeded,
-  wrapSolIfNeeded,
+  unwrapSol,
+  wrapSol,
 } from "@/utils/transactionHelpers";
 
 export async function swapTransactionBuilder(
@@ -68,7 +68,7 @@ export async function swapTransactionBuilder(
 
     if (ataIx) preInstructions.push(ataIx);
 
-    let wrapInstructions = await wrapSolIfNeeded(
+    let wrapInstructions = await wrapSol(
       publicKey,
       publicKey,
       connection,
@@ -113,7 +113,7 @@ export async function swapTransactionBuilder(
   let amountIn = new BN(amtInNumber * 10 ** receivingCustody.decimals);
   // console.log("min amoutn out", Number(minAmountOut));
   let postInstructions: TransactionInstruction[] = [];
-  let unwrapTx = await unwrapSolIfNeeded(publicKey, publicKey, connection);
+  let unwrapTx = await unwrapSol(publicKey, publicKey, connection);
   if (unwrapTx) postInstructions.push(...unwrapTx);
 
   const params: any = {

@@ -27,9 +27,7 @@ export async function createAtaIfNeeded(
     publicKey,
   );
 
-  console.log("creating ata", associatedTokenAccount.toString());
   if (!(await checkIfAccountExists(associatedTokenAccount, connection))) {
-    console.log("ata doesn't exist");
     return createAssociatedTokenAccountInstruction(
       payer,
       associatedTokenAccount,
@@ -41,69 +39,37 @@ export async function createAtaIfNeeded(
   return null;
 }
 
-export async function wrapSolIfNeeded(
+export async function wrapSol(
   publicKey: PublicKey,
   payer: PublicKey,
   connection: Connection,
   payAmount: number,
 ): Promise<TransactionInstruction[] | null> {
-  console.log("in wrap sol if needed");
-  let preInstructions: TransactionInstruction[] = [];
-
   const associatedTokenAccount = await getAssociatedTokenAddress(
     NATIVE_MINT,
     publicKey,
   );
 
-  const balance =
-    (await connection.getBalance(associatedTokenAccount)) / LAMPORTS_PER_SOL;
-
-  if (balance < payAmount) {
-    console.log("balance insufficient");
-
-    preInstructions.push(
-      SystemProgram.transfer({
-        fromPubkey: publicKey,
-        toPubkey: associatedTokenAccount,
-        lamports: Math.floor((payAmount - balance) * LAMPORTS_PER_SOL * 3),
-      }),
-    );
-    preInstructions.push(
-      createSyncNativeInstruction(associatedTokenAccount, TOKEN_PROGRAM_ID),
-    );
-  }
-
-  return preInstructions.length > 0 ? preInstructions : null;
+  return [
+    SystemProgram.transfer({
+      fromPubkey: publicKey,
+      toPubkey: associatedTokenAccount,
+      lamports: Math.floor(payAmount * LAMPORTS_PER_SOL),
+    }),
+    createSyncNativeInstruction(associatedTokenAccount, TOKEN_PROGRAM_ID),
+  ];
 }
 
-export async function unwrapSolIfNeeded(
+export async function unwrapSol(
   publicKey: PublicKey,
   payer: PublicKey,
   connection: Connection,
 ): Promise<TransactionInstruction[] | null> {
-  console.log("in unwrap sol if needed");
-  let preInstructions: TransactionInstruction[] = [];
-
   const associatedTokenAccount = await getAssociatedTokenAddress(
     NATIVE_MINT,
     publicKey,
   );
-
-  // const balance =
-  //   (await connection.getBalance(associatedTokenAccount)) / LAMPORTS_PER_SOL;
-  const balance = 1;
-
-  if (balance > 0) {
-    preInstructions.push(
-      createCloseAccountInstruction(
-        associatedTokenAccount,
-        publicKey,
-        publicKey,
-      ),
-    );
-  }
-
-  console.log("unwrap sol ix", preInstructions);
-
-  return preInstructions.length > 0 ? preInstructions : null;
+  return [
+    createCloseAccountInstruction(associatedTokenAccount, publicKey, publicKey),
+  ];
 }
