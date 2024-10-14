@@ -7,7 +7,6 @@ import {
   SystemProgram,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { swapTransactionBuilder } from "src/actions/swap";
 
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
@@ -18,10 +17,7 @@ import {
   PERPETUALS_ADDRESS,
   TRANSFER_AUTHORITY,
 } from "@/utils/constants";
-import {
-  automaticSendTransaction,
-  manualSendTransaction,
-} from "@/utils/TransactionHandlers";
+import { manualSendTransaction } from "@/utils/TransactionHandlers";
 import {
   createAtaIfNeeded,
   unwrapSol,
@@ -29,19 +25,31 @@ import {
 } from "@/utils/transactionHelpers";
 import { ViewHelper } from "@/utils/viewHelpers";
 
-export async function openPositionBuilder(
-  walletContextState: WalletContextState,
-  connection: Connection,
-  pool: PoolAccount,
-  payCustody: CustodyAccount,
-  collateralCustody: CustodyAccount,
-  positionCustody: CustodyAccount,
-  payAmount: number,
-  positionAmount: number,
-  price: number,
-  side: Side,
-  leverage: number,
-) {
+export async function openPositionBuilder({
+  walletContextState,
+  connection,
+  pool,
+  payCustody,
+  collateralCustody,
+  positionCustody,
+  payAmount,
+  positionAmount,
+  price,
+  side,
+  leverage,
+}: {
+  walletContextState: WalletContextState;
+  connection: Connection;
+  pool: PoolAccount;
+  payCustody: CustodyAccount;
+  collateralCustody: CustodyAccount;
+  positionCustody: CustodyAccount;
+  payAmount: number;
+  positionAmount: number;
+  price: number;
+  side: Side;
+  leverage: number;
+}) {
   // console.log("in open position");
   let { perpetual_program, provider } =
     await getPerpetualProgramAndProvider(walletContextState);
@@ -73,72 +81,6 @@ export async function openPositionBuilder(
   let preInstructions: TransactionInstruction[] = [];
   let finalPayAmount = payAmount;
   // let finalPayAmount = positionAmount / leverage;
-
-  if (payCustody.mint.toString() != collateralCustody.mint.toString()) {
-    console.log("first swapping in open pos");
-    const View = new ViewHelper(connection, provider);
-    let swapInfo = await View.getSwapAmountAndFees(
-      payAmount,
-      pool!,
-      payCustody,
-      collateralCustody,
-    );
-
-    let swapAmountOut =
-      Number(swapInfo.amountOut) / 10 ** collateralCustody.decimals;
-
-    let swapFee = Number(swapInfo.feeOut) / 10 ** collateralCustody.decimals;
-
-    let recAmt = swapAmountOut - swapFee;
-    finalPayAmount = recAmt;
-
-    console.log("rec amt in swap builder", recAmt, swapAmountOut, swapFee);
-
-    let getEntryPrice = await View.getEntryPriceAndFee(
-      recAmt,
-      positionAmount,
-      side,
-      pool!,
-      collateralCustody!,
-    );
-
-    let entryFee = Number(getEntryPrice.fee) / 10 ** collateralCustody.decimals;
-
-    console.log("entry fee in swap builder", entryFee);
-
-    let swapInfo2 = await View.getSwapAmountAndFees(
-      payAmount + entryFee + swapFee,
-      pool!,
-      payCustody,
-      collateralCustody,
-    );
-
-    let swapAmountOut2 =
-      Number(swapInfo2.amountOut) / 10 ** collateralCustody.decimals -
-      Number(swapInfo2.feeOut) / 10 ** collateralCustody.decimals -
-      entryFee;
-
-    let extraSwap = 0;
-
-    if (swapAmountOut2 < finalPayAmount) {
-      let difference = (finalPayAmount - swapAmountOut2) / swapAmountOut2;
-      extraSwap = difference * (payAmount + entryFee + swapFee);
-    }
-
-    let { methodBuilder: swapBuilder, preInstructions: swapPreInstructions } =
-      await swapTransactionBuilder(
-        walletContextState,
-        connection,
-        pool,
-        payCustody.getTokenE(),
-        collateralCustody.getTokenE(),
-        payAmount + entryFee + swapFee + extraSwap,
-        recAmt,
-      );
-
-    let ix = await swapBuilder.instruction();
-    preInstructions.push(...swapPreInstructions, ix);
-  }
 
   let ataIx = await createAtaIfNeeded(
     publicKey,
@@ -224,18 +166,29 @@ export async function openPositionBuilder(
   }
 }
 
-export async function openPosition(
-  walletContextState: WalletContextState,
-  connection: Connection,
-  pool: PoolAccount,
-  payToken: TokenE,
-  positionToken: TokenE,
-  payAmount: number,
-  positionAmount: number,
-  price: number,
-  side: Side,
-  leverage: number,
-) {
+export async function openPosition({
+  walletContextState,
+  connection,
+  pool,
+  payToken,
+  positionToken,
+  payAmount,
+  positionAmount,
+  price,
+  side,
+  leverage,
+}: {
+  walletContextState: WalletContextState;
+  connection: Connection;
+  pool: PoolAccount;
+  payToken: TokenE;
+  positionToken: TokenE;
+  payAmount: number;
+  positionAmount: number;
+  price: number;
+  side: Side;
+  leverage: number;
+}) {
   console.log({ payToken, positionToken, payAmount, positionAmount });
   let payCustody = pool.getCustodyAccount(payToken)!;
   let positionCustody = pool.getCustodyAccount(positionToken)!;
@@ -244,7 +197,7 @@ export async function openPosition(
 
   let collateralCustody = pool.getCustodyAccount(collateralToken)!;
 
-  await openPositionBuilder(
+  await openPositionBuilder({
     walletContextState,
     connection,
     pool,
@@ -256,5 +209,5 @@ export async function openPosition(
     price,
     side,
     leverage,
-  );
+  });
 }

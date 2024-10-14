@@ -34,12 +34,6 @@ export interface ProfitAndLoss {
   loss: BN;
 }
 
-export interface SwapAmountAndFees {
-  amountOut: BN;
-  feeIn: BN;
-  feeOut: BN;
-}
-
 export interface AddLiquidityAmountAndFees {
   amount: BN;
   fee: BN;
@@ -290,45 +284,6 @@ export class ViewHelper {
     return {
       profit: res.profit,
       loss: res.loss,
-    };
-  };
-
-  getSwapAmountAndFees = async (
-    amtIn: number,
-    pool: PoolAccount,
-    receivingCustody: CustodyAccount,
-    dispensingCustody: CustodyAccount,
-  ): Promise<SwapAmountAndFees> => {
-    let program = new Program(IDL, PERPETUALS_PROGRAM_ID, this.provider);
-    let amountIn = new BN(amtIn * 10 ** receivingCustody.decimals);
-
-    // console.log("amount in", Number(amountIn));
-    let transaction = await program.methods
-      // @ts-ignore
-      .getSwapAmountAndFees({
-        amountIn,
-      })
-      .accounts({
-        perpetuals: PERPETUALS_ADDRESS,
-        pool: pool.address,
-        receivingCustody: receivingCustody.address,
-        receivingCustodyOracleAccount: receivingCustody.oracle.oracleAccount,
-        dispensingCustody: dispensingCustody.address,
-        dispensingCustodyOracleAccount: dispensingCustody.oracle.oracleAccount,
-      })
-      .transaction();
-
-    const result = await this.simulateTransaction(transaction);
-    // console.log("result in swap  fetch", result);
-    const index = IDL.instructions.findIndex(
-      (f) => f.name === "getSwapAmountAndFees",
-    );
-    const res: any = this.decodeLogs(result, index);
-
-    return {
-      amountOut: res.amountOut,
-      feeIn: res.feeIn,
-      feeOut: res.feeOut,
     };
   };
 

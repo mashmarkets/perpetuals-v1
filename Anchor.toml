@@ -2,10 +2,10 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-perpetuals = "GGkf4PUjpgYodf4JfMnMhjKzS5knMtsdqZnEzXUuw1t7"
+perpetuals = "3imnxzymKGjYChfh7VsCMPB9TWpXuaM9QCnDBnQiF7AC"
 
 [programs.localnet]
-perpetuals = "GGkf4PUjpgYodf4JfMnMhjKzS5knMtsdqZnEzXUuw1t7"
+perpetuals = "3imnxzymKGjYChfh7VsCMPB9TWpXuaM9QCnDBnQiF7AC"
 
 [registry]
 url = "https://api.apr.dev"

@@ -57,7 +57,6 @@ pub struct Init<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize, Copy, Clone)]
 pub struct InitParams {
     pub min_signatures: u8,
-    pub allow_swap: bool,
     pub allow_add_liquidity: bool,
     pub allow_remove_liquidity: bool,
     pub allow_open_position: bool,
@@ -88,7 +87,6 @@ pub fn init(ctx: Context<Init>, params: &InitParams) -> Result<()> {
     // record perpetuals
     let perpetuals = ctx.accounts.perpetuals.as_mut();
 
-    perpetuals.permissions.allow_swap = params.allow_swap;
     perpetuals.permissions.allow_add_liquidity = params.allow_add_liquidity;
     perpetuals.permissions.allow_remove_liquidity = params.allow_remove_liquidity;
     perpetuals.permissions.allow_open_position = params.allow_open_position;

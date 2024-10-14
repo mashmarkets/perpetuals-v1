@@ -41,7 +41,6 @@ export const addCustodySchema = z.object({
     useUnrealizedPnlInAum: z.boolean(),
     tradeSpreadLong: z.string().transform(transformToBN(4 - 2)),
     tradeSpreadShort: z.string().transform(transformToBN(4 - 2)),
-    swapSpread: z.string().transform(transformToBN(4 - 2)),
     minInitialLeverage: z.string().transform(transformToBN(4)),
     maxInitialLeverage: z.string().transform(transformToBN(4)),
     maxLeverage: z.string().transform(transformToBN(4)),
@@ -51,7 +50,6 @@ export const addCustodySchema = z.object({
     maxTotalLockedUsd: z.string().transform(transformToBN(6)),
   }),
   permissions: z.object({
-    allowSwap: z.boolean(),
     allowAddLiquidity: z.boolean(),
     allowRemoveLiquidity: z.boolean(),
     allowOpenPosition: z.boolean(),
@@ -69,10 +67,6 @@ export const addCustodySchema = z.object({
       ),
     ratioMult: z.string().transform(transformToBN(4 - 2)),
     utilizationMult: z.string().transform(transformToBN(4 - 2)),
-    swapIn: z.string().transform(transformToBN(4 - 2)),
-    swapOut: z.string().transform(transformToBN(4 - 2)),
-    stableSwapIn: z.string().transform(transformToBN(4 - 2)),
-    stableSwapOut: z.string().transform(transformToBN(4 - 2)),
     addLiquidity: z.string().transform(transformToBN(4 - 2)),
     removeLiquidity: z.string().transform(transformToBN(4 - 2)),
     openPosition: z.string().transform(transformToBN(4 - 2)),
@@ -174,7 +168,6 @@ const AddCustodyForm = ({
       useUnrealizedPnlInAum: true,
       tradeSpreadLong: "1.00",
       tradeSpreadShort: "1.00",
-      swapSpread: "2.00",
       minInitialLeverage: "1.0000",
       maxInitialLeverage: "100.0000",
       maxLeverage: "100.0000",
@@ -184,7 +177,6 @@ const AddCustodyForm = ({
       maxTotalLockedUsd: "0",
     },
     permissions: {
-      allowSwap: true,
       allowAddLiquidity: true,
       allowRemoveLiquidity: true,
       allowOpenPosition: true,
@@ -197,10 +189,6 @@ const AddCustodyForm = ({
       mode: "linear",
       ratioMult: "200.00",
       utilizationMult: "200.00",
-      swapIn: "1.00",
-      swapOut: "1.00",
-      stableSwapIn: "1.00",
-      stableSwapOut: "1.00",
       addLiquidity: "1.00",
       removeLiquidity: "1.00",
       openPosition: "1.00",
@@ -418,20 +406,6 @@ const AddCustodyForm = ({
             id="tradeSpreadShort"
             type="number"
             {...register("pricingConfig.tradeSpreadShort")}
-            className="w-full rounded border p-2"
-            required
-            step="0.01"
-            min="0"
-          />
-        </div>
-        <div>
-          <label htmlFor="swapSpread" className="mb-1 block text-white">
-            Swap Spread (%):
-          </label>
-          <input
-            id="swapSpread"
-            type="number"
-            {...register("pricingConfig.swapSpread")}
             className="w-full rounded border p-2"
             required
             step="0.01"

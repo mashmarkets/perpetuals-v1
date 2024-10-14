@@ -23,13 +23,6 @@ pub struct NewPositionPricesAndFee {
 }
 
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
-pub struct SwapAmountAndFees {
-    pub amount_out: u64,
-    pub fee_in: u64,
-    pub fee_out: u64,
-}
-
-#[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
 pub struct ProfitAndLoss {
     pub profit: u64,
     pub loss: u64,
@@ -37,7 +30,6 @@ pub struct ProfitAndLoss {
 
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
 pub struct Permissions {
-    pub allow_swap: bool,
     pub allow_add_liquidity: bool,
     pub allow_remove_liquidity: bool,
     pub allow_open_position: bool,

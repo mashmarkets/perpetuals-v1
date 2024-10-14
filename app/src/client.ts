@@ -4,8 +4,8 @@ import {
   AnchorProvider,
   workspace,
   utils,
-  BN,
 } from "@coral-xyz/anchor";
+import { BN } from "bn.js";
 import { Perpetuals } from "../../target/types/perpetuals";
 import {
   PublicKey,
@@ -37,7 +37,6 @@ import {
   NewPositionPricesAndFee,
   PriceAndFee,
   ProfitAndLoss,
-  SwapAmountAndFees,
   Custody,
 } from "./types";
 import { token } from "@coral-xyz/anchor/dist/cjs/utils";
@@ -953,37 +952,6 @@ export class PerpetualsClient {
         collateralCustodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
           collateralMint
-        ),
-      })
-      .view()
-      .catch((err) => {
-        console.error(err);
-        throw err;
-      });
-  };
-
-  getSwapAmountAndFees = async (
-    poolName: string,
-    tokenMintIn: PublicKey,
-    tokenMintOut: PublicKey,
-    amountIn: BN
-  ): Promise<SwapAmountAndFees> => {
-    return this.program.methods
-      .getSwapAmountAndFees({
-        amountIn,
-      })
-      .accounts({
-        perpetuals: this.perpetuals.publicKey,
-        pool: this.getPoolKey(poolName),
-        receivingCustody: this.getCustodyKey(poolName, tokenMintIn),
-        receivingCustodyOracleAccount: await this.getCustodyOracleAccountKey(
-          poolName,
-          tokenMintIn
-        ),
-        dispensingCustody: this.getCustodyKey(poolName, tokenMintOut),
-        dispensingCustodyOracleAccount: await this.getCustodyOracleAccountKey(
-          poolName,
-          tokenMintOut
         ),
       })
       .view()

@@ -344,7 +344,6 @@ export class TestClient {
       await this.program.methods
         .init({
           minSignatures: 2,
-          allowSwap: true,
           allowAddLiquidity: true,
           allowRemoveLiquidity: true,
           allowOpenPosition: true,
@@ -808,46 +807,6 @@ export class TestClient {
     }
   };
 
-  swap = async (
-    amountIn: BN,
-    minAmountOut: BN,
-    user,
-    fundingAccount: PublicKey,
-    receivingAccount: PublicKey,
-    custodyIn,
-    custodyOut
-  ) => {
-    try {
-      await this.program.methods
-        .swap({
-          amountIn,
-          minAmountOut,
-        })
-        .accounts({
-          owner: user.wallet.publicKey,
-          fundingAccount: fundingAccount,
-          receivingAccount,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          receivingCustody: custodyIn.custody,
-          receivingCustodyOracleAccount: custodyIn.oracleAccount,
-          receivingCustodyTokenAccount: custodyIn.tokenAccount,
-          dispensingCustody: custodyOut.custody,
-          dispensingCustodyOracleAccount: custodyOut.oracleAccount,
-          dispensingCustodyTokenAccount: custodyOut.tokenAccount,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .signers([user.wallet])
-        .rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
-  };
-
   addLiquidity = async (
     amountIn: BN,
     minLpAmountOut: BN,
@@ -1169,29 +1128,6 @@ export class TestClient {
           custodyOracleAccount: custody.oracleAccount,
           collateralCustody: custody.custody,
           collateralCustodyOracleAccount: custody.oracleAccount,
-        })
-        .view();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
-  };
-
-  getSwapAmountAndFees = async (amountIn: number, custodyIn, custodyOut) => {
-    try {
-      return await this.program.methods
-        .getSwapAmountAndFees({
-          amountIn: new BN(amountIn),
-        })
-        .accounts({
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          receivingCustody: custodyIn.custody,
-          receivingCustodyOracleAccount: custodyIn.oracleAccount,
-          dispensingCustody: custodyOut.custody,
-          dispensingCustodyOracleAccount: custodyOut.oracleAccount,
         })
         .view();
     } catch (err) {

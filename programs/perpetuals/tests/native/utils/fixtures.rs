@@ -14,7 +14,6 @@ use {
 
 pub fn permissions_full() -> Permissions {
     Permissions {
-        allow_swap: true,
         allow_add_liquidity: true,
         allow_remove_liquidity: true,
         allow_open_position: true,
@@ -39,10 +38,6 @@ pub fn fees_linear_regular() -> Fees {
         mode: FeesMode::Linear,
         ratio_mult: 20_000,
         utilization_mult: 20_000,
-        swap_in: 100,
-        swap_out: 100,
-        stable_swap_in: 100,
-        stable_swap_out: 100,
         add_liquidity: 200,
         remove_liquidity: 300,
         open_position: 100,
@@ -60,7 +55,6 @@ pub fn pricing_params_regular(use_ema: bool) -> PricingParams {
         use_unrealized_pnl_in_aum: true,
         trade_spread_long: 100,
         trade_spread_short: 100,
-        swap_spread: 300,
         min_initial_leverage: 10_000,
         max_initial_leverage: 100_000,
         max_leverage: 100_000,
@@ -84,7 +78,6 @@ pub fn oracle_params_regular(oracle_account: Pubkey) -> OracleParams {
 pub fn init_params_permissions_full(min_signatures: u8) -> InitParams {
     InitParams {
         min_signatures,
-        allow_swap: true,
         allow_add_liquidity: true,
         allow_remove_liquidity: true,
         allow_open_position: true,

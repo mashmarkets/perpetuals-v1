@@ -27,7 +27,6 @@ function init(adminSigners: PublicKey[], minSignatures: number): Promise<void> {
   // to be loaded from config file
   const perpetualsConfig: InitParams = {
     minSignatures: minSignatures,
-    allowSwap: true,
     allowAddLiquidity: true,
     allowRemoveLiquidity: true,
     allowOpenPosition: true,
@@ -95,7 +94,6 @@ async function addCustody(
     useUnrealizedPnlInAum: true,
     tradeSpreadLong: new BN(100), // 1%
     tradeSpreadShort: new BN(100), // 1%
-    swapSpread: new BN(200), // 2%
     minInitialLeverage: new BN(10_000), // 1x
     maxInitialLeverage: new BN(1_000_000), // 100x
     maxLeverage: new BN(1_000_000), // 100x
@@ -105,7 +103,6 @@ async function addCustody(
     maxTotalLockedUsd: new BN(0), // No limit
   };
   const permissions: Permissions = {
-    allowSwap: true,
     allowAddLiquidity: true,
     allowRemoveLiquidity: true,
     allowOpenPosition: true,
@@ -129,10 +126,6 @@ async function addCustody(
     mode: { linear: {} }, // Fixed, Linear, Optimal
     ratioMult: new BN(20_000), // 200%
     utilizationMult: new BN(20_000), // 200%
-    swapIn: new BN(100), // 1%
-    swapOut: new BN(100), // 1%
-    stableSwapIn: new BN(100), // 1%
-    stableSwapOut: new BN(100), // 1%
     addLiquidity: new BN(100), // 1%
     removeLiquidity: new BN(100), // 1%
     openPosition: new BN(100), // 1%
@@ -404,22 +397,6 @@ async function getPnl(
       tokenMint,
       await client.getCollateralCustodyMint(wallet, poolName, tokenMint, side),
       side
-    )
-  );
-}
-
-async function getSwapAmountAndFees(
-  poolName: string,
-  tokenMintIn: PublicKey,
-  tokenMintOut: PublicKey,
-  amountIn: BN
-): Promise<void> {
-  client.prettyPrint(
-    await client.getSwapAmountAndFees(
-      poolName,
-      tokenMintIn,
-      tokenMintOut,
-      amountIn
     )
   );
 }
@@ -828,22 +805,6 @@ async function withdrawFees(
         poolName,
         new PublicKey(tokenMint),
         side
-      );
-    });
-
-  program
-    .command("get-swap-amount-and-fees")
-    .description("Compute amount out and fees for the swap")
-    .argument("<string>", "Pool name")
-    .argument("<pubkey>", "Token mint in")
-    .argument("<pubkey>", "Token mint out")
-    .requiredOption("-i, --amount-in <bigint>", "Token amount to be swapped")
-    .action(async (poolName, tokenMintIn, tokenMintOut, options) => {
-      await getSwapAmountAndFees(
-        poolName,
-        new PublicKey(tokenMintIn),
-        new PublicKey(tokenMintOut),
-        new BN(options.amountIn)
       );
     });
 

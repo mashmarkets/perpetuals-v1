@@ -6,8 +6,6 @@ pub mod utils;
 pub async fn test_integration() {
     tests_suite::basic_interactions().await;
 
-    tests_suite::swap::insuffisient_fund().await;
-
     tests_suite::liquidity::fixed_fees().await;
     tests_suite::liquidity::insuffisient_fund().await;
     tests_suite::liquidity::min_max_ratio().await;

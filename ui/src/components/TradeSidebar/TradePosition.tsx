@@ -67,7 +67,7 @@ export function TradePosition(props: Props) {
 
   async function handleTrade() {
     // console.log("in handle trade");
-    await openPosition(
+    await openPosition({
       walletContextState,
       connection,
       pool,
@@ -75,10 +75,10 @@ export function TradePosition(props: Props) {
       positionToken,
       payAmount,
       positionAmount,
-      stats[positionToken]?.currentPrice,
-      props.side,
+      price: stats[positionToken]?.currentPrice,
+      side: props.side,
       leverage,
-    );
+    });
     const positionInfos = await getPositionData(custodyData);
     setPositionData(positionInfos);
 
@@ -100,43 +100,6 @@ export function TradePosition(props: Props) {
       setPool(Object.values(poolData)[0]);
     }
   }, [poolData]);
-
-  useEffect(() => {
-    async function getConversionRatio() {
-      if (payToken != positionToken) {
-        let { perpetual_program } =
-          await getPerpetualProgramAndProvider(walletContextState);
-
-        let payCustody = pool!.getCustodyAccount(payToken)!;
-        let positionCustody = pool!.getCustodyAccount(positionToken)!;
-
-        const View = new ViewHelper(
-          perpetual_program.provider.connection,
-          perpetual_program.provider,
-        );
-
-        let swapInfo = await View.getSwapAmountAndFees(
-          1,
-          pool!,
-          payCustody,
-          positionCustody,
-        );
-
-        let f =
-          Number(swapInfo.feeIn.add(swapInfo.feeOut)) /
-          10 ** positionCustody.decimals;
-
-        let payAmt =
-          Number(swapInfo.amountOut) / 10 ** positionCustody.decimals - f;
-        setConversionRatio(payAmt);
-      } else {
-        setConversionRatio(1);
-      }
-    }
-    if (pool && payToken && positionToken) {
-      getConversionRatio();
-    }
-  }, [pool, payToken, positionToken]);
 
   useEffect(() => {
     async function updateSelectors() {
@@ -258,7 +221,10 @@ export function TradePosition(props: Props) {
           setPayAmount(e);
           setLastChanged(Input.Pay);
         }}
-        onSelectToken={setPayToken}
+        onSelectToken={(token) => {
+          setPayToken(token);
+          setPositionToken(token);
+        }}
         tokenList={pool.getTokenList()}
         maxBalance={
           userData.tokenBalances[payToken]
@@ -278,6 +244,7 @@ export function TradePosition(props: Props) {
           setLastChanged(Input.Position);
         }}
         onSelectToken={(token) => {
+          setPayToken(token);
           setPositionToken(token);
           router.push("/trade/" + token + "-USD", undefined, { shallow: true });
         }}

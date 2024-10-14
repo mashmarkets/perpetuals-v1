@@ -66,7 +66,6 @@ pub async fn test_init(
     {
         let p = perpetuals_account.permissions;
 
-        assert_eq!(p.allow_swap, params.allow_swap);
         assert_eq!(p.allow_add_liquidity, params.allow_add_liquidity);
         assert_eq!(p.allow_remove_liquidity, params.allow_remove_liquidity);
         assert_eq!(p.allow_open_position, params.allow_open_position);

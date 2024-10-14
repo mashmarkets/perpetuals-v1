@@ -10,9 +10,7 @@ pub mod state;
 use {
     anchor_lang::prelude::*,
     instructions::*,
-    state::perpetuals::{
-        AmountAndFee, NewPositionPricesAndFee, PriceAndFee, ProfitAndLoss, SwapAmountAndFees,
-    },
+    state::perpetuals::{AmountAndFee, NewPositionPricesAndFee, PriceAndFee, ProfitAndLoss},
 };
 
 solana_security_txt::security_txt! {
@@ -24,7 +22,7 @@ solana_security_txt::security_txt! {
     auditors: "Halborn"
 }
 
-declare_id!("GGkf4PUjpgYodf4JfMnMhjKzS5knMtsdqZnEzXUuw1t7");
+declare_id!("3imnxzymKGjYChfh7VsCMPB9TWpXuaM9QCnDBnQiF7AC");
 
 #[program]
 pub mod perpetuals {
@@ -123,10 +121,6 @@ pub mod perpetuals {
 
     // public instructions
 
-    pub fn swap(ctx: Context<Swap>, params: SwapParams) -> Result<()> {
-        instructions::swap(ctx, &params)
-    }
-
     pub fn add_liquidity(ctx: Context<AddLiquidity>, params: AddLiquidityParams) -> Result<()> {
         instructions::add_liquidity(ctx, &params)
     }
@@ -216,13 +210,6 @@ pub mod perpetuals {
         params: GetOraclePriceParams,
     ) -> Result<u64> {
         instructions::get_oracle_price(ctx, &params)
-    }
-
-    pub fn get_swap_amount_and_fees(
-        ctx: Context<GetSwapAmountAndFees>,
-        params: GetSwapAmountAndFeesParams,
-    ) -> Result<SwapAmountAndFees> {
-        instructions::get_swap_amount_and_fees(ctx, &params)
     }
 
     pub fn get_assets_under_management(

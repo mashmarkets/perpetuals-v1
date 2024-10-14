@@ -35,7 +35,6 @@ describe("perpetuals", () => {
 
     perpetualsExpected = {
       permissions: {
-        allowSwap: true,
         allowAddLiquidity: true,
         allowRemoveLiquidity: true,
         allowOpenPosition: true,
@@ -94,7 +93,6 @@ describe("perpetuals", () => {
 
   it("setPermissions", async () => {
     perpetualsExpected.permissions = {
-      allowSwap: true,
       allowAddLiquidity: true,
       allowRemoveLiquidity: true,
       allowOpenPosition: true,
@@ -147,7 +145,6 @@ describe("perpetuals", () => {
       useUnrealizedPnlInAum: true,
       tradeSpreadLong: new BN(100),
       tradeSpreadShort: new BN(100),
-      swapSpread: new BN(200),
       minInitialLeverage: new BN(10000),
       maxInitialLeverage: new BN(1000000),
       maxLeverage: new BN(1000000),
@@ -157,7 +154,6 @@ describe("perpetuals", () => {
       maxTotalLockedUsd: new BN(1000000000),
     };
     permissions = {
-      allowSwap: true,
       allowAddLiquidity: true,
       allowRemoveLiquidity: true,
       allowOpenPosition: true,
@@ -170,10 +166,6 @@ describe("perpetuals", () => {
       mode: { linear: {} },
       ratioMult: new BN(20000),
       utilizationMult: new BN(20000),
-      swapIn: new BN(100),
-      swapOut: new BN(100),
-      stableSwapIn: new BN(100),
-      stableSwapOut: new BN(100),
       addLiquidity: new BN(100),
       removeLiquidity: new BN(100),
       openPosition: new BN(100),
@@ -242,7 +234,6 @@ describe("perpetuals", () => {
         useUnrealizedPnlInAum: true,
         tradeSpreadLong: "100",
         tradeSpreadShort: "100",
-        swapSpread: "200",
         minInitialLeverage: "10000",
         maxInitialLeverage: "1000000",
         maxLeverage: "1000000",
@@ -252,7 +243,6 @@ describe("perpetuals", () => {
         maxTotalLockedUsd: "1000000000",
       },
       permissions: {
-        allowSwap: true,
         allowAddLiquidity: true,
         allowRemoveLiquidity: true,
         allowOpenPosition: true,
@@ -265,10 +255,6 @@ describe("perpetuals", () => {
         mode: { linear: {} },
         ratioMult: "20000",
         utilizationMult: "20000",
-        swapIn: "100",
-        swapOut: "100",
-        stableSwapIn: "100",
-        stableSwapOut: "100",
         addLiquidity: "100",
         removeLiquidity: "100",
         openPosition: "100",
@@ -291,7 +277,6 @@ describe("perpetuals", () => {
         locked: "0",
       },
       collectedFees: {
-        swapUsd: "0",
         addLiquidityUsd: "0",
         removeLiquidityUsd: "0",
         openPositionUsd: "0",
@@ -299,7 +284,6 @@ describe("perpetuals", () => {
         liquidationUsd: "0",
       },
       volumeStats: {
-        swapUsd: "0",
         addLiquidityUsd: "0",
         removeLiquidityUsd: "0",
         openPositionUsd: "0",
@@ -537,18 +521,6 @@ describe("perpetuals", () => {
       new BN(1),
       tc.users[1],
       tc.users[1].tokenAccounts[1],
-      tc.custodies[1]
-    );
-  });
-
-  it("swap", async () => {
-    await tc.swap(
-      tc.toTokenAmount(1, tc.custodies[0].decimals),
-      new BN(1),
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.users[0].tokenAccounts[1],
-      tc.custodies[0],
       tc.custodies[1]
     );
   });

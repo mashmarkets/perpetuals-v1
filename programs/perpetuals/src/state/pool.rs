@@ -257,107 +257,6 @@ impl Pool {
         ))
     }
 
-    pub fn get_swap_price(
-        &self,
-        token_in_price: &OraclePrice,
-        token_in_ema_price: &OraclePrice,
-        token_out_price: &OraclePrice,
-        token_out_ema_price: &OraclePrice,
-        custody_in: &Custody,
-    ) -> Result<OraclePrice> {
-        let min_price = if token_in_price < token_in_ema_price {
-            token_in_price
-        } else {
-            token_in_ema_price
-        };
-
-        let max_price = if token_out_price > token_out_ema_price {
-            token_out_price
-        } else {
-            token_out_ema_price
-        };
-
-        let pair_price = min_price.checked_div(max_price)?;
-
-        self.get_price(
-            &pair_price,
-            &pair_price,
-            Side::Short,
-            custody_in.pricing.swap_spread,
-        )
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn get_swap_amount(
-        &self,
-        token_in_price: &OraclePrice,
-        token_in_ema_price: &OraclePrice,
-        token_out_price: &OraclePrice,
-        token_out_ema_price: &OraclePrice,
-        custody_in: &Custody,
-        custody_out: &Custody,
-        amount_in: u64,
-    ) -> Result<u64> {
-        let swap_price = self.get_swap_price(
-            token_in_price,
-            token_in_ema_price,
-            token_out_price,
-            token_out_ema_price,
-            custody_in,
-        )?;
-
-        math::checked_decimal_mul(
-            amount_in,
-            -(custody_in.decimals as i32),
-            swap_price.price,
-            swap_price.exponent,
-            -(custody_out.decimals as i32),
-        )
-    }
-
-    #[allow(clippy::too_many_arguments)]
-    pub fn get_swap_fees(
-        &self,
-        token_id_in: usize,
-        token_id_out: usize,
-        amount_in: u64,
-        amount_out: u64,
-        custody_in: &Custody,
-        token_price_in: &OraclePrice,
-        custody_out: &Custody,
-        token_price_out: &OraclePrice,
-    ) -> Result<(u64, u64)> {
-        let stable_swap = custody_in.is_stable && custody_out.is_stable;
-
-        let swap_in_fee = self.get_fee(
-            token_id_in,
-            if stable_swap {
-                custody_in.fees.stable_swap_in
-            } else {
-                custody_in.fees.swap_in
-            },
-            amount_in,
-            0u64,
-            custody_in,
-            token_price_in,
-        )?;
-
-        let swap_out_fee = self.get_fee(
-            token_id_out,
-            if stable_swap {
-                custody_out.fees.stable_swap_out
-            } else {
-                custody_out.fees.swap_out
-            },
-            0u64,
-            amount_out,
-            custody_out,
-            token_price_out,
-        )?;
-
-        Ok((swap_in_fee, swap_out_fee))
-    }
-
     pub fn get_add_liquidity_fee(
         &self,
         token_id: usize,
@@ -1154,7 +1053,6 @@ mod test {
             use_unrealized_pnl_in_aum: true,
             trade_spread_long: 100,
             trade_spread_short: 100,
-            swap_spread: 300,
             min_initial_leverage: 10_000,
             max_initial_leverage: 100_000,
             max_leverage: 100_000,
@@ -1165,7 +1063,6 @@ mod test {
         };
 
         let permissions = Permissions {
-            allow_swap: true,
             allow_add_liquidity: true,
             allow_remove_liquidity: true,
             allow_open_position: true,
@@ -1179,10 +1076,6 @@ mod test {
             mode: FeesMode::Linear,
             ratio_mult: 20_000,
             utilization_mult: 20_000,
-            swap_in: 100,
-            swap_out: 100,
-            stable_swap_in: 100,
-            stable_swap_out: 100,
             add_liquidity: 0,
             remove_liquidity: 0,
             open_position: 100,
@@ -1554,7 +1447,7 @@ mod test {
             scale_f64(0.2, custody.decimals),
             pool.get_fee(
                 0,
-                custody.fees.swap_in,
+                100,
                 scale(20, custody.decimals),
                 0,
                 &custody,
@@ -1578,7 +1471,7 @@ mod test {
             97_000_000,
             pool.get_fee(
                 0,
-                custody.fees.swap_in,
+                100,
                 scale(5, custody.decimals),
                 0,
                 &custody,
@@ -1592,7 +1485,7 @@ mod test {
             13_600_000,
             pool.get_fee(
                 0,
-                custody.fees.swap_in,
+                100,
                 0,
                 scale(2, custody.decimals),
                 &custody,
@@ -1606,7 +1499,7 @@ mod test {
             60_000_000,
             pool.get_fee(
                 0,
-                custody.fees.swap_in,
+                100,
                 0,
                 scale(6, custody.decimals),
                 &custody,
@@ -1623,7 +1516,7 @@ mod test {
             30_500_000,
             pool.get_fee(
                 0,
-                custody.fees.swap_in,
+                100,
                 scale(5, custody.decimals),
                 0,
                 &custody,
@@ -1637,7 +1530,7 @@ mod test {
             116_500_000,
             pool.get_fee(
                 0,
-                custody.fees.swap_in,
+                100,
                 0,
                 scale(5, custody.decimals),
                 &custody,
@@ -1651,7 +1544,7 @@ mod test {
             180_000_000,
             pool.get_fee(
                 0,
-                custody.fees.swap_in,
+                100,
                 scale(18, custody.decimals),
                 0,
                 &custody,

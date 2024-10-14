@@ -75,7 +75,6 @@ export interface Assets {
 }
 
 export interface Stats {
-  swapUsd: BN;
   addLiquidityUsd: BN;
   removeLiquidityUsd: BN;
   openPositionUsd: BN;
@@ -87,7 +86,6 @@ export interface Fees {
   mode: FeesMode;
   maxIncrease: BN;
   maxDecrease: BN;
-  swap: BN;
   addLiquidity: BN;
   removeLiquidity: BN;
   openPosition: BN;
@@ -118,7 +116,6 @@ export enum OracleType {
 }
 
 export interface Permissions {
-  allowSwap: boolean;
   allowAddLiquidity: boolean;
   allowRemoveLiquidity: boolean;
   allowOpenPosition: boolean;
@@ -132,7 +129,6 @@ export interface PricingParams {
   useEma: boolean;
   tradeSpreadLong: BN;
   tradeSpreadShort: BN;
-  swapSpread: BN;
   minInitialLeverage: BN;
   maxLeverage: BN;
   maxPayoffMult: BN;
@@ -149,7 +145,6 @@ export enum Side {
   None = "None",
   Long = "Long",
   Short = "Short",
-  Swap = "Swap",
 }
 
 export enum Tab {

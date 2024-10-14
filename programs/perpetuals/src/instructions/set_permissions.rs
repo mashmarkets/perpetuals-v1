@@ -33,7 +33,6 @@ pub struct SetPermissions<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct SetPermissionsParams {
-    pub allow_swap: bool,
     pub allow_add_liquidity: bool,
     pub allow_remove_liquidity: bool,
     pub allow_open_position: bool,
@@ -65,7 +64,6 @@ pub fn set_permissions<'info>(
 
     // update permissions
     let perpetuals = ctx.accounts.perpetuals.as_mut();
-    perpetuals.permissions.allow_swap = params.allow_swap;
     perpetuals.permissions.allow_add_liquidity = params.allow_add_liquidity;
     perpetuals.permissions.allow_remove_liquidity = params.allow_remove_liquidity;
     perpetuals.permissions.allow_open_position = params.allow_open_position;

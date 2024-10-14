@@ -20,7 +20,6 @@ export type AmountAndFee = Types["AmountAndFee"];
 export type NewPositionPricesAndFee = Types["NewPositionPricesAndFee"];
 export type PriceAndFee = Types["PriceAndFee"];
 export type ProfitAndLoss = Types["ProfitAndLoss"];
-export type SwapAmountAndFees = Types["SwapAmountAndFees"];
 
 export type Custody = Accounts["custody"];
 export type Pool = Accounts["pool"];

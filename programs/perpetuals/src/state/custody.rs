@@ -24,10 +24,6 @@ pub struct Fees {
     // fees have implied BPS_DECIMALS decimals
     pub ratio_mult: u64,
     pub utilization_mult: u64,
-    pub swap_in: u64,
-    pub swap_out: u64,
-    pub stable_swap_in: u64,
-    pub stable_swap_out: u64,
     pub add_liquidity: u64,
     pub remove_liquidity: u64,
     pub open_position: u64,
@@ -41,7 +37,6 @@ pub struct Fees {
 
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
 pub struct FeesStats {
-    pub swap_usd: u64,
     pub add_liquidity_usd: u64,
     pub remove_liquidity_usd: u64,
     pub open_position_usd: u64,
@@ -51,7 +46,6 @@ pub struct FeesStats {
 
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
 pub struct VolumeStats {
-    pub swap_usd: u64,
     pub add_liquidity_usd: u64,
     pub remove_liquidity_usd: u64,
     pub open_position_usd: u64,
@@ -88,7 +82,6 @@ pub struct PricingParams {
     // pricing params have implied BPS_DECIMALS decimals (except ended with _usd)
     pub trade_spread_long: u64,
     pub trade_spread_short: u64,
-    pub swap_spread: u64,
     pub min_initial_leverage: u64,
     pub max_initial_leverage: u64,
     pub max_leverage: u64,
@@ -168,7 +161,6 @@ pub struct DeprecatedPricingParams {
     // pricing params have implied BPS_DECIMALS decimals
     pub trade_spread_long: u64,
     pub trade_spread_short: u64,
-    pub swap_spread: u64,
     pub min_initial_leverage: u64,
     pub max_leverage: u64,
     // max_user_profit = position_size * max_payoff_mult
@@ -212,11 +204,7 @@ impl Default for FeesMode {
 
 impl Fees {
     pub fn validate(&self) -> bool {
-        self.swap_in as u128 <= Perpetuals::BPS_POWER
-            && self.swap_out as u128 <= Perpetuals::BPS_POWER
-            && self.stable_swap_in as u128 <= Perpetuals::BPS_POWER
-            && self.stable_swap_out as u128 <= Perpetuals::BPS_POWER
-            && self.add_liquidity as u128 <= Perpetuals::BPS_POWER
+        self.add_liquidity as u128 <= Perpetuals::BPS_POWER
             && self.remove_liquidity as u128 <= Perpetuals::BPS_POWER
             && self.open_position as u128 <= Perpetuals::BPS_POWER
             && self.close_position as u128 <= Perpetuals::BPS_POWER
@@ -240,7 +228,6 @@ impl PricingParams {
             && self.max_initial_leverage <= self.max_leverage
             && (self.trade_spread_long as u128) < Perpetuals::BPS_POWER
             && (self.trade_spread_short as u128) < Perpetuals::BPS_POWER
-            && (self.swap_spread as u128) < Perpetuals::BPS_POWER
             && (self.max_utilization as u128) <= Perpetuals::BPS_POWER
             && self.max_position_locked_usd <= self.max_total_locked_usd
     }
