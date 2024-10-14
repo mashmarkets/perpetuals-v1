@@ -4,7 +4,7 @@ import * as Dropdown from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Atoms/LoadingSpinner";
 import { PoolTokens } from "@/components/PoolTokens";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { useGlobalStore } from "@/stores/store";

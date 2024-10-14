@@ -1,12 +1,56 @@
 import ChartCandlestickIcon from "@carbon/icons-react/lib/ChartCandlestick";
-import CircleDash from "@carbon/icons-react/lib/CircleDash";
 import StoragePoolIcon from "@carbon/icons-react/lib/StoragePool";
 import UserAdmin from "@carbon/icons-react/lib/UserAdmin";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { useRouter } from "next/router";
+import React, { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { NavbarLink } from "./NavbarLink";
+function NavbarLink(
+  props: {
+    href: string;
+    icon: JSX.Element;
+  } & React.AnchorHTMLAttributes<HTMLAnchorElement>,
+) {
+  const router = useRouter();
+
+  const currentPath = router.pathname;
+  const selected = currentPath.startsWith(props.href);
+
+  return (
+    <Link
+      href={props.href}
+      className={twMerge(
+        "font-medium",
+        "flex",
+        "h-full",
+        "items-center",
+        "px-5",
+        "text-sm",
+        "text-gray-500",
+        "transition-colors",
+        "active:text-gray-200",
+        "hover:text-white",
+        selected && "text-white",
+        selected && "border-b",
+        selected && "border-purple-500",
+      )}
+    >
+      <div className="hidden md:block">{props.children}</div>
+      {cloneElement(props.icon, {
+        className: twMerge(
+          props.icon.props.className,
+          "block",
+          "fill-current",
+          "h-4",
+          "w-4",
+          "md:hidden",
+        ),
+      })}
+    </Link>
+  );
+}
 
 const WalletMultiButtonDynamic = dynamic(
   async () =>
@@ -32,8 +76,7 @@ export const Navbar = () => {
       )}
     >
       <Link className="hidden items-center space-x-2 md:flex" href="/">
-        <CircleDash className="h-7 w-7 fill-white/80" />
-        <div className="text-white">APP NAME</div>
+        <div className="text-white">Mash Markets</div>
       </Link>
       <div className="flex h-full items-center space-x-2">
         <NavbarLink href="/trade" icon={<ChartCandlestickIcon />}>

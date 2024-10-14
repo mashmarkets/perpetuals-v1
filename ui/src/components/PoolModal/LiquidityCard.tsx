@@ -39,8 +39,6 @@ export default function LiquidityCard(props: Props) {
   const [payToken, setPayToken] = useState(props.pool.getTokenList()[0]);
   const [fee, setFee] = useState<number>(0);
 
-  const stats = useGlobalStore((state) => state.priceStats);
-
   const setPoolData = useGlobalStore((state) => state.setPoolData);
   const setCustodyData = useGlobalStore((state) => state.setCustodyData);
 

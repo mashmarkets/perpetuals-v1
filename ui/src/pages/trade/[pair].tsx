@@ -3,7 +3,6 @@
 import { useRouter } from "next/router";
 
 import { CandlestickChart } from "@/components/Chart/CandlestickChart";
-import { TradeLayout } from "@/components/Layouts/TradeLayout";
 import { Positions } from "@/components/Positions";
 import { TradeSidebar } from "@/components/TradeSidebar";
 import { asToken } from "@/lib/Token";
@@ -40,14 +39,12 @@ export default function Page() {
   }
 
   return (
-    <TradeLayout className="pt-11">
-      <div>
-        <TradeSidebar />
-      </div>
+    <div className="mx-auto w-full max-w-[1550px] flex-row-reverse px-4 pt-11 lg:grid lg:grid-cols-[900px,1fr] lg:gap-x-16 lg:px-16">
       <div>
         <CandlestickChart comparisonCurrency={currency} token={token} />
         <Positions className="mt-8" />
       </div>
-    </TradeLayout>
+      <TradeSidebar />
+    </div>
   );
 }

@@ -1,7 +1,7 @@
 import { forwardRef, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Atoms/LoadingSpinner";
 
 interface Props extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   pending?: boolean;

@@ -2,7 +2,7 @@ import NewTab from "@carbon/icons-react/lib/NewTab";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Atoms/LoadingSpinner";
 import { getCurrentWeight } from "@/lib/classGetters";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";

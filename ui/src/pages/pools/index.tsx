@@ -3,7 +3,7 @@
 import { useRouter } from "next/router";
 import { twMerge } from "tailwind-merge";
 
-import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Atoms/LoadingSpinner";
 import { TableHeader } from "@/components/Molecules/PoolHeaders/TableHeader";
 import { NoPositions } from "@/components/Positions/NoPositions";
 import { useGlobalStore } from "@/stores/store";

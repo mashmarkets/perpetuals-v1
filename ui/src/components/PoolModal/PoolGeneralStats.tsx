@@ -1,6 +1,6 @@
 import { twMerge } from "tailwind-merge";
 
-import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
+import { LoadingSpinner } from "@/components/Atoms/LoadingSpinner";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { useGlobalStore } from "@/stores/store";
 import { formatNumberCommas } from "@/utils/formatters";

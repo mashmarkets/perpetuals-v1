@@ -2,10 +2,9 @@ import { BN } from "@coral-xyz/anchor";
 import { Mint } from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 
-import { PriceStats } from "@/hooks/storeHelpers/fetchPrices";
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { TokenE } from "@/lib/Token";
-import { AccountMeta, Pool, TokenRatios } from "@/lib/types";
+import { AccountMeta, Pool, PriceStats, TokenRatios } from "@/lib/types";
 import { PERPETUALS_PROGRAM_ID } from "@/utils/constants";
 
 export class PoolAccount {
