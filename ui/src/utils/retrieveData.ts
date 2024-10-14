@@ -2,7 +2,7 @@ import { getAssociatedTokenAddress, Mint } from "@solana/spl-token";
 import { Connection, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 
 import { PoolAccount } from "@/lib/PoolAccount";
-import { getTokenAddress, TokenE } from "@/lib/Token";
+import { getTokenPublicKey, TokenE } from "@/lib/Token";
 
 export async function checkIfAccountExists(
   account: PublicKey,
@@ -23,7 +23,7 @@ export async function fetchTokenBalance(
 ): Promise<number> {
   console.log("fetching user token", payToken);
   let tokenATA = await getAssociatedTokenAddress(
-    new PublicKey(getTokenAddress(payToken)),
+    getTokenPublicKey(payToken),
     publicKey,
   );
   let balance = 0;

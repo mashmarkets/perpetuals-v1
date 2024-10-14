@@ -1,7 +1,7 @@
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { getTokenIcon, TokenE } from "@/lib/Token";
+import { getTokenIcon, getTokenPublicKey, TokenE } from "@/lib/Token";
 
 interface Props {
   className?: string;
@@ -12,7 +12,7 @@ export function PoolTokens(props: Props) {
   return (
     <div className="flex items-center -space-x-6">
       {props.tokens.slice(0, 3).map((token, i) => {
-        const tokenIcon = getTokenIcon(token);
+        const tokenIcon = getTokenIcon(getTokenPublicKey(token));
 
         return cloneElement(tokenIcon, {
           className: twMerge(

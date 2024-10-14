@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 
 import { MaxButton } from "@/components/Atoms/MaxButton";
 import { TokenSelectorList } from "@/components/TokenSelectorList";
-import { getTokenIcon, TokenE } from "@/lib/Token";
+import { getTokenIcon, getTokenPublicKey, TokenE } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
 
 function formatNumber(num: number) {
@@ -70,7 +70,7 @@ export function TokenSelector(props: Props) {
             className="group flex items-center"
             onClick={() => setSelectorOpen(true)}
           >
-            {cloneElement(getTokenIcon(props.token), {
+            {cloneElement(getTokenIcon(getTokenPublicKey(props.token)), {
               className: "h-6 rounded-full w-6",
             })}
             <div className="ml-1 mr-2 text-xl text-white">{props.token}</div>

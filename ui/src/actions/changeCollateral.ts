@@ -9,7 +9,6 @@ import { Connection, TransactionInstruction } from "@solana/web3.js";
 
 import { PoolAccount } from "@/lib/PoolAccount";
 import { PositionAccount } from "@/lib/PositionAccount";
-import { TokenE } from "@/lib/Token";
 import { Tab } from "@/lib/types";
 import {
   getPerpetualProgramAndProvider,
@@ -62,7 +61,7 @@ export async function changeCollateral(
       connection,
     );
     if (ataIx) preInstructions.push(ataIx);
-    if (position.collateralToken == TokenE.SOL) {
+    if (position.collateralCustodyMint.toString() == NATIVE_MINT.toString()) {
       let wrapInstructions = await wrapSol(
         publicKey,
         publicKey,
@@ -132,7 +131,7 @@ export async function changeCollateral(
   if (preInstructions)
     methodBuilder = methodBuilder.preInstructions(preInstructions);
 
-  if (position.collateralToken == TokenE.SOL)
+  if (position.collateralCustodyMint.toString() == NATIVE_MINT.toString())
     methodBuilder = methodBuilder.postInstructions(postInstructions);
 
   try {

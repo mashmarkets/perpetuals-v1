@@ -74,7 +74,7 @@ export async function openPositionBuilder(
   let finalPayAmount = payAmount;
   // let finalPayAmount = positionAmount / leverage;
 
-  if (payCustody.getTokenE() != collateralCustody.getTokenE()) {
+  if (payCustody.mint.toString() != collateralCustody.mint.toString()) {
     console.log("first swapping in open pos");
     const View = new ViewHelper(connection, provider);
     let swapInfo = await View.getSwapAmountAndFees(

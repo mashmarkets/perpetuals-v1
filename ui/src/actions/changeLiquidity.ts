@@ -1,5 +1,9 @@
 import { BN } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddress,
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import {
   Connection,
@@ -9,7 +13,6 @@ import {
 
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
-import { TokenE } from "@/lib/Token";
 import { Tab } from "@/lib/types";
 import {
   getPerpetualProgramAndProvider,
@@ -60,7 +63,7 @@ export async function changeLiquidity(
 
   if (ataIx) preInstructions.push(ataIx);
 
-  if (custody.getTokenE() == TokenE.SOL) {
+  if (custody.mint.toString() == NATIVE_MINT.toString()) {
     let ataIx = await createAtaIfNeeded(
       publicKey,
       publicKey,
@@ -93,7 +96,7 @@ export async function changeLiquidity(
     let minLpAmountOut = new BN(
       liquidityAmount * 10 ** pool.lpData.decimals * 0.8,
     );
-    if (custody.getTokenE() === TokenE.SOL) {
+    if (custody.mint.toString() === NATIVE_MINT.toString()) {
       amountIn = new BN(tokenAmount * LAMPORTS_PER_SOL);
     } else {
       amountIn = new BN(tokenAmount * 10 ** custody.decimals);
@@ -124,7 +127,7 @@ export async function changeLiquidity(
     console.log("in liq remove");
     let lpAmountIn = new BN(liquidityAmount * 10 ** pool.lpData.decimals);
     let minAmountOut;
-    if (custody.getTokenE() === TokenE.SOL) {
+    if (custody.mint.toString() === NATIVE_MINT.toString()) {
       minAmountOut = new BN(tokenAmount * LAMPORTS_PER_SOL * 0.9);
     } else {
       minAmountOut = new BN(tokenAmount * 10 ** custody.decimals * 0.9);
@@ -151,7 +154,7 @@ export async function changeLiquidity(
   if (preInstructions)
     methodBuilder = methodBuilder.preInstructions(preInstructions);
 
-  if (custody.getTokenE() == TokenE.SOL) {
+  if (custody.mint.toString() == NATIVE_MINT.toString()) {
     methodBuilder = methodBuilder.postInstructions(postInstructions);
   }
 

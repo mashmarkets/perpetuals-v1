@@ -1,4 +1,4 @@
-import { getTokenId, TOKEN_LIST } from "@/lib/Token";
+import { getCoingeckoId, getTokenPublicKey, TOKEN_LIST } from "@/lib/Token";
 import { PriceStats } from "@/lib/types";
 
 type FetchedData = {
@@ -11,8 +11,8 @@ type FetchedData = {
 
 export function fetchAllStats(): PriceStats {
   let stats = fetch(
-    `https://api.coingecko.com/api/v3/simple/price?ids=${TOKEN_LIST.map(
-      getTokenId,
+    `https://api.coingecko.com/api/v3/simple/price?ids=${TOKEN_LIST.map((x) =>
+      getCoingeckoId(getTokenPublicKey(x)),
     ).join(
       ",",
     )}&vs_currencies=USD&include_24hr_vol=true&include_24hr_change=true`,
@@ -20,7 +20,7 @@ export function fetchAllStats(): PriceStats {
     .then((resp) => resp.json())
     .then((data: FetchedData) => {
       const allStats = TOKEN_LIST.reduce((acc, token) => {
-        const tokenData = data[getTokenId(token)];
+        const tokenData = data[getCoingeckoId(getTokenPublicKey(token))!];
 
         acc[token] = {
           change24hr: tokenData!.usd_24h_change,

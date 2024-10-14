@@ -1,21 +1,21 @@
 import { BN } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddress,
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection, TransactionInstruction } from "@solana/web3.js";
 
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { PositionAccount } from "@/lib/PositionAccount";
-import { TokenE } from "@/lib/Token";
 import {
   getPerpetualProgramAndProvider,
   PERPETUALS_ADDRESS,
   TRANSFER_AUTHORITY,
 } from "@/utils/constants";
-import {
-  automaticSendTransaction,
-  manualSendTransaction,
-} from "@/utils/TransactionHandlers";
+import { manualSendTransaction } from "@/utils/TransactionHandlers";
 import { createAtaIfNeeded, unwrapSol } from "@/utils/transactionHelpers";
 
 export async function closePosition(
@@ -78,7 +78,7 @@ export async function closePosition(
     })
     .preInstructions(preInstructions);
 
-  if (position.collateralToken == TokenE.SOL)
+  if (position.collateralCustodyMint.toString() == NATIVE_MINT.toString())
     methodBuilder = methodBuilder.postInstructions(postInstructions);
 
   try {

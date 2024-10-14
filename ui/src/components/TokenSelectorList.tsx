@@ -2,7 +2,13 @@ import CloseIcon from "@carbon/icons-react/lib/Close";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { getTokenIcon, getTokenLabel, TOKEN_LIST, TokenE } from "@/lib/Token";
+import {
+  getTokenIcon,
+  getTokenLabel,
+  getTokenPublicKey,
+  TOKEN_LIST,
+  TokenE,
+} from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
 
 function formatNumber(num: number) {
@@ -40,7 +46,7 @@ export function TokenSelectorList(props: Props) {
         </header>
         <div className="mt-6">
           {(props.tokenList ? props.tokenList : TOKEN_LIST).map((token) => {
-            const icon = getTokenIcon(token);
+            const icon = getTokenIcon(getTokenPublicKey(token));
 
             return (
               <button
@@ -67,7 +73,7 @@ export function TokenSelectorList(props: Props) {
                 <div className="text-left">
                   <div className="font-semibold text-white">{token}</div>
                   <div className="text-sm text-zinc-500">
-                    {getTokenLabel(token)}
+                    {getTokenLabel(getTokenPublicKey(token))}
                   </div>
                 </div>
                 {!!stats[token]?.currentPrice && (

@@ -1,7 +1,7 @@
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { getTokenIcon, TokenE } from "@/lib/Token";
+import { getTokenIcon, getTokenPublicKey, TokenE } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import {
   formatFees,
@@ -24,7 +24,7 @@ interface Props {
 }
 
 export function TradeDetails(props: Props) {
-  const icon = getTokenIcon(props.positionToken);
+  const icon = getTokenIcon(getTokenPublicKey(props.positionToken));
 
   return (
     <div className={props.className}>

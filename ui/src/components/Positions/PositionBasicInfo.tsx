@@ -8,7 +8,7 @@ import { twMerge } from "tailwind-merge";
 import { CollateralModal } from "@/components/Positions/CollateralModal";
 import { PositionColumn } from "@/components/Positions/PositionColumn";
 import { PositionAccount } from "@/lib/PositionAccount";
-import { getTokenIcon, getTokenLabel } from "@/lib/Token";
+import { getTokenIcon, getTokenLabel, getTokenPublicKey } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
 import { formatNumberCommas } from "@/utils/formatters";
@@ -24,7 +24,8 @@ interface Props {
 }
 
 export default function PositionBasicInfo(props: Props) {
-  const tokenIcon = getTokenIcon(props.position.token);
+  const token = getTokenPublicKey(props.position.token);
+  const tokenIcon = getTokenIcon(token);
   const stats = useGlobalStore((state) => state.priceStats);
 
   return (
@@ -51,7 +52,7 @@ export default function PositionBasicInfo(props: Props) {
           <div className="pr-2">
             <div className="font-bold text-white">{props.position.token}</div>
             <div className="mt-0.5 truncate text-sm font-medium text-zinc-500">
-              {getTokenLabel(props.position.token)}
+              {getTokenLabel(token)}
             </div>
           </div>
         </div>

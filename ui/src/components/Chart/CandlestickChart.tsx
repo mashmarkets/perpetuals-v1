@@ -2,7 +2,7 @@ import dynamic from "next/dynamic";
 
 import { ChartCurrency } from "@/components/Chart/ChartCurrency";
 import { DailyStats } from "@/components/Chart/DailyStats";
-import { getSymbol, TokenE } from "@/lib/Token";
+import { getTradingViewSymbol, TokenE } from "@/lib/Token";
 
 // @ts-ignore
 const TradingViewWidget = dynamic<any>(
@@ -31,12 +31,12 @@ export function CandlestickChart(props: Props) {
       <div className="h-[350px] md:h-[500px]">
         <TradingViewWidget
           autosize
-          symbol={getSymbol(props.token)}
+          symbol={getTradingViewSymbol(props.token)}
           theme="Dark"
         />
         <div className="items-center text-center">
           <a
-            href={`https://www.tradingview.com/symbols/${getSymbol(
+            href={`https://www.tradingview.com/symbols/${getTradingViewSymbol(
               props.token,
             )}/?exchange=COINBASE`}
             className="text-xs text-white underline"

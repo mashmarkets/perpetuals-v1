@@ -1,6 +1,10 @@
 import { BN } from "@coral-xyz/anchor";
 import { MethodsBuilder } from "@coral-xyz/anchor/dist/cjs/program/namespace/methods";
-import { getAssociatedTokenAddress, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  getAssociatedTokenAddress,
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import { WalletContextState } from "@solana/wallet-adapter-react";
 import { Connection, TransactionInstruction } from "@solana/web3.js";
 
@@ -57,7 +61,7 @@ export async function swapTransactionBuilder(
 
   let preInstructions: TransactionInstruction[] = [];
 
-  if (receivingCustody.getTokenE() == TokenE.SOL) {
+  if (receivingCustody.mint.toString() == NATIVE_MINT.toString()) {
     console.log("sending sol", receivingCustody.getTokenE());
     let ataIx = await createAtaIfNeeded(
       publicKey,
@@ -158,8 +162,8 @@ export async function swapTransactionBuilder(
     methodBuilder = methodBuilder.preInstructions(preInstructions);
   }
   if (
-    dispensingCustody.getTokenE() == TokenE.SOL ||
-    receivingCustody.getTokenE() == TokenE.SOL
+    dispensingCustody.mint.toString() == NATIVE_MINT.toString() ||
+    receivingCustody.mint.toString() == NATIVE_MINT.toString()
   ) {
     methodBuilder = methodBuilder.postInstructions(postInstructions);
   }

@@ -5,7 +5,7 @@ import { twMerge } from "tailwind-merge";
 import { LoadingSpinner } from "@/components/Icons/LoadingSpinner";
 import { getCurrentWeight } from "@/lib/classGetters";
 import { PoolAccount } from "@/lib/PoolAccount";
-import { getTokenIcon, getTokenLabel } from "@/lib/Token";
+import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
 import { formatNumberCommas } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
@@ -52,13 +52,15 @@ export default function PoolTokenStats(props: Props) {
                   >
                     <td className="py-4">
                       <div className="flex flex-row items-center space-x-1">
-                        {cloneElement(getTokenIcon(custody.getTokenE()!), {
+                        {cloneElement(getTokenIcon(custody.mint), {
                           className: "h-10 w-10",
                         })}
                         <div className="flex flex-col">
-                          <p className="font-medium">{custody.getTokenE()!}</p>
+                          <p className="font-medium">
+                            {getTokenSymbol(custody.mint)}
+                          </p>
                           <p className={twMerge("text-xs", "text-zinc-500")}>
-                            {getTokenLabel(custody.getTokenE()!)}
+                            {getTokenLabel(custody.mint)}
                           </p>
                         </div>
                         <a

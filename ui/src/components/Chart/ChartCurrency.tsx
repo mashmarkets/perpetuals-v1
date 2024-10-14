@@ -3,18 +3,24 @@ import { useRouter } from "next/router";
 import { cloneElement, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { getTokenIcon, getTokenLabel, TOKEN_LIST, TokenE } from "@/lib/Token";
+import {
+  getTokenIcon,
+  getTokenLabel,
+  getTokenPublicKey,
+  TOKEN_LIST,
+  TokenE,
+} from "@/lib/Token";
 
 import { TokenSelectorList } from "../TokenSelectorList";
 
 interface Props {
   className?: string;
-  comparisonCurrency: "usd" | "eur" | TokenE.USDC | TokenE.USDT;
+  comparisonCurrency: "usd" | "eur" | TokenE.USDC;
   token: TokenE;
 }
 
 export function ChartCurrency(props: Props) {
-  const tokenIcon = getTokenIcon(props.token);
+  const tokenIcon = getTokenIcon(getTokenPublicKey(props.token));
   const [selectorOpen, setSelectorOpen] = useState(false);
   const router = useRouter();
 
@@ -36,7 +42,7 @@ export function ChartCurrency(props: Props) {
         <div className="flex items-baseline space-x-2">
           <div className="text-3xl font-bold text-white">{props.token}</div>
           <div className="text-sm font-medium text-zinc-500">
-            {getTokenLabel(props.token)}
+            {getTokenLabel(getTokenPublicKey(props.token))}
           </div>
         </div>
         <div className="pl-4">

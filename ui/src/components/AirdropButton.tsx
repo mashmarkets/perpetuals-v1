@@ -106,7 +106,7 @@ export default function AirdropButton(props: Props) {
       >
         <SolidButton className="my-6 w-full bg-slate-500 hover:bg-slate-200">
           Airdrop {'"'}
-          {getTokenLabel(props.custody.getTokenE())}
+          {getTokenLabel(props.custody.mint)}
           {'"'}
         </SolidButton>
       </a>
@@ -119,7 +119,7 @@ export default function AirdropButton(props: Props) {
       onClick={handleAirdrop}
     >
       Airdrop {'"'}
-      {getTokenLabel(props.custody.getTokenE())}
+      {getTokenLabel(props.custody.mint)}
       {'"'}
     </SolidButton>
   );
