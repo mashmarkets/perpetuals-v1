@@ -1,23 +1,14 @@
-import {
-  createAssociatedTokenAccountInstruction,
-  createMintToInstruction,
-  getAssociatedTokenAddress,
-} from "@solana/spl-token";
+import { BN } from "@coral-xyz/anchor";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { Transaction } from "@solana/web3.js";
+import { PublicKey, Transaction } from "@solana/web3.js";
 import { toast } from "react-toastify";
+import { createMintToInstruction } from "src/actions/faucet";
 
 import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
 import { CustodyAccount } from "@/lib/CustodyAccount";
-import { getTokenLabel, TokenE } from "@/lib/Token";
+import { getTokenLabel, tokens } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
-import { DEFAULT_PERPS_USER } from "@/utils/constants";
-import { checkIfAccountExists } from "@/utils/retrieveData";
-import {
-  manualSendTransaction,
-  sendSignedTransactionAndNotify,
-  sendTransaction,
-} from "@/utils/TransactionHandlers";
+import { sendSignedTransactionAndNotify } from "@/utils/TransactionHandlers";
 
 import { SolidButton } from "./SolidButton";
 
@@ -25,6 +16,7 @@ interface Props {
   className?: string;
   custody: CustodyAccount;
 }
+
 export default function AirdropButton(props: Props) {
   const { publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
@@ -39,38 +31,26 @@ export default function AirdropButton(props: Props) {
     if (mint.toString() === "So11111111111111111111111111111111111111112") {
       await connection.requestAirdrop(publicKey!, 5 * 10 ** 9);
     } else {
+      const {
+        decimals,
+        extensions: { mainnet, faucet },
+      } = tokens[mint.toString()]!;
+
       let transaction = new Transaction();
-
-      let associatedAccount = await getAssociatedTokenAddress(mint, publicKey);
-
-      if (!(await checkIfAccountExists(associatedAccount, connection))) {
-        transaction = transaction.add(
-          createAssociatedTokenAccountInstruction(
-            publicKey,
-            associatedAccount,
-            publicKey,
-            mint,
-          ),
-        );
-      }
-
       transaction = transaction.add(
-        createMintToInstruction(
-          mint,
-          associatedAccount,
-          DEFAULT_PERPS_USER.publicKey,
-          1_000_000 * 10 ** 6,
-        ),
+        createMintToInstruction({
+          payer: publicKey,
+          seed: new PublicKey(mainnet),
+          amount: new BN(faucet).mul(new BN(10 ** decimals)),
+        }),
       );
-
       transaction.feePayer = publicKey;
       transaction.recentBlockhash = (
         await connection.getLatestBlockhash("finalized")
       ).blockhash;
 
-      transaction.sign(DEFAULT_PERPS_USER);
-
       transaction = await signTransaction!(transaction);
+
       await sendSignedTransactionAndNotify({
         connection,
         transaction,
@@ -79,39 +59,27 @@ export default function AirdropButton(props: Props) {
         signTransaction: () => {},
         enableSigning: false,
       });
-      // const rawTransaction = transaction.serialize();
-      // let signature = await connection.sendRawTransaction(rawTransaction, {
-      //   skipPreflight: false,
-      // });
-      // console.log(
-      //   `sent raw, waiting : https://explorer.solana.com/tx/${signature}?cluster=devnet`
-      // );
-      // await connection.confirmTransaction(signature, "confirmed");
-      // console.log(
-      //   `sent tx!!! :https://explorer.solana.com/tx/${signature}?cluster=devnet`
-      // );
-      // toast("You have been airdropped");
     }
 
     const userData = await getAllUserData(connection, publicKey!, poolData);
     setUserData(userData);
   }
 
-  if (props.custody.getTokenE() === TokenE.USDC) {
-    return (
-      <a
-        target="_blank"
-        rel="noreferrer"
-        href={"https://spl-token-faucet.com/?token-name=USDC-Dev"}
-      >
-        <SolidButton className="my-6 w-full bg-slate-500 hover:bg-slate-200">
-          Airdrop {'"'}
-          {getTokenLabel(props.custody.mint)}
-          {'"'}
-        </SolidButton>
-      </a>
-    );
-  }
+  // if (props.custody.getTokenE() === TokenE.USDC) {
+  //   return (
+  //     <a
+  //       target="_blank"
+  //       rel="noreferrer"
+  //       href={"https://spl-token-faucet.com/?token-name=USDC-Dev"}
+  //     >
+  //       <SolidButton className="my-6 w-full bg-slate-500 hover:bg-slate-200">
+  //         Airdrop {'"'}
+  //         {getTokenLabel(props.custody.mint)}
+  //         {'"'}
+  //       </SolidButton>
+  //     </a>
+  //   );
+  // }
 
   return (
     <SolidButton

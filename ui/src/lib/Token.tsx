@@ -1,4 +1,5 @@
 import { PublicKey } from "@solana/web3.js";
+import { getFaucetMint } from "src/actions/faucet";
 
 interface Token {
   address: string;
@@ -8,6 +9,8 @@ interface Token {
   logoURI: string;
   extensions: {
     coingeckoId: string;
+    mainnet: string;
+    faucet: number;
   };
 }
 export const tokenList: Token[] = [
@@ -19,6 +22,7 @@ export const tokenList: Token[] = [
     logoURI: "https://arweave.net/hQiPZOsRZXGXBJd_82PhVdlM_hACsT_q6wqwf5cSY7I",
     extensions: {
       coingeckoId: "bonk",
+      faucet: 100_000_000,
     },
   },
   {
@@ -30,6 +34,7 @@ export const tokenList: Token[] = [
       "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE/logo.png",
     extensions: {
       coingeckoId: "orca",
+      faucet: 1000,
     },
   },
   {
@@ -41,6 +46,7 @@ export const tokenList: Token[] = [
       "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R/logo.png",
     extensions: {
       coingeckoId: "raydium",
+      faucet: 1000,
     },
   },
   {
@@ -52,6 +58,19 @@ export const tokenList: Token[] = [
       "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
     extensions: {
       coingeckoId: "wrapped-solana",
+      faucet: 1,
+    },
+  },
+  {
+    address: "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
+    name: "Marinade staked SOL (mSOL)",
+    symbol: "mSOL",
+    decimals: 9,
+    logoURI:
+      "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So/logo.png",
+    extensions: {
+      coingeckoId: "msol",
+      faucet: 1,
     },
   },
   {
@@ -63,25 +82,22 @@ export const tokenList: Token[] = [
       "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png",
     extensions: {
       coingeckoId: "usd-coin",
+      faucet: 1000,
     },
   },
 ].map((x) => ({
   ...x,
-  address: {
-    DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263:
-      "Ek9RtoqksVzPfMRFN2BTgCxM7e5QoJ3rZLL18phtz2Ri",
-    orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE:
-      "A5sPEFgEF2ET1Xdo6ZT8vMxwKqdBgQ6bAUaKdqoNApo8",
-    "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R":
-      "GFz5gtptPcqJpV5dUHqiwtDwvrVamjQyKaLaFrQ9iwH2",
-    So11111111111111111111111111111111111111112:
-      "So11111111111111111111111111111111111111112",
-    EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v:
-      "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr",
-  }[x.address]!,
+  extensions: {
+    ...x.extensions,
+    mainnet: x.address,
+  },
+  address:
+    x.address === "So11111111111111111111111111111111111111112"
+      ? "So11111111111111111111111111111111111111112"
+      : getFaucetMint(new PublicKey(x.address)).toString(),
 }));
 
-const tokens = tokenList.reduce(
+export const tokens = tokenList.reduce(
   (acc, curr) => {
     acc[curr.address] = curr;
     return acc;
@@ -89,12 +105,14 @@ const tokens = tokenList.reduce(
   {} as Record<string, Token>,
 );
 
+// This MUST match token symbol for now
 export enum TokenE {
   Bonk = "Bonk",
   ORCA = "ORCA",
   RAY = "RAY",
   SOL = "SOL",
   USDC = "USDC",
+  mSOL = "mSOL",
 }
 export const TOKEN_LIST = [
   TokenE.SOL,
@@ -102,6 +120,7 @@ export const TOKEN_LIST = [
   TokenE.RAY,
   TokenE.ORCA,
   TokenE.Bonk,
+  TokenE.mSOL,
 ];
 export const TOKEN_ADDRESSES = tokenList.map((x) => new PublicKey(x.address));
 
@@ -117,6 +136,8 @@ export function asToken(tokenStr: string): TokenE {
       return TokenE.ORCA;
     case "Bonk":
       return TokenE.Bonk;
+    case "mSOL":
+      return TokenE.mSOL;
     default:
       throw new Error("Not a valid token string");
   }
@@ -138,8 +159,11 @@ export function getTokenSymbol(token: PublicKey) {
   return tokens[token.toString()]!.symbol;
 }
 
-export function getTokenIcon(token: PublicKey) {
-  if (!Object.prototype.hasOwnProperty.call(tokens, token.toString())) {
+export function getTokenIcon(token: PublicKey | undefined) {
+  if (
+    token === undefined ||
+    !Object.prototype.hasOwnProperty.call(tokens, token.toString())
+  ) {
     return <></>;
   }
   const src = tokens[token.toString()]!.logoURI;
@@ -170,42 +194,23 @@ export function getTradingViewSymbol(token: TokenE) {
       return "SOLUSD";
     case TokenE.USDC:
       return "USDCUSD";
+    case TokenE.mSOL:
+      return "mSOLUSD";
   }
 }
 
 // Trying to decprecated TokenE and just use PublicKey
 export function tokenAddressToToken(address: string): TokenE | null {
-  switch (address) {
-    case "So11111111111111111111111111111111111111112":
-      return TokenE.SOL;
-    case "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr":
-      return TokenE.USDC;
-    case "GFz5gtptPcqJpV5dUHqiwtDwvrVamjQyKaLaFrQ9iwH2":
-      return TokenE.RAY;
-    case "A5sPEFgEF2ET1Xdo6ZT8vMxwKqdBgQ6bAUaKdqoNApo8":
-      return TokenE.ORCA;
-    case "Ek9RtoqksVzPfMRFN2BTgCxM7e5QoJ3rZLL18phtz2Ri":
-      return TokenE.Bonk;
-    default:
-      return null;
+  if (!Object.prototype.hasOwnProperty.call(tokens, address)) {
+    return null;
   }
+  return tokens[address]!.symbol as TokenE;
 }
 
 // Trying to decprecated TokenE and just use PublicKey
 export function getTokenPublicKey(token: TokenE) {
   function getTokenAddress(token: TokenE) {
-    switch (token) {
-      case TokenE.SOL:
-        return "So11111111111111111111111111111111111111112";
-      case TokenE.USDC:
-        return "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr";
-      case TokenE.RAY:
-        return "GFz5gtptPcqJpV5dUHqiwtDwvrVamjQyKaLaFrQ9iwH2";
-      case TokenE.ORCA:
-        return "A5sPEFgEF2ET1Xdo6ZT8vMxwKqdBgQ6bAUaKdqoNApo8";
-      case TokenE.Bonk:
-        return "Ek9RtoqksVzPfMRFN2BTgCxM7e5QoJ3rZLL18phtz2Ri";
-    }
+    return tokenList.find((x) => x.symbol === token)!.address;
   }
 
   return new PublicKey(getTokenAddress(token));

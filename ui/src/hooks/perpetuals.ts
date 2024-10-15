@@ -1,52 +1,74 @@
-import { IdlAccounts, utils } from "@coral-xyz/anchor";
+import { IdlAccounts } from "@coral-xyz/anchor";
+import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { useQueries, useQuery } from "@tanstack/react-query";
-import { create, indexedResolver, windowScheduler } from "@yornaath/batshit";
-import { memoize } from "lodash-es";
+import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { Perpetuals } from "@/target/types/perpetuals";
 
-import { PerpetualsProgram, useProgram } from "./useProgram";
+import { connectionBatcher } from "./accounts";
+import { useProgram } from "./useProgram";
 
 export type Pool = IdlAccounts<Perpetuals>["pool"];
 export type Custody = IdlAccounts<Perpetuals>["custody"];
+
 export const usePool = (pool: PublicKey | undefined) => {
+  const { connection } = useConnection();
   const program = useProgram();
-  return useQuery<Pool>({
+
+  return useQuery({
     queryKey: ["pool", pool?.toString()],
-    enabled: !!program || !!pool,
-    queryFn: () => program.account.pool.fetch(pool!),
+    enabled: !!program && !!pool,
+    queryFn: () =>
+      connectionBatcher(connection)
+        .fetch(pool!)
+        .then((info) => {
+          const coder = program.account.pool.coder;
+          return coder.accounts.decode("pool", info!.data!);
+        }) as Promise<Pool>,
   });
 };
 
-const custodiesBatcher = memoize((program: PerpetualsProgram) =>
-  create({
-    name: "custody",
-    fetcher: async (accounts: PublicKey[]) => {
-      const data = await program.account.custody.fetchMultiple(accounts);
-      // Index the data by the account key, so it can resolved
-      return data.reduce(
-        (acc, v, i) => {
-          acc[accounts[i]!.toString()] = v;
+export const useAllPools = () => {
+  const program = useProgram();
+  const client = useQueryClient();
+  return useQuery<Record<string, Pool>>({
+    queryKey: ["pool"],
+    enabled: !!program,
+    queryFn: async () => {
+      const data = await program.account.pool.all();
+      const pools = data.reduce(
+        (acc, v) => {
+          acc[v.publicKey.toString()] = v.account;
           return acc;
         },
-        {} as Record<string, Custody | null>,
+        {} as Record<string, Pool>,
       );
+
+      // Update individual pool cache
+      Object.entries(pools).forEach(([key, pool]) => {
+        client.setQueryData(["pool", key], pool);
+      });
+      return pools;
     },
-    resolver: indexedResolver(),
-    scheduler: windowScheduler(10),
-  }),
-);
+  });
+};
 
 // Inspired by https://github.com/TanStack/query/discussions/6305
 export const useCustodies = (custodies: PublicKey[]) => {
+  const { connection } = useConnection();
   const program = useProgram();
 
-  return useQueries<Custody[]>({
+  return useQueries({
     queries: custodies.map((custody) => ({
       queryKey: ["custody", custody.toString()],
       enabled: !!program,
-      queryFn: () => custodiesBatcher(program).fetch(custody),
+      queryFn: () =>
+        connectionBatcher(connection)
+          .fetch(custody)
+          .then((info) => {
+            const coder = program.account.custody.coder;
+            return coder.accounts.decode("custody", info!.data!);
+          }) as Promise<Custody>,
     })),
   });
 };

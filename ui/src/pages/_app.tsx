@@ -23,6 +23,7 @@ import {
   TrustWalletAdapter,
 } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
+import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AppProps } from "next/app";
 import React, { FC, ReactNode, useMemo } from "react";
 import { ToastContainer } from "react-toastify";
@@ -62,6 +63,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
         <StoreUpdater />
         <Component {...pageProps} />
       </Context>
+      <ReactQueryDevtools initialIsOpen={false} />
     </QueryClientProvider>
   );
 }

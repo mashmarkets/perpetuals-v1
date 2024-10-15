@@ -28,8 +28,7 @@
         {
           "name": "perpetualsProgramData",
           "isMut": false,
-          "isSigner": false,
-          "docs": ["FIXME"]
+          "isSigner": false
         },
         {
           "name": "perpetualsProgram",
@@ -473,45 +472,6 @@
       "returns": "u8"
     },
     {
-      "name": "upgradeCustody",
-      "accounts": [
-        {
-          "name": "admin",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "multisig",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "custody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "UpgradeCustodyParams"
-          }
-        }
-      ],
-      "returns": "u8"
-    },
-    {
       "name": "setCustomOraclePrice",
       "accounts": [
         {
@@ -588,84 +548,6 @@
         }
       ],
       "returns": "u8"
-    },
-    {
-      "name": "swap",
-      "accounts": [
-        {
-          "name": "owner",
-          "isMut": false,
-          "isSigner": true
-        },
-        {
-          "name": "fundingAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "receivingAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "transferAuthority",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "perpetuals",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "receivingCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "receivingCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "receivingCustodyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "dispensingCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "dispensingCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "dispensingCustodyTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "SwapParams"
-          }
-        }
-      ]
     },
     {
       "name": "addLiquidity",
@@ -1563,52 +1445,6 @@
       "returns": "u64"
     },
     {
-      "name": "getSwapAmountAndFees",
-      "accounts": [
-        {
-          "name": "perpetuals",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "pool",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "receivingCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "receivingCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "dispensingCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "dispensingCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "GetSwapAmountAndFeesParams"
-          }
-        }
-      ],
-      "returns": {
-        "defined": "SwapAmountAndFees"
-      }
-    },
-    {
       "name": "getAssetsUnderManagement",
       "accounts": [
         {
@@ -1814,114 +1650,6 @@
       }
     },
     {
-      "name": "DeprecatedCustody",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "pool",
-            "type": "publicKey"
-          },
-          {
-            "name": "mint",
-            "type": "publicKey"
-          },
-          {
-            "name": "tokenAccount",
-            "type": "publicKey"
-          },
-          {
-            "name": "decimals",
-            "type": "u8"
-          },
-          {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "oracle",
-            "type": {
-              "defined": "OracleParams"
-            }
-          },
-          {
-            "name": "pricing",
-            "type": {
-              "defined": "PricingParams"
-            }
-          },
-          {
-            "name": "permissions",
-            "type": {
-              "defined": "Permissions"
-            }
-          },
-          {
-            "name": "fees",
-            "type": {
-              "defined": "Fees"
-            }
-          },
-          {
-            "name": "borrowRate",
-            "type": {
-              "defined": "BorrowRateParams"
-            }
-          },
-          {
-            "name": "assets",
-            "type": {
-              "defined": "Assets"
-            }
-          },
-          {
-            "name": "collectedFees",
-            "type": {
-              "defined": "FeesStats"
-            }
-          },
-          {
-            "name": "volumeStats",
-            "type": {
-              "defined": "VolumeStats"
-            }
-          },
-          {
-            "name": "tradeStats",
-            "type": {
-              "defined": "TradeStats"
-            }
-          },
-          {
-            "name": "longPositions",
-            "type": {
-              "defined": "PositionStats"
-            }
-          },
-          {
-            "name": "shortPositions",
-            "type": {
-              "defined": "PositionStats"
-            }
-          },
-          {
-            "name": "borrowRateState",
-            "type": {
-              "defined": "BorrowRateState"
-            }
-          },
-          {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
-            "name": "tokenAccountBump",
-            "type": "u8"
-          }
-        ]
-      }
-    },
-    {
       "name": "Multisig",
       "type": {
         "kind": "struct",
@@ -1953,13 +1681,19 @@
           {
             "name": "signers",
             "type": {
-              "array": ["publicKey", 6]
+              "array": [
+                "publicKey",
+                6
+              ]
             }
           },
           {
             "name": "signed",
             "type": {
-              "array": ["u8", 6]
+              "array": [
+                "u8",
+                6
+              ]
             }
           },
           {
@@ -2042,14 +1776,6 @@
             "name": "custodies",
             "type": {
               "vec": "publicKey"
-            }
-          },
-          {
-            "name": "ratios",
-            "type": {
-              "vec": {
-                "defined": "TokenRatios"
-              }
             }
           },
           {
@@ -2205,14 +1931,6 @@
             "type": {
               "defined": "BorrowRateParams"
             }
-          },
-          {
-            "name": "ratios",
-            "type": {
-              "vec": {
-                "defined": "TokenRatios"
-              }
-            }
           }
         ]
       }
@@ -2367,18 +2085,6 @@
       }
     },
     {
-      "name": "GetSwapAmountAndFeesParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amountIn",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "InitParams",
       "type": {
         "kind": "struct",
@@ -2386,10 +2092,6 @@
           {
             "name": "minSignatures",
             "type": "u8"
-          },
-          {
-            "name": "allowSwap",
-            "type": "bool"
           },
           {
             "name": "allowAddLiquidity",
@@ -2471,16 +2173,7 @@
       "name": "RemoveCustodyParams",
       "type": {
         "kind": "struct",
-        "fields": [
-          {
-            "name": "ratios",
-            "type": {
-              "vec": {
-                "defined": "TokenRatios"
-              }
-            }
-          }
-        ]
+        "fields": []
       }
     },
     {
@@ -2560,14 +2253,6 @@
             "type": {
               "defined": "BorrowRateParams"
             }
-          },
-          {
-            "name": "ratios",
-            "type": {
-              "vec": {
-                "defined": "TokenRatios"
-              }
-            }
           }
         ]
       }
@@ -2638,10 +2323,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "allowSwap",
-            "type": "bool"
-          },
-          {
             "name": "allowAddLiquidity",
             "type": "bool"
           },
@@ -2685,29 +2366,6 @@
       }
     },
     {
-      "name": "SwapParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amountIn",
-            "type": "u64"
-          },
-          {
-            "name": "minAmountOut",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "UpgradeCustodyParams",
-      "type": {
-        "kind": "struct",
-        "fields": []
-      }
-    },
-    {
       "name": "WithdrawFeesParams",
       "type": {
         "kind": "struct",
@@ -2737,33 +2395,7 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "mode",
-            "type": {
-              "defined": "FeesMode"
-            }
-          },
-          {
-            "name": "ratioMult",
-            "type": "u64"
-          },
-          {
             "name": "utilizationMult",
-            "type": "u64"
-          },
-          {
-            "name": "swapIn",
-            "type": "u64"
-          },
-          {
-            "name": "swapOut",
-            "type": "u64"
-          },
-          {
-            "name": "stableSwapIn",
-            "type": "u64"
-          },
-          {
-            "name": "stableSwapOut",
             "type": "u64"
           },
           {
@@ -2789,14 +2421,6 @@
           {
             "name": "protocolShare",
             "type": "u64"
-          },
-          {
-            "name": "feeMax",
-            "type": "u64"
-          },
-          {
-            "name": "feeOptimal",
-            "type": "u64"
           }
         ]
       }
@@ -2806,10 +2430,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "swapUsd",
-            "type": "u64"
-          },
           {
             "name": "addLiquidityUsd",
             "type": "u64"
@@ -2838,10 +2458,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "swapUsd",
-            "type": "u64"
-          },
           {
             "name": "addLiquidityUsd",
             "type": "u64"
@@ -2932,10 +2548,6 @@
           },
           {
             "name": "tradeSpreadShort",
-            "type": "u64"
-          },
-          {
-            "name": "swapSpread",
             "type": "u64"
           },
           {
@@ -3058,46 +2670,6 @@
       }
     },
     {
-      "name": "DeprecatedPricingParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "useEma",
-            "type": "bool"
-          },
-          {
-            "name": "useUnrealizedPnlInAum",
-            "type": "bool"
-          },
-          {
-            "name": "tradeSpreadLong",
-            "type": "u64"
-          },
-          {
-            "name": "tradeSpreadShort",
-            "type": "u64"
-          },
-          {
-            "name": "swapSpread",
-            "type": "u64"
-          },
-          {
-            "name": "minInitialLeverage",
-            "type": "u64"
-          },
-          {
-            "name": "maxLeverage",
-            "type": "u64"
-          },
-          {
-            "name": "maxPayoffMult",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "OraclePrice",
       "type": {
         "kind": "struct",
@@ -3196,26 +2768,6 @@
       }
     },
     {
-      "name": "SwapAmountAndFees",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amountOut",
-            "type": "u64"
-          },
-          {
-            "name": "feeIn",
-            "type": "u64"
-          },
-          {
-            "name": "feeOut",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
       "name": "ProfitAndLoss",
       "type": {
         "kind": "struct",
@@ -3236,10 +2788,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "allowSwap",
-            "type": "bool"
-          },
           {
             "name": "allowAddLiquidity",
             "type": "bool"
@@ -3267,43 +2815,6 @@
           {
             "name": "allowSizeChange",
             "type": "bool"
-          }
-        ]
-      }
-    },
-    {
-      "name": "TokenRatios",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "target",
-            "type": "u64"
-          },
-          {
-            "name": "min",
-            "type": "u64"
-          },
-          {
-            "name": "max",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "FeesMode",
-      "type": {
-        "kind": "enum",
-        "variants": [
-          {
-            "name": "Fixed"
-          },
-          {
-            "name": "Linear"
-          },
-          {
-            "name": "Optimal"
           }
         ]
       }
@@ -3540,46 +3051,41 @@
     },
     {
       "code": 6022,
-      "name": "TokenRatioOutOfRange",
-      "msg": "Token ratio out of range"
-    },
-    {
-      "code": 6023,
       "name": "UnsupportedToken",
       "msg": "Token is not supported"
     },
     {
-      "code": 6024,
+      "code": 6023,
       "name": "InstructionNotAllowed",
       "msg": "Instruction is not allowed at this time"
     },
     {
-      "code": 6025,
+      "code": 6024,
       "name": "MaxUtilization",
       "msg": "Token utilization limit exceeded"
     },
     {
-      "code": 6026,
+      "code": 6025,
       "name": "PermissionlessOracleMissingSignature",
       "msg": "Permissionless oracle update must be preceded by Ed25519 signature verification instruction"
     },
     {
-      "code": 6027,
+      "code": 6026,
       "name": "PermissionlessOracleMalformedEd25519Data",
       "msg": "Ed25519 signature verification data does not match expected format"
     },
     {
-      "code": 6028,
+      "code": 6027,
       "name": "PermissionlessOracleSignerMismatch",
       "msg": "Ed25519 signature was not signed by the oracle authority"
     },
     {
-      "code": 6029,
+      "code": 6028,
       "name": "PermissionlessOracleMessageMismatch",
       "msg": "Signed message does not match instruction params"
     }
   ],
   "metadata": {
-    "address": "3imnxzymKGjYChfh7VsCMPB9TWpXuaM9QCnDBnQiF7AC"
+    "address": "EdVAT8DSqZ2vUCdXCVWRjyJaF8hiDHfat7W7nbazcfdY"
   }
 }
