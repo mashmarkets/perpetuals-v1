@@ -1,5 +1,6 @@
 "use client";
 
+import { PublicKey } from "@solana/web3.js";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
@@ -15,8 +16,9 @@ import { useGlobalStore } from "@/stores/store";
 export default function SinglePool() {
   const router = useRouter();
 
+  const poolKey = router.query.poolName as string;
   const poolData = useGlobalStore((state) => state.poolData);
-  let pool = poolData[router.query.poolName as string];
+  let pool = poolData[poolKey];
 
   if (!pool) {
     return <LoadingSpinner className="text-4xl" />;
@@ -33,7 +35,7 @@ export default function SinglePool() {
             />
             <Link
               href="/pools/manage/[poolAddress]"
-              as={`/pools/manage/${router.query.poolName}`}
+              as={`/pools/manage/${poolKey}`}
             >
               <div className="rounded-lg px-4 py-2 text-slate-200 text-white">
                 Admin ↗️
@@ -43,7 +45,7 @@ export default function SinglePool() {
         </div>
         <div className="flex w-full flex-col">
           <PoolGeneralStats pool={pool!} className="mb-8" />
-          <PoolTokenStats pool={pool!} />
+          <PoolTokenStats pool={pool!} poolKey={new PublicKey(poolKey)} />
         </div>
         <LiquidityCard pool={pool} />
       </PoolLayout>

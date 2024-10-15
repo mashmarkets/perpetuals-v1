@@ -1,16 +1,16 @@
 import CloseIcon from "@carbon/icons-react/lib/Close";
-import EditIcon from "@carbon/icons-react/lib/Edit";
 import { BN } from "@coral-xyz/anchor";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { closePosition } from "src/actions/closePosition";
 import { twMerge } from "tailwind-merge";
 
-import { CollateralModal } from "@/components/Positions/CollateralModal";
 import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/SolidButton";
+import { usePrice } from "@/hooks/price";
 import { getPositionData } from "@/hooks/storeHelpers/fetchPositions";
 import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
 import { PositionAccount } from "@/lib/PositionAccount";
+import { getTokenPublicKey } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
 import { formatPrice } from "@/utils/formatters";
@@ -27,7 +27,8 @@ export function PositionAdditionalInfo(props: Props) {
   const { publicKey } = useWallet();
 
   const { connection } = useConnection();
-  const stats = useGlobalStore((state) => state.priceStats);
+  const token = getTokenPublicKey(props.position.token);
+  const { data: price } = usePrice(token);
 
   const poolData = useGlobalStore((state) => state.poolData);
   const custodyData = useGlobalStore((state) => state.custodyData);
@@ -45,7 +46,7 @@ export function PositionAdditionalInfo(props: Props) {
       positionPool,
       props.position,
       positionCustody,
-      new BN(stats[props.position.token].currentPrice * 10 ** 6),
+      new BN(price!.currentPrice * 10 ** 6),
     );
 
     const positionInfos = await getPositionData(custodyData);
@@ -54,7 +55,7 @@ export function PositionAdditionalInfo(props: Props) {
     setUserData(userData);
   }
 
-  if (Object.values(stats).length === 0) return <p>sdf</p>;
+  if (price === undefined) return <p>sdf</p>;
 
   return (
     <div
@@ -125,8 +126,8 @@ export function PositionAdditionalInfo(props: Props) {
             $
             {formatPrice(
               props.position.side === Side.Long
-                ? stats[props.position.token].currentPrice - props.liqPrice
-                : props.liqPrice - stats[props.position.token].currentPrice,
+                ? price.currentPrice - props.liqPrice
+                : props.liqPrice - price.currentPrice,
             )}
           </div>
         </div>

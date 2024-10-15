@@ -4,7 +4,6 @@ import { devtools } from "zustand/middleware";
 import { PositionRequest } from "@/hooks/storeHelpers/fetchPositions";
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
-import { Custody, PriceStats } from "@/lib/types";
 import { UserAccount } from "@/lib/UserAccount";
 
 interface StoreState {
@@ -19,9 +18,6 @@ interface StoreState {
 
   userData: UserAccount;
   setUserData: (user: UserAccount) => void;
-
-  priceStats: PriceStats;
-  setPriceStats: (stats: PriceStats) => void;
 }
 
 export const useGlobalStore = create<StoreState>()(
@@ -44,8 +40,5 @@ export const useGlobalStore = create<StoreState>()(
 
     userData: new UserAccount(),
     setUserData: (user: UserAccount) => set({ userData: user }),
-
-    priceStats: {},
-    setPriceStats: (stats: PriceStats) => set({ priceStats: stats }),
   })),
 );

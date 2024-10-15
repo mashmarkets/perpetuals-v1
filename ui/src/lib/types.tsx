@@ -174,5 +174,3 @@ export interface PriceStat {
   high24hr: number;
   low24hr: number;
 }
-
-export type PriceStats = Record<TokenE, PriceStat>;

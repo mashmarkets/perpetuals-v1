@@ -1,5 +1,5 @@
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useRouter } from "next/router";
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useRef, useState } from "react";
 import { openPosition } from "src/actions/openPosition";
 import { twMerge } from "tailwind-merge";
@@ -11,10 +11,11 @@ import { PoolSelector } from "@/components/PoolSelector";
 import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
 import { TradeDetails } from "@/components/TradeSidebar/TradeDetails";
+import { usePrice } from "@/hooks/price";
 import { getPositionData } from "@/hooks/storeHelpers/fetchPositions";
-import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
+import { useBalance } from "@/hooks/token";
 import { PoolAccount } from "@/lib/PoolAccount";
-import { asToken, TokenE } from "@/lib/Token";
+import { getTokenPublicKey, TokenE, tokens } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
@@ -24,6 +25,7 @@ import { ViewHelper } from "@/utils/viewHelpers";
 interface Props {
   className?: string;
   side: Side;
+  token: TokenE;
 }
 
 enum Input {
@@ -32,28 +34,23 @@ enum Input {
 }
 
 export function TradePosition(props: Props) {
+  const queryClient = useQueryClient();
   const poolData = useGlobalStore((state) => state.poolData);
-  const userData = useGlobalStore((state) => state.userData);
   const custodyData = useGlobalStore((state) => state.custodyData);
-  const stats = useGlobalStore((state) => state.priceStats);
   const positionData = useGlobalStore((state) => state.positionData);
 
   const setPositionData = useGlobalStore((state) => state.setPositionData);
-  const setUserData = useGlobalStore((state) => state.setUserData);
 
   const { publicKey, wallet } = useWallet();
   const walletContextState = useWallet();
   const { connection } = useConnection();
   const timeoutRef = useRef(null);
 
-  const router = useRouter();
-  const { pair } = router.query;
-
   const [lastChanged, setLastChanged] = useState<Input>(Input.Pay);
   const [pool, setPool] = useState<PoolAccount>();
 
-  const [payToken, setPayToken] = useState<TokenE>();
-  const [positionToken, setPositionToken] = useState<TokenE>();
+  const [payToken, setPayToken] = useState<TokenE>(props.token);
+  const [positionToken, setPositionToken] = useState<TokenE>(props.token);
 
   const [payAmount, setPayAmount] = useState(0);
   const [positionAmount, setPositionAmount] = useState(0);
@@ -63,7 +60,15 @@ export function TradePosition(props: Props) {
   const [liquidationPrice, setLiquidationPrice] = useState(0);
   const [fee, setFee] = useState(0);
 
+  const { data: price } = usePrice(getTokenPublicKey(positionToken));
+
   const [pendingRateConversion, setPendingRateConversion] = useState(false);
+  const { data: balance } = useBalance(getTokenPublicKey(payToken), publicKey);
+  const { decimals } = tokens[getTokenPublicKey(payToken).toString()]!;
+
+  const payTokenBalance = balance
+    ? Number(balance) / 10 ** decimals
+    : undefined;
 
   async function handleTrade() {
     // console.log("in handle trade");
@@ -75,25 +80,17 @@ export function TradePosition(props: Props) {
       positionToken,
       payAmount,
       positionAmount,
-      price: stats[positionToken]?.currentPrice,
+      price: price?.currentPrice ?? 0,
       side: props.side,
       leverage,
     });
     const positionInfos = await getPositionData(custodyData);
     setPositionData(positionInfos);
 
-    const uData = await getAllUserData(connection, publicKey, poolData);
-    setUserData(uData);
+    queryClient.invalidateQueries({
+      queryKey: ["balance", publicKey?.toString(), getTokenPublicKey(payToken)],
+    });
   }
-
-  useEffect(() => {
-    // @ts-ignore
-
-    setPositionToken(asToken(pair.split("-")[0]));
-    if (!payToken) {
-      setPayToken(asToken(pair.split("-")[0]));
-    }
-  }, [pair]);
 
   useEffect(() => {
     if (Object.values(poolData).length > 0) {
@@ -176,8 +173,11 @@ export function TradePosition(props: Props) {
 
   function isLiquityExceeded() {
     return (
-      positionAmount * stats[positionToken].currentPrice >
-      pool.getCustodyAccount(positionToken!)?.getCustodyLiquidity(stats!)!
+      price &&
+      positionAmount * price.currentPrice >
+        pool
+          .getCustodyAccount(positionToken!)
+          ?.getCustodyLiquidity(price.currentPrice)!
     );
   }
 
@@ -193,13 +193,10 @@ export function TradePosition(props: Props) {
   }
 
   function isBalanceValid() {
-    return (
-      payAmount <=
-      (userData.tokenBalances[payToken] ? userData.tokenBalances[payToken] : 0)
-    );
+    return payAmount <= (payTokenBalance ? payTokenBalance : 0);
   }
 
-  if (!pair || !pool || Object.values(stats).length === 0) {
+  if (!pool || price === undefined) {
     return (
       <div>
         <LoadingDots />
@@ -211,7 +208,7 @@ export function TradePosition(props: Props) {
     <div className={props.className}>
       <div className="flex items-center justify-between text-sm">
         <div className="font-medium text-white">Your Collateral</div>
-        <UserBalance token={payToken} />
+        <UserBalance mint={getTokenPublicKey(payToken)} />
       </div>
       <TokenSelector
         className="mt-2"
@@ -226,11 +223,7 @@ export function TradePosition(props: Props) {
           setPositionToken(token);
         }}
         tokenList={pool.getTokenList()}
-        maxBalance={
-          userData.tokenBalances[payToken]
-            ? userData.tokenBalances[payToken]
-            : 0
-        }
+        maxBalance={payTokenBalance ? payTokenBalance : 0}
       />
       <div className="mt-4 text-sm font-medium text-white">
         Your {props.side}
@@ -246,7 +239,7 @@ export function TradePosition(props: Props) {
         onSelectToken={(token) => {
           setPayToken(token);
           setPositionToken(token);
-          router.push("/trade/" + token + "-USD", undefined, { shallow: true });
+          router.push("/trade/" + token, undefined, { shallow: true });
         }}
         tokenList={pool.getTokenList([TokenE.USDC, TokenE.USDT])}
         pendingRateConversion={pendingRateConversion}
@@ -326,7 +319,9 @@ export function TradePosition(props: Props) {
         liquidationPrice={liquidationPrice}
         fees={fee}
         availableLiquidity={
-          pool.getCustodyAccount(positionToken!)?.getCustodyLiquidity(stats!)!
+          pool
+            .getCustodyAccount(positionToken!)
+            ?.getCustodyLiquidity(price.currentPrice)!
         }
         borrowRate={
           Number(

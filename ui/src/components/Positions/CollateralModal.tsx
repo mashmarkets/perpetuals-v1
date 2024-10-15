@@ -3,6 +3,7 @@ import ArrowRight from "@carbon/icons-react/lib/ArrowRight";
 import Subtract from "@carbon/icons-react/lib/Subtract";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { useEffect, useRef, useState } from "react";
 import { changeCollateral } from "src/actions/changeCollateral";
 import { twMerge } from "tailwind-merge";
@@ -11,8 +12,11 @@ import { LpSelector } from "@/components/PoolModal/LpSelector";
 import { SidebarTab } from "@/components/SidebarTab";
 import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
+import { usePrices } from "@/hooks/price";
 import { getPositionData } from "@/hooks/storeHelpers/fetchPositions";
+import { useBalance } from "@/hooks/token";
 import { PositionAccount } from "@/lib/PositionAccount";
+import { getTokenPublicKey, tokens } from "@/lib/Token";
 import { Tab } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
@@ -33,13 +37,19 @@ export function CollateralModal(props: Props) {
   const { connection } = useConnection();
 
   const poolData = useGlobalStore((state) => state.poolData);
-  const userData = useGlobalStore((state) => state.userData);
+  const { address: mint, decimals } =
+    tokens[getTokenPublicKey(props.position.collateralToken)!.toString()]!;
+
+  const { data: balance } = useBalance(
+    new PublicKey(mint),
+    publicKey === null ? undefined : publicKey,
+  );
 
   let pool = poolData[props.position.pool.toString()]!;
 
   let payToken = props.position.collateralToken;
 
-  let payTokenBalance = userData.tokenBalances[payToken];
+  let payTokenBalance = Number(balance) / 10 ** decimals;
 
   const custodyData = useGlobalStore((state) => state.custodyData);
 
@@ -99,7 +109,10 @@ export function CollateralModal(props: Props) {
       if (tab === Tab.Add) {
         newCollat =
           props.position.getCollateralUsd() +
-          depositAmount * stats[props.position.collateralToken].currentPrice;
+          depositAmount *
+            prices[
+              getTokenPublicKey(props.position.collateralToken).toString()
+            ]!.currentPrice;
       } else {
         newCollat = props.position.getCollateralUsd() - withdrawAmount;
       }
@@ -109,7 +122,10 @@ export function CollateralModal(props: Props) {
       let newLev;
       let changeCollateral =
         tab === Tab.Add
-          ? depositAmount * stats[props.position.collateralToken].currentPrice
+          ? depositAmount *
+            prices[
+              getTokenPublicKey(props.position.collateralToken).toString()
+            ]!.currentPrice
           : -1 * withdrawAmount;
 
       newLev =
@@ -131,7 +147,10 @@ export function CollateralModal(props: Props) {
     };
   }, [open, withdrawAmount, depositAmount]);
 
-  const stats = useGlobalStore((state) => state.priceStats);
+  const prices = usePrices([
+    getTokenPublicKey(props.position.token),
+    getTokenPublicKey(props.position.collateralToken),
+  ]);
 
   async function handleChangeCollateral() {
     let changeAmount;
@@ -251,9 +270,13 @@ export function CollateralModal(props: Props) {
                 {
                   label: "Mark Price",
                   value: `$${
-                    stats[props.position.token] != undefined
+                    prices[
+                      getTokenPublicKey(props.position.token).toString()
+                    ] != undefined
                       ? formatNumberCommas(
-                          stats[props.position.token].currentPrice,
+                          prices[
+                            getTokenPublicKey(props.position.token).toString()
+                          ]!.currentPrice,
                         )
                       : 0
                   }`,

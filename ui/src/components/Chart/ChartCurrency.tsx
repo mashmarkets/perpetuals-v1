@@ -68,7 +68,7 @@ export function ChartCurrency(props: Props) {
           tokenList={TOKEN_LIST.filter((x) => !["USDC", "USDT"].includes(x))}
           onClose={() => setSelectorOpen(false)}
           onSelectToken={(token) => {
-            router.push(`/trade/${token}-usd`);
+            router.push(`/trade/${token}`);
           }}
         />
       )}

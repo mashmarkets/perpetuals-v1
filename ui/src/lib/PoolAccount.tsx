@@ -4,7 +4,7 @@ import { PublicKey } from "@solana/web3.js";
 
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { TokenE } from "@/lib/Token";
-import { AccountMeta, Pool, PriceStats } from "@/lib/types";
+import { AccountMeta, Pool } from "@/lib/types";
 import { PERPETUALS_PROGRAM_ID } from "@/utils/constants";
 
 export class PoolAccount {
@@ -96,7 +96,7 @@ export class PoolAccount {
 
     return custodyMetas;
   }
-  getLiquidities(stats: PriceStats): number | null {
+  getLiquidities(): number | null {
     return this.aumUsd.toNumber() / 10 ** 6;
   }
 

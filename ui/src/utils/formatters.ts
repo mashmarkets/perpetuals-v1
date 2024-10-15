@@ -1,6 +1,6 @@
 import { BN } from "@coral-xyz/anchor";
 
-export function formatNumberCommas(num: number | BN | null) {
+export function formatNumberCommas(num: number | BN | null | undefined) {
   if (typeof num === "bigint") {
     return Number(num).toLocaleString(undefined, {
       minimumFractionDigits: 2,

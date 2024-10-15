@@ -4,6 +4,7 @@ import { twMerge } from "tailwind-merge";
 
 import { MaxButton } from "@/components/Atoms/MaxButton";
 import { TokenSelectorList } from "@/components/TokenSelectorList";
+import { usePrice } from "@/hooks/price";
 import { getTokenIcon, getTokenPublicKey, TokenE } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
 
@@ -27,7 +28,7 @@ interface Props {
 }
 
 export function TokenSelector(props: Props) {
-  const stats = useGlobalStore((state) => state.priceStats);
+  const { data: price } = usePrice(getTokenPublicKey(props.token));
   const [selectorOpen, setSelectorOpen] = useState(false);
 
   if (props.token === undefined) {
@@ -113,9 +114,9 @@ export function TokenSelector(props: Props) {
               }}
             />
           )}
-          {!!stats[props.token]?.currentPrice && (
+          {!!price?.currentPrice && (
             <div className="mt-0.5 text-right text-xs text-zinc-500">
-              {formatNumber(props.amount * stats[props.token].currentPrice)}
+              {formatNumber(props.amount * price.currentPrice)}
             </div>
           )}
         </div>

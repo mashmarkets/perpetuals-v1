@@ -1,13 +1,11 @@
 import { BN } from "@coral-xyz/anchor";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
-import { toast } from "react-toastify";
+import { useQueryClient } from "@tanstack/react-query";
 import { createMintToInstruction } from "src/actions/faucet";
 
-import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { getTokenLabel, tokens } from "@/lib/Token";
-import { useGlobalStore } from "@/stores/store";
 import { sendSignedTransactionAndNotify } from "@/utils/TransactionHandlers";
 
 import { SolidButton } from "./SolidButton";
@@ -18,13 +16,11 @@ interface Props {
 }
 
 export default function AirdropButton(props: Props) {
+  const client = useQueryClient();
   const { publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
 
   let mint = props.custody.mint;
-
-  const poolData = useGlobalStore((state) => state.poolData);
-  const setUserData = useGlobalStore((state) => state.setUserData);
 
   async function handleAirdrop() {
     if (!publicKey) return;
@@ -61,8 +57,9 @@ export default function AirdropButton(props: Props) {
       });
     }
 
-    const userData = await getAllUserData(connection, publicKey!, poolData);
-    setUserData(userData);
+    client.invalidateQueries({
+      queryKey: ["balance", publicKey.toString(), mint.toString()],
+    });
   }
 
   // if (props.custody.getTokenE() === TokenE.USDC) {

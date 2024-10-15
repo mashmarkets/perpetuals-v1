@@ -105,7 +105,7 @@ export const tokens = tokenList.reduce(
   {} as Record<string, Token>,
 );
 
-// This MUST match token symbol for now
+// This MUST match UPPER token symbol for now
 export enum TokenE {
   Bonk = "Bonk",
   ORCA = "ORCA",
@@ -125,7 +125,7 @@ export const TOKEN_LIST = [
 export const TOKEN_ADDRESSES = tokenList.map((x) => new PublicKey(x.address));
 
 export function asToken(tokenStr: string): TokenE {
-  switch (tokenStr) {
+  switch (tokenStr.toUpperCase()) {
     case "SOL":
       return TokenE.SOL;
     case "USDC":
@@ -134,9 +134,9 @@ export function asToken(tokenStr: string): TokenE {
       return TokenE.RAY;
     case "ORCA":
       return TokenE.ORCA;
-    case "Bonk":
+    case "BONK":
       return TokenE.Bonk;
-    case "mSOL":
+    case "MSOL":
       return TokenE.mSOL;
     default:
       throw new Error("Not a valid token string");
@@ -209,9 +209,12 @@ export function tokenAddressToToken(address: string): TokenE | null {
 
 // Trying to decprecated TokenE and just use PublicKey
 export function getTokenPublicKey(token: TokenE) {
-  function getTokenAddress(token: TokenE) {
-    return tokenList.find((x) => x.symbol === token)!.address;
-  }
+  const info = tokenList.find(
+    (x) => x.symbol.toUpperCase() === token.toUpperCase(),
+  );
 
-  return new PublicKey(getTokenAddress(token));
+  if (info === undefined) {
+    console.log("Can't find address for: ", token);
+  }
+  return new PublicKey(info!.address);
 }

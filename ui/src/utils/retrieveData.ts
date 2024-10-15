@@ -59,10 +59,9 @@ export async function fetchLPBalance(
 export function getLiquidityBalance(
   pool: PoolAccount,
   userLpBalance: number,
-  stats: Record<string, any>,
 ): number {
   let lpSupply = Number(pool.lpData.supply) / 10 ** pool.lpData.decimals;
-  let userLiquidity = (userLpBalance! / lpSupply) * pool.getLiquidities(stats)!;
+  let userLiquidity = (userLpBalance! / lpSupply) * pool.getLiquidities()!;
 
   if (Number.isNaN(userLiquidity)) {
     return 0;

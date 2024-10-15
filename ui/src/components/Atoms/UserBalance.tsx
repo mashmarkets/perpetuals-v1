@@ -1,18 +1,17 @@
 import { useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 
-import { TokenE } from "@/lib/Token";
-import { useGlobalStore } from "@/stores/store";
+import { useBalance } from "@/hooks/token";
+import { tokens } from "@/lib/Token";
 
-interface Props {
-  token: TokenE;
-  onClick: () => void;
-}
-
-export function UserBalance(props: Props) {
+export function UserBalance({ mint }: { mint: PublicKey }) {
   const { publicKey } = useWallet();
-  const userData = useGlobalStore((state) => state.userData);
+  const { decimals, symbol } = tokens[mint.toString()]!;
 
-  let balance = userData.tokenBalances[props.token];
+  const { data: balance } = useBalance(
+    mint,
+    publicKey === null ? undefined : publicKey,
+  );
   if (!publicKey) {
     return (
       <div className="flex flex-row space-x-1 font-medium text-white hover:cursor-pointer">
@@ -20,24 +19,12 @@ export function UserBalance(props: Props) {
       </div>
     );
   }
-  if (balance) {
-    return (
-      <div
-        className="flex flex-row space-x-1 font-medium text-white hover:cursor-pointer"
-        onClick={props.onClick}
-      >
-        <p>{balance.toFixed(4)}</p>
-        <p className="font-normal">{props.token}</p>
-        <p className="text-zinc-400"> Balance</p>
-      </div>
-    );
-  } else {
-    return (
-      <div className="flex flex-row space-x-1 font-medium text-white hover:cursor-pointer">
-        <p>0</p>
-        <p className="font-normal">{props.token}</p>
-        <p className="text-zinc-400"> Balance</p>
-      </div>
-    );
-  }
+
+  return (
+    <div className="flex flex-row space-x-1 font-medium text-white hover:cursor-pointer">
+      <p>{balance ? (Number(balance) / 10 ** decimals).toFixed(4) : 0}</p>
+      <p className="font-normal">{symbol}</p>
+      <p className="text-zinc-400"> Balance</p>
+    </div>
+  );
 }

@@ -1,106 +1,113 @@
 import NewTab from "@carbon/icons-react/lib/NewTab";
+import { PublicKey } from "@solana/web3.js";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { LoadingSpinner } from "@/components/Atoms/LoadingSpinner";
-import { getCurrentWeight } from "@/lib/classGetters";
+import { useCustodies, usePool } from "@/hooks/perpetuals";
+import { usePrices } from "@/hooks/price";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
 import { useGlobalStore } from "@/stores/store";
 import { formatNumberCommas } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 
-interface Props {
-  className?: string;
+export default function PoolTokenStats({
+  pool,
+  poolKey,
+  className,
+}: {
   pool: PoolAccount;
-}
+  poolKey: PublicKey;
+  className?: string;
+}) {
+  const poolData = usePool(new PublicKey(poolKey));
+  const custodies = useCustodies(
+    poolData.data?.custodies.map((x) => new PublicKey(x)) ?? [],
+  );
+  const prices = usePrices(
+    custodies.filter((x) => x.data !== undefined).map((x) => x.data?.mint),
+  );
 
-export default function PoolTokenStats(props: Props) {
-  const stats = useGlobalStore((state) => state.priceStats);
-  let poolData = useGlobalStore((state) => state.poolData);
+  return (
+    <div className="w-full">
+      <div className="bg-zinc-900 p-8">
+        <table className={twMerge("table-auto", "text-white", "w-full")}>
+          <thead className={twMerge("text-xs", "text-zinc-500", "p-10")}>
+            <tr className="">
+              <td className="pb-5 text-white">Pool Tokens</td>
+              <td className="pb-5">Deposit Fee</td>
+              <td className="pb-5">Liquidity</td>
+              <td className="pb-5">Price</td>
+              <td className="pb-5">Amount</td>
+              <td className="pb-5">Utilization</td>
+              <td className="pb-5"></td>
+            </tr>
+          </thead>
+          <tbody className={twMerge("text-xs")}>
+            {Object.values(pool.custodies).map((custody) => {
+              let token = custody.getTokenE();
 
-  if (Object.keys(stats).length === 0) {
-    return <LoadingSpinner className="absolute text-4xl" />;
-  } else {
-    return (
-      <div className="w-full">
-        <div className="bg-zinc-900 p-8">
-          <table className={twMerge("table-auto", "text-white", "w-full")}>
-            <thead className={twMerge("text-xs", "text-zinc-500", "p-10")}>
-              <tr className="">
-                <td className="pb-5 text-white">Pool Tokens</td>
-                <td className="pb-5">Deposit Fee</td>
-                <td className="pb-5">Liquidity</td>
-                <td className="pb-5">Price</td>
-                <td className="pb-5">Amount</td>
-                <td className="pb-5">Current/Target Weight</td>
-                <td className="pb-5">Utilization</td>
-                <td className="pb-5"></td>
-              </tr>
-            </thead>
-            <tbody className={twMerge("text-xs")}>
-              {Object.values(props.pool.custodies).map((custody) => {
-                let pool = poolData[custody.pool.toString()];
-                let token = custody.getTokenE();
+              if (!token) return <></>;
 
-                if (!token) return <></>;
-
-                return (
-                  <tr
-                    key={custody.mint.toString()}
-                    className="border-t border-zinc-700"
-                  >
-                    <td className="py-4">
-                      <div className="flex flex-row items-center space-x-1">
-                        {cloneElement(getTokenIcon(custody.mint), {
-                          className: "h-10 w-10",
-                        })}
-                        <div className="flex flex-col">
-                          <p className="font-medium">
-                            {getTokenSymbol(custody.mint)}
-                          </p>
-                          <p className={twMerge("text-xs", "text-zinc-500")}>
-                            {getTokenLabel(custody.mint)}
-                          </p>
-                        </div>
-                        <a
-                          target="_blank"
-                          rel="noreferrer"
-                          href={`${ACCOUNT_URL(custody.mint.toString())}`}
-                        >
-                          <NewTab />
-                        </a>
+              return (
+                <tr
+                  key={custody.mint.toString()}
+                  className="border-t border-zinc-700"
+                >
+                  <td className="py-4">
+                    <div className="flex flex-row items-center space-x-1">
+                      {cloneElement(getTokenIcon(custody.mint), {
+                        className: "h-10 w-10",
+                      })}
+                      <div className="flex flex-col">
+                        <p className="font-medium">
+                          {getTokenSymbol(custody.mint)}
+                        </p>
+                        <p className={twMerge("text-xs", "text-zinc-500")}>
+                          {getTokenLabel(custody.mint)}
+                        </p>
                       </div>
-                    </td>
-                    <td>{custody.getAddFee()}%</td>
-                    <td>
-                      ${formatNumberCommas(custody.getCustodyLiquidity(stats))}
-                    </td>
-                    <td>${formatNumberCommas(stats[token].currentPrice)}</td>
-                    <td>{formatNumberCommas(custody.getAmount())}</td>
-                    <td>
-                      {formatNumberCommas(
-                        getCurrentWeight(props.pool, custody, stats),
-                      )}
-                      %
-                    </td>
-                    <td>{formatNumberCommas(custody.getUtilizationRate())}%</td>
-                    <td>
                       <a
                         target="_blank"
                         rel="noreferrer"
-                        href={`${ACCOUNT_URL(custody.address.toString())}`}
+                        href={`${ACCOUNT_URL(custody.mint.toString())}`}
                       >
                         <NewTab />
                       </a>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </td>
+                  <td>{custody.getAddFee()}%</td>
+                  <td>
+                    $
+                    {formatNumberCommas(
+                      custody.getCustodyLiquidity(
+                        prices[custody.mint.toString()]?.currentPrice,
+                      ),
+                    )}
+                  </td>
+                  <td>
+                    $
+                    {formatNumberCommas(
+                      prices[custody.mint.toString()]?.currentPrice,
+                    )}
+                  </td>
+                  <td>{formatNumberCommas(custody.getAmount())}</td>
+                  <td>{formatNumberCommas(custody.getUtilizationRate())}%</td>
+                  <td>
+                    <a
+                      target="_blank"
+                      rel="noreferrer"
+                      href={`${ACCOUNT_URL(custody.address.toString())}`}
+                    >
+                      <NewTab />
+                    </a>
+                  </td>
+                </tr>
+              );
+            })}
+          </tbody>
+        </table>
       </div>
-    );
-  }
+    </div>
+  );
 }

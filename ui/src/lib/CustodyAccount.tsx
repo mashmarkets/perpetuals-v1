@@ -10,8 +10,6 @@ import {
   OracleParams,
   Permissions,
   PositionStats,
-  PriceStat,
-  PriceStats,
   PricingParams,
   Stats,
   TradeStats,
@@ -75,30 +73,14 @@ export class CustodyAccount {
     return tokenAddressToToken(this.mint.toString())!;
   }
 
-  getCustodyLiquidity(stats: PriceStats): number {
-    if (Object.values(stats).length === 0) {
-      throw new Error("stats not loaded");
+  getCustodyLiquidity(price: number | undefined): number {
+    if (price === undefined) {
+      return 0;
     }
-    try {
-      return (
-        (stats[this.getTokenE()].currentPrice *
-          Number(this.assets.owned.sub(this.assets.locked))) /
-        10 ** this.decimals
-      );
-    } catch (e) {
-      console.log("stats error", e, stats);
-      throw e;
-    }
-  }
-
-  getCurrentWeight(stats: PriceStat, liquidity: number): number {
-    let weight =
-      (100 *
-        stats.currentPrice *
-        (Number(this.assets.owned) / 10 ** this.decimals)) /
-      liquidity;
-
-    return weight ? weight : 0;
+    return (
+      (price * Number(this.assets.owned.sub(this.assets.locked))) /
+      10 ** this.decimals
+    );
   }
 
   getAmount(): number {

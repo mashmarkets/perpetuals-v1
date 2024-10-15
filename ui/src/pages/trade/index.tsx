@@ -7,7 +7,7 @@ const IndexPage = () => {
   useEffect(() => {
     const { pathname } = Router;
     if (pathname == "/trade") {
-      Router.push("/trade/SOL-USD");
+      Router.push("/trade/mSOL");
     }
   });
 

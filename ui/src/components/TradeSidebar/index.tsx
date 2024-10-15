@@ -8,6 +8,7 @@ import { Side } from "@/lib/types";
 
 interface Props {
   className?: string;
+  token: TokenE;
 }
 
 export function TradeSidebar(props: Props) {
@@ -36,10 +37,18 @@ export function TradeSidebar(props: Props) {
           </SidebarTab>
         </div>
         {side === Side.Long && (
-          <TradePosition className="mt-6" side={Side.Long} />
+          <TradePosition
+            className="mt-6"
+            side={Side.Long}
+            token={props.token}
+          />
         )}
         {side === Side.Short && (
-          <TradePosition className="mt-6" side={Side.Short} />
+          <TradePosition
+            className="mt-6"
+            side={Side.Short}
+            token={props.token}
+          />
         )}
       </div>
     </div>

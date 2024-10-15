@@ -12,11 +12,9 @@ interface Props {
 }
 
 export default function PoolGeneralStats(props: Props) {
-  const stats = useGlobalStore((state) => state.priceStats);
-
   const userData = useGlobalStore((state) => state.userData);
 
-  if (Object.keys(stats).length === 0 || props.pool.lpData === null) {
+  if (props.pool.lpData === null) {
     return <LoadingSpinner className="absolute text-4xl" />;
   } else {
     return (
@@ -32,7 +30,7 @@ export default function PoolGeneralStats(props: Props) {
         {[
           {
             label: "Liquidity",
-            value: `$${formatNumberCommas(props.pool.getLiquidities(stats))}`,
+            value: `$${formatNumberCommas(props.pool.getLiquidities())}`,
           },
           {
             label: "Volume",
@@ -61,7 +59,6 @@ export default function PoolGeneralStats(props: Props) {
               getLiquidityBalance(
                 props.pool,
                 userData.getUserLpBalance(props.pool.address.toString()),
-                stats,
               ),
             )}`,
           },

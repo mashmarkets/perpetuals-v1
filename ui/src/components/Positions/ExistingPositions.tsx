@@ -11,11 +11,7 @@ import { countDictList, getPoolSortedPositions } from "@/utils/organizers";
 import { PoolTokens } from "../PoolTokens";
 import { PositionColumn } from "./PositionColumn";
 
-interface Props {
-  className?: string;
-}
-
-export function ExistingPositions(props: Props) {
+export function ExistingPositions() {
   const { publicKey } = useWallet();
 
   const positionData = useGlobalStore((state) => state.positionData);

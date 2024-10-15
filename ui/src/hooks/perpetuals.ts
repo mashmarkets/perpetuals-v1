@@ -58,6 +58,7 @@ export const useCustodies = (custodies: PublicKey[]) => {
   const { connection } = useConnection();
   const program = useProgram();
 
+  // TODO:- Add a combine here for better ergonomics
   return useQueries({
     queries: custodies.map((custody) => ({
       queryKey: ["custody", custody.toString()],

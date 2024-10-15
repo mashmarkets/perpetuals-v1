@@ -7,6 +7,7 @@ import { twMerge } from "tailwind-merge";
 
 import { CollateralModal } from "@/components/Positions/CollateralModal";
 import { PositionColumn } from "@/components/Positions/PositionColumn";
+import { usePrice } from "@/hooks/price";
 import { PositionAccount } from "@/lib/PositionAccount";
 import { getTokenIcon, getTokenLabel, getTokenPublicKey } from "@/lib/Token";
 import { Side } from "@/lib/types";
@@ -26,7 +27,7 @@ interface Props {
 export default function PositionBasicInfo(props: Props) {
   const token = getTokenPublicKey(props.position.token);
   const tokenIcon = getTokenIcon(token);
-  const stats = useGlobalStore((state) => state.priceStats);
+  const { data: price } = usePrice(token);
 
   return (
     <div className={twMerge("flex", "items-center", "py-5", props.className)}>
@@ -114,10 +115,7 @@ export default function PositionBasicInfo(props: Props) {
       </PositionColumn>
       <PositionColumn num={6}>
         <div className="text-sm text-white">
-          $
-          {stats[props.position.token] != undefined
-            ? formatNumberCommas(stats[props.position.token].currentPrice)
-            : 0}
+          ${price ? formatNumberCommas(price.currentPrice) : 0}
         </div>
       </PositionColumn>
       <PositionColumn num={7}>

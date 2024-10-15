@@ -25,7 +25,7 @@ export const useMint = (mint: PublicKey | undefined) => {
 
 export const useBalance = (
   mint: PublicKey | undefined,
-  user: PublicKey | undefined,
+  user: PublicKey | undefined | null, // null cause thats what useWallet returns
 ) => {
   const { connection } = useConnection();
   return useQuery({

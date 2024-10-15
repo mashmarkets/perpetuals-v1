@@ -49,8 +49,3 @@ export function CandlestickChart(props: Props) {
     </div>
   );
 }
-
-CandlestickChart.defaultProps = {
-  token: TokenE.SOL,
-  comparisonCurrency: "usd",
-};

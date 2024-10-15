@@ -2,6 +2,7 @@ import CloseIcon from "@carbon/icons-react/lib/Close";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
+import { usePrices } from "@/hooks/price";
 import {
   getTokenIcon,
   getTokenLabel,
@@ -27,7 +28,9 @@ interface Props {
 }
 
 export function TokenSelectorList(props: Props) {
-  const stats = useGlobalStore((state) => state.priceStats);
+  const list = props.tokenList ? props.tokenList : TOKEN_LIST;
+
+  const prices = usePrices(list.map(getTokenPublicKey));
 
   return (
     <div
@@ -45,7 +48,7 @@ export function TokenSelectorList(props: Props) {
           </button>
         </header>
         <div className="mt-6">
-          {(props.tokenList ? props.tokenList : TOKEN_LIST).map((token) => {
+          {list.map((token) => {
             const icon = getTokenIcon(getTokenPublicKey(token));
 
             return (
@@ -76,9 +79,13 @@ export function TokenSelectorList(props: Props) {
                     {getTokenLabel(getTokenPublicKey(token))}
                   </div>
                 </div>
-                {!!stats[token]?.currentPrice && (
+                {!!prices[getTokenPublicKey(token)!.toString()]
+                  ?.currentPrice && (
                   <div className="text-sm text-white">
-                    ${formatNumber(stats[token].currentPrice)}
+                    $
+                    {formatNumber(
+                      prices[getTokenPublicKey(token)!.toString()].currentPrice,
+                    )}
                   </div>
                 )}
               </button>
