@@ -8,7 +8,7 @@ use {
             multisig::{AdminInstruction, Multisig},
             oracle::OracleParams,
             perpetuals::Permissions,
-            pool::{Pool, TokenRatios},
+            pool::Pool,
         },
     },
     anchor_lang::prelude::*,
@@ -53,18 +53,12 @@ pub struct SetCustodyConfigParams {
     pub permissions: Permissions,
     pub fees: Fees,
     pub borrow_rate: BorrowRateParams,
-    pub ratios: Vec<TokenRatios>,
 }
 
 pub fn set_custody_config<'info>(
     ctx: Context<'_, '_, '_, 'info, SetCustodyConfig<'info>>,
     params: &SetCustodyConfigParams,
 ) -> Result<u8> {
-    // validate inputs
-    if params.ratios.len() != ctx.accounts.pool.ratios.len() {
-        return Err(ProgramError::InvalidArgument.into());
-    }
-
     // validate signatures
     let mut multisig = ctx.accounts.multisig.load_mut()?;
 
@@ -83,7 +77,6 @@ pub fn set_custody_config<'info>(
 
     // update pool data
     let pool = ctx.accounts.pool.as_mut();
-    pool.ratios = params.ratios.clone();
     if !pool.validate() {
         return err!(PerpetualsError::InvalidPoolConfig);
     }

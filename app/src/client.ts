@@ -24,7 +24,6 @@ import { sha256 } from "js-sha256";
 import { encode } from "bs58";
 import { readFileSync } from "fs";
 import {
-  TokenRatio,
   PositionSide,
   InitParams,
   OracleParams,
@@ -101,26 +100,6 @@ export class PerpetualsClient {
     );
 
     return { publicKey, bump };
-  };
-
-  adjustTokenRatios = (ratios: TokenRatio[]): TokenRatio[] => {
-    if (ratios.length == 0) {
-      return ratios;
-    }
-
-    const target = Math.floor(10_000 / ratios.length);
-
-    for (const ratio of ratios) {
-      ratio.target = new BN(target);
-    }
-
-    if (10_000 % ratios.length !== 0) {
-      ratios[ratios.length - 1].target = new BN(
-        target + (10_000 % ratios.length)
-      );
-    }
-
-    return ratios;
   };
 
   getPerpetuals = async () => {
@@ -469,8 +448,7 @@ export class PerpetualsClient {
     pricingConfig: PricingParams,
     permissions: Permissions,
     fees: Fees,
-    borrowRate: BorrowRateParams,
-    ratios: TokenRatio[]
+    borrowRate: BorrowRateParams
   ): Promise<void> => {
     await this.program.methods
       .addCustody({
@@ -481,7 +459,6 @@ export class PerpetualsClient {
         permissions,
         fees,
         borrowRate,
-        ratios,
       })
       .accounts({
         admin: this.admin.publicKey,
@@ -509,11 +486,10 @@ export class PerpetualsClient {
 
   removeCustody = async (
     poolName: string,
-    tokenMint: PublicKey,
-    ratios: TokenRatio[]
+    tokenMint: PublicKey
   ): Promise<void> => {
     await this.program.methods
-      .removeCustody({ ratios })
+      .removeCustody({})
       .accounts({
         admin: this.admin.publicKey,
         multisig: this.multisig.publicKey,

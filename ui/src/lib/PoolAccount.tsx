@@ -4,13 +4,12 @@ import { PublicKey } from "@solana/web3.js";
 
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { TokenE } from "@/lib/Token";
-import { AccountMeta, Pool, PriceStats, TokenRatios } from "@/lib/types";
+import { AccountMeta, Pool, PriceStats } from "@/lib/types";
 import { PERPETUALS_PROGRAM_ID } from "@/utils/constants";
 
 export class PoolAccount {
   public name: string;
   public custodies: Record<string, CustodyAccount>;
-  public ratios: Record<string, TokenRatios>;
   // public tokens: Token[];
   public aumUsd: BN;
   public bump: number;
@@ -38,23 +37,10 @@ export class PoolAccount {
       tempCustodies[custody.toString()] = custodyData[custody.toString()]!;
     });
 
-    let tempRatios: Record<string, TokenRatios> = {};
-    pool.ratios.forEach((ratio: TokenRatios, index: number) => {
-      tempRatios[pool.custodies[index].toString()] = ratio;
-    });
-
     this.custodies = tempCustodies;
-    this.ratios = tempRatios;
 
     this.address = address;
     this.lpData = lpData;
-  }
-
-  getRatioStruct(publicKey: PublicKey): TokenRatios {
-    return this.ratios[publicKey.toString()]
-      ? this.ratios[publicKey.toString()]
-      : { target: new BN(1), min: new BN(1), max: new BN(1) };
-    // find the indexin
   }
 
   getCustodyAccount(token: TokenE): CustodyAccount | null {

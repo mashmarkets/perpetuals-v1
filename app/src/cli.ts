@@ -111,20 +111,7 @@ async function addCustody(
     allowCollateralWithdrawal: true,
     allowSizeChange: true,
   };
-  // TODO:- FIGURE OUT THESE PARAMS
-  // Linear
-  // if token ratio is improved:
-  //    fee = base_fee / ratio_fee
-  // otherwise:
-  //    fee = base_fee * ratio_fee
-  // where:
-  //   if new_ratio < ratios.target:
-  //     ratio_fee = 1 + custody.fees.ratio_mult * (ratios.target - new_ratio) / (ratios.target - ratios.min);
-  //   otherwise:
-  //     ratio_fee = 1 + custody.fees.ratio_mult * (new_ratio - ratios.target) / (ratios.max - ratios.target);
   const fees: Fees = {
-    mode: { linear: {} }, // Fixed, Linear, Optimal
-    ratioMult: new BN(20_000), // 200%
     utilizationMult: new BN(20_000), // 200%
     addLiquidity: new BN(100), // 1%
     removeLiquidity: new BN(100), // 1%
@@ -132,8 +119,6 @@ async function addCustody(
     closePosition: new BN(100), // 1%
     liquidation: new BN(100), // 1%
     protocolShare: new BN(10), // 0.1%
-    feeMax: new BN(250), // 2.5%
-    feeOptimal: new BN(10), // 0.1%
   };
   // (9 decimals)
   // if current_utilization < optimal_utilization:
@@ -147,15 +132,6 @@ async function addCustody(
     optimalUtilization: new BN(800_000_000), // 800 USDC
   };
 
-  const pool = await client.getPool(poolName);
-  pool.ratios.push({
-    target: new BN(5_000), // 50%
-    min: new BN(10), // 0.1%
-    max: new BN(10_000), // 100%
-  });
-
-  const ratios = client.adjustTokenRatios(pool.ratios);
-
   return client.addCustody(
     poolName,
     tokenMint,
@@ -165,8 +141,7 @@ async function addCustody(
     pricingConfig,
     permissions,
     fees,
-    borrowRate,
-    ratios
+    borrowRate
   );
 }
 
@@ -185,13 +160,7 @@ async function removeCustody(
   poolName: string,
   tokenMint: PublicKey
 ): Promise<void> {
-  const pool = await client.getPool(poolName);
-
-  pool.ratios.pop();
-
-  const ratios = client.adjustTokenRatios(pool.ratios);
-
-  return client.removeCustody(poolName, tokenMint, ratios);
+  return client.removeCustody(poolName, tokenMint);
 }
 
 function upgradeCustody(poolName: string, tokenMint: PublicKey): Promise<void> {

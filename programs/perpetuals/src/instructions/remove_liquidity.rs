@@ -180,10 +180,6 @@ pub fn remove_liquidity(
     msg!("Check pool constraints");
     let protocol_fee = Pool::get_fee_amount(custody.fees.protocol_share, fee_amount)?;
     let withdrawal_amount = math::checked_add(transfer_amount, protocol_fee)?;
-    require!(
-        pool.check_token_ratio(token_id, 0, withdrawal_amount, custody, &token_ema_price)?,
-        PerpetualsError::TokenRatioOutOfRange
-    );
 
     require!(
         math::checked_sub(custody.assets.owned, custody.assets.locked)? >= withdrawal_amount,

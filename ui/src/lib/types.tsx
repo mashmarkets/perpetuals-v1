@@ -6,17 +6,10 @@ import { TokenE } from "@/lib/Token";
 export interface Pool {
   name: string;
   custodies: PublicKey[];
-  ratios: TokenRatios[];
   aumUsd: BN;
   bump: number;
   lpTokenBump: number;
   inceptionTime: BN;
-}
-
-export interface TokenRatios {
-  target: BN;
-  min: BN;
-  max: BN;
 }
 
 export interface Custody {
@@ -83,7 +76,6 @@ export interface Stats {
 }
 
 export interface Fees {
-  mode: FeesMode;
   maxIncrease: BN;
   maxDecrease: BN;
   addLiquidity: BN;
@@ -92,14 +84,6 @@ export interface Fees {
   closePosition: BN;
   liquidation: BN;
   protocolShare: BN;
-  fee_max: BN;
-  fee_optimal: BN;
-}
-
-export enum FeesMode {
-  Fixed,
-  Linear,
-  Optimal,
 }
 
 export interface OracleParams {

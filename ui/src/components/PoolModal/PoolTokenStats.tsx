@@ -82,9 +82,6 @@ export default function PoolTokenStats(props: Props) {
                       {formatNumberCommas(
                         getCurrentWeight(props.pool, custody, stats),
                       )}
-                      % /{" "}
-                      {Number(pool?.getRatioStruct(custody.address)!.target) /
-                        100}
                       %
                     </td>
                     <td>{formatNumberCommas(custody.getUtilizationRate())}%</td>

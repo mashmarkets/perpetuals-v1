@@ -5,8 +5,8 @@ import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { Pool } from "@/lib/types";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
-import { ViewHelper } from "@/utils/viewHelpers";
 import { sleep } from "@/utils/TransactionHandlers";
+import { ViewHelper } from "@/utils/viewHelpers";
 
 interface FetchPool {
   account: Pool;
@@ -40,7 +40,6 @@ export async function getPoolData(
         let poolData: Pool = {
           name: pool.account.name,
           custodies: pool.account.custodies,
-          ratios: pool.account.ratios,
           aumUsd: pool.account.aumUsd,
           bump: pool.account.bump,
           lpTokenBump: pool.account.lpTokenBump,

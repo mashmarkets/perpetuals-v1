@@ -59,13 +59,6 @@ export const addCustodySchema = z.object({
     allowSizeChange: z.boolean(),
   }),
   fees: z.object({
-    mode: z
-      .enum(["fixed", "linear", "optimal"])
-      .transform(
-        (x) =>
-          ({ [x]: {} }) as { fixed: {} } | { linear: {} } | { optimal: {} },
-      ),
-    ratioMult: z.string().transform(transformToBN(4 - 2)),
     utilizationMult: z.string().transform(transformToBN(4 - 2)),
     addLiquidity: z.string().transform(transformToBN(4 - 2)),
     removeLiquidity: z.string().transform(transformToBN(4 - 2)),
@@ -73,8 +66,6 @@ export const addCustodySchema = z.object({
     closePosition: z.string().transform(transformToBN(4 - 2)),
     liquidation: z.string().transform(transformToBN(4 - 2)),
     protocolShare: z.string().transform(transformToBN(4 - 2)),
-    feeMax: z.string().transform(transformToBN(4 - 2)),
-    feeOptimal: z.string().transform(transformToBN(4 - 2)),
   }),
   borrowRate: z.object({
     baseRate: z.string().transform(transformToBN(9 - 2)),
@@ -82,24 +73,6 @@ export const addCustodySchema = z.object({
     slope2: z.string().transform(transformToBN(9 - 2)),
     optimalUtilization: z.string().transform(transformToBN(9 - 2)),
   }),
-  ratios: z
-    .array(
-      z.object({
-        target: z.string().transform(transformToBN(4 - 2)),
-        min: z.string().transform(transformToBN(4 - 2)),
-        max: z.string().transform(transformToBN(4 - 2)),
-      }),
-    )
-    .refine(
-      (vals) => {
-        return new BN("10000").eq(
-          vals.reduce((acc, val) => acc.add(val.target), new BN(0)),
-        );
-      },
-      {
-        message: "Target ratios don't add up to 100%",
-      },
-    ),
 });
 
 export type AddCustodyParams = z.infer<typeof addCustodySchema>;
@@ -186,8 +159,6 @@ const AddCustodyForm = ({
       allowSizeChange: true,
     },
     fees: {
-      mode: "linear",
-      ratioMult: "200.00",
       utilizationMult: "200.00",
       addLiquidity: "1.00",
       removeLiquidity: "1.00",
@@ -195,8 +166,6 @@ const AddCustodyForm = ({
       closePosition: "1.00",
       liquidation: "1.00",
       protocolShare: "0.10",
-      feeMax: "2.50",
-      feeOptimal: "0.10",
     },
     borrowRate: {
       baseRate: "0.0000000",
@@ -204,14 +173,6 @@ const AddCustodyForm = ({
       slope2: "0.0120000",
       optimalUtilization: "80.0000000",
     },
-    ratios: [
-      ...pool.ratios,
-      { min: new BN("0"), max: new BN("10000"), target: new BN("5000") },
-    ].map((x) => ({
-      max: BigNumber(x.max.toString()).div(100).toFixed(2),
-      min: BigNumber(x.min.toString()).div(100).toFixed(2),
-      target: BigNumber(x.target.toString()).div(100).toFixed(2),
-    })),
   };
 
   const {
@@ -538,28 +499,7 @@ const AddCustodyForm = ({
 
         {/* Fees */}
         <h2 className="mt-4 text-xl font-semibold text-white">Fees</h2>
-        <div>
-          <label htmlFor="feeMode" className="mb-1 block text-white">
-            Fee Mode:
-          </label>
-          <select
-            id="feeMode"
-            {...register("fees.mode")}
-            className="w-full rounded border p-2"
-          >
-            <option value="fixed">Fixed</option>
-            <option value="linear">Linear</option>
-            <option value="optimal">Optimal</option>
-          </select>
-        </div>
         {Object.entries(defaultValues.fees).map(([key, value]) => {
-          if (key === "mode") return null;
-          if (["ratioMult"].includes(key) && feeMode !== "linear") {
-            return null;
-          }
-          if (["feeMax", "feeOptimal"].includes(key) && feeMode !== "optimal") {
-            return null;
-          }
           return (
             <div key={key}>
               <label htmlFor={key} className="mb-1 block text-white">
@@ -602,56 +542,6 @@ const AddCustodyForm = ({
             />
           </div>
         ))}
-
-        <h2 className="mt-4 text-xl font-semibold text-white">Ratios</h2>
-        <table className="w-full text-white">
-          <thead>
-            <tr>
-              <th>Custody</th>
-              <th>Target (%)</th>
-              <th>Min (%)</th>
-              <th>Max (%)</th>
-            </tr>
-          </thead>
-          <tbody>
-            {[...pool.custodies, tokenMint].map((custody, i) => (
-              <tr key={custody.toString()}>
-                <td>{custody === "" ? "To be added" : custody.toString()}</td>
-                <td>
-                  <input
-                    type="number"
-                    // defaultValue={ratio.target}
-                    className="w-full rounded border bg-gray-700 p-2 text-white"
-                    {...register(`ratios.${i}.target`)}
-                    step="0.01"
-                    min="0"
-                    max="100"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    {...register(`ratios.${i}.min`)}
-                    className="w-full rounded border bg-gray-700 p-2 text-white"
-                    step="0.01"
-                    min="0"
-                    max="100"
-                  />
-                </td>
-                <td>
-                  <input
-                    type="number"
-                    className="w-full rounded border bg-gray-700 p-2 text-white"
-                    {...register(`ratios.${i}.max`)}
-                    step="0.01"
-                    min="0"
-                    max="100"
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
 
         <button
           type="submit"

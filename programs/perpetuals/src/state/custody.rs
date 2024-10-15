@@ -11,18 +11,9 @@ use {
     anchor_lang::prelude::*,
 };
 
-#[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Debug)]
-pub enum FeesMode {
-    Fixed,
-    Linear,
-    Optimal,
-}
-
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
 pub struct Fees {
-    pub mode: FeesMode,
     // fees have implied BPS_DECIMALS decimals
-    pub ratio_mult: u64,
     pub utilization_mult: u64,
     pub add_liquidity: u64,
     pub remove_liquidity: u64,
@@ -30,9 +21,6 @@ pub struct Fees {
     pub close_position: u64,
     pub liquidation: u64,
     pub protocol_share: u64,
-    // configs for optimal fee mode
-    pub fee_max: u64,
-    pub fee_optimal: u64,
 }
 
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
@@ -196,12 +184,6 @@ pub struct DeprecatedCustody {
     pub token_account_bump: u8,
 }
 
-impl Default for FeesMode {
-    fn default() -> Self {
-        Self::Linear
-    }
-}
-
 impl Fees {
     pub fn validate(&self) -> bool {
         self.add_liquidity as u128 <= Perpetuals::BPS_POWER
@@ -210,8 +192,6 @@ impl Fees {
             && self.close_position as u128 <= Perpetuals::BPS_POWER
             && self.liquidation as u128 <= Perpetuals::BPS_POWER
             && self.protocol_share as u128 <= Perpetuals::BPS_POWER
-            && self.fee_max as u128 <= Perpetuals::BPS_POWER
-            && self.fee_optimal as u128 <= Perpetuals::BPS_POWER
     }
 }
 

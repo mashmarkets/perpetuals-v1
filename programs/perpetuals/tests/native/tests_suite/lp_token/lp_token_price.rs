@@ -34,9 +34,6 @@ pub async fn lp_token_price() {
                     mint_name: "usdc",
                     is_stable: true,
                     is_virtual: false,
-                    target_ratio: utils::ratio_from_percentage(50.0),
-                    min_ratio: utils::ratio_from_percentage(0.0),
-                    max_ratio: utils::ratio_from_percentage(100.0),
                     initial_price: utils::scale(1, USDC_DECIMALS),
                     initial_conf: utils::scale_f64(0.01, USDC_DECIMALS),
                     pricing_params: None,
@@ -52,9 +49,6 @@ pub async fn lp_token_price() {
                     mint_name: "eth",
                     is_stable: false,
                     is_virtual: false,
-                    target_ratio: utils::ratio_from_percentage(50.0),
-                    min_ratio: utils::ratio_from_percentage(0.0),
-                    max_ratio: utils::ratio_from_percentage(100.0),
                     initial_price: utils::scale(1_500, ETH_DECIMALS),
                     initial_conf: utils::scale(10, ETH_DECIMALS),
                     pricing_params: None,
@@ -83,7 +77,7 @@ pub async fn lp_token_price() {
         )
         .await
         .unwrap(),
-        1_074_388
+        1_030_638
     );
 
     // Increase asset price and check that lp token price increase
@@ -125,7 +119,7 @@ pub async fn lp_token_price() {
             )
             .await
             .unwrap(),
-            1_128_110
+            1_082_170
         );
     }
 
@@ -168,7 +162,7 @@ pub async fn lp_token_price() {
             )
             .await
             .unwrap(),
-            1_009_921
+            968_799
         );
     }
 }

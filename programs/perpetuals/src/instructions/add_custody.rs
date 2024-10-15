@@ -8,7 +8,7 @@ use {
             multisig::{AdminInstruction, Multisig},
             oracle::OracleParams,
             perpetuals::{Permissions, Perpetuals},
-            pool::{Pool, TokenRatios},
+            pool::Pool,
         },
     },
     anchor_lang::prelude::*,
@@ -42,8 +42,7 @@ pub struct AddCustody<'info> {
 
     #[account(
         mut,
-        realloc = Pool::LEN + (pool.custodies.len() + 1) * std::mem::size_of::<Pubkey>() +
-                              (pool.ratios.len() + 1) * std::mem::size_of::<TokenRatios>(),
+        realloc = Pool::LEN + (pool.custodies.len() + 1) * std::mem::size_of::<Pubkey>(),
         realloc::payer = admin,
         realloc::zero = false,
         seeds = [b"pool",
@@ -92,18 +91,12 @@ pub struct AddCustodyParams {
     pub permissions: Permissions,
     pub fees: Fees,
     pub borrow_rate: BorrowRateParams,
-    pub ratios: Vec<TokenRatios>,
 }
 
 pub fn add_custody<'info>(
     ctx: Context<'_, '_, '_, 'info, AddCustody<'info>>,
     params: &AddCustodyParams,
 ) -> Result<u8> {
-    // validate inputs
-    if params.ratios.len() != ctx.accounts.pool.ratios.len() + 1 {
-        return Err(ProgramError::InvalidArgument.into());
-    }
-
     // validate signatures
     let mut multisig = ctx.accounts.multisig.load_mut()?;
 
@@ -128,7 +121,6 @@ pub fn add_custody<'info>(
 
     // update pool data
     pool.custodies.push(ctx.accounts.custody.key());
-    pool.ratios = params.ratios.clone();
     if !pool.validate() {
         return err!(PerpetualsError::InvalidPoolConfig);
     }

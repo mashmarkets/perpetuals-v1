@@ -7,7 +7,7 @@ use {
             custody::Custody,
             multisig::{AdminInstruction, Multisig},
             perpetuals::Perpetuals,
-            pool::{Pool, TokenRatios},
+            pool::Pool,
         },
     },
     anchor_lang::prelude::*,
@@ -42,8 +42,8 @@ pub struct RemoveCustody<'info> {
 
     #[account(
         mut,
-        realloc = Pool::LEN + (pool.custodies.len() - 1) * std::mem::size_of::<Pubkey>() +
-                              (pool.ratios.len() - 1) * std::mem::size_of::<TokenRatios>(),
+        realloc = Pool::LEN + (pool.custodies.len() - 1) * std::mem::size_of::<Pubkey>(),
+                              
         realloc::payer = admin,
         realloc::zero = false,
         seeds = [b"pool",
@@ -77,19 +77,12 @@ pub struct RemoveCustody<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct RemoveCustodyParams {
-    pub ratios: Vec<TokenRatios>,
 }
 
 pub fn remove_custody<'info>(
     ctx: Context<'_, '_, '_, 'info, RemoveCustody<'info>>,
     params: &RemoveCustodyParams,
 ) -> Result<u8> {
-    // validate inputs
-    if ctx.accounts.pool.ratios.is_empty()
-        || params.ratios.len() != ctx.accounts.pool.ratios.len() - 1
-    {
-        return Err(ProgramError::InvalidArgument.into());
-    }
 
     // validate signatures
     let mut multisig = ctx.accounts.multisig.load_mut()?;
@@ -116,7 +109,6 @@ pub fn remove_custody<'info>(
     let pool = ctx.accounts.pool.as_mut();
     let token_id = pool.get_token_id(&ctx.accounts.custody.key())?;
     pool.custodies.remove(token_id);
-    pool.ratios = params.ratios.clone();
     if !pool.validate() {
         return err!(PerpetualsError::InvalidPoolConfig);
     }

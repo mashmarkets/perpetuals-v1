@@ -498,8 +498,7 @@ export class TestClient {
     pricing,
     permissions,
     fees,
-    borrowRate,
-    ratios
+    borrowRate
   ) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey
@@ -515,7 +514,6 @@ export class TestClient {
             permissions,
             fees,
             borrowRate,
-            ratios,
           })
           .accounts({
             admin: this.admins[i].publicKey,
@@ -541,14 +539,14 @@ export class TestClient {
     }
   };
 
-  removeCustody = async (custody, ratios) => {
+  removeCustody = async (custody) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
         await this.program.methods
-          .removeCustody({ ratios })
+          .removeCustody({})
           .accounts({
             admin: this.admins[i].publicKey,
             multisig: this.multisig.publicKey,
@@ -579,8 +577,7 @@ export class TestClient {
     pricing,
     permissions,
     fees,
-    borrowRate,
-    ratios
+    borrowRate
   ) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey
@@ -596,7 +593,6 @@ export class TestClient {
             permissions,
             fees,
             borrowRate,
-            ratios,
           })
           .accounts({
             admin: this.admins[i].publicKey,

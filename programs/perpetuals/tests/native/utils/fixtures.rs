@@ -5,7 +5,7 @@ use {
     perpetuals::{
         instructions::InitParams,
         state::{
-            custody::{BorrowRateParams, Fees, FeesMode, PricingParams},
+            custody::{BorrowRateParams, Fees, PricingParams},
             oracle::{OracleParams, OracleType},
             perpetuals::Permissions,
         },
@@ -35,8 +35,6 @@ pub fn borrow_rate_regular() -> BorrowRateParams {
 
 pub fn fees_linear_regular() -> Fees {
     Fees {
-        mode: FeesMode::Linear,
-        ratio_mult: 20_000,
         utilization_mult: 20_000,
         add_liquidity: 200,
         remove_liquidity: 300,
@@ -44,8 +42,6 @@ pub fn fees_linear_regular() -> Fees {
         close_position: 100,
         liquidation: 50,
         protocol_share: 25,
-        fee_max: 0,
-        fee_optimal: 0,
     }
 }
 

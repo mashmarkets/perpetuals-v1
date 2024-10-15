@@ -3,14 +3,13 @@ use {
         error::PerpetualsError,
         math,
         state::{
-            custody::{Custody, FeesMode},
+            custody::Custody,
             oracle::OraclePrice,
             perpetuals::Perpetuals,
             position::{Position, Side},
         },
     },
     anchor_lang::prelude::*,
-    std::cmp::Ordering,
 };
 
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Debug)]
@@ -21,34 +20,16 @@ pub enum AumCalcMode {
     EMA,
 }
 
-#[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
-pub struct TokenRatios {
-    pub target: u64,
-    pub min: u64,
-    pub max: u64,
-}
-
 #[account]
 #[derive(Default, Debug)]
 pub struct Pool {
     pub name: String,
     pub custodies: Vec<Pubkey>,
-    pub ratios: Vec<TokenRatios>,
     pub aum_usd: u128,
 
     pub bump: u8,
     pub lp_token_bump: u8,
     pub inception_time: i64,
-}
-
-impl TokenRatios {
-    pub fn validate(&self) -> bool {
-        (self.target as u128) <= Perpetuals::BPS_POWER
-            && (self.min as u128) <= Perpetuals::BPS_POWER
-            && (self.max as u128) <= Perpetuals::BPS_POWER
-            && self.min <= self.target
-            && self.target <= self.max
-    }
 }
 
 /// Token Pool
@@ -59,24 +40,6 @@ impl Pool {
     pub const LEN: usize = 8 + 64 + std::mem::size_of::<Pool>();
 
     pub fn validate(&self) -> bool {
-        for ratio in &self.ratios {
-            if !ratio.validate() {
-                return false;
-            }
-        }
-
-        // check target ratios add up to 1
-        if !self.ratios.is_empty()
-            && self
-                .ratios
-                .iter()
-                .map(|&x| (x.target as u128))
-                .sum::<u128>()
-                != Perpetuals::BPS_POWER
-        {
-            return false;
-        }
-
         // check custodies are unique
         for i in 1..self.custodies.len() {
             if self.custodies[i..].contains(&self.custodies[i - 1]) {
@@ -84,7 +47,7 @@ impl Pool {
             }
         }
 
-        !self.name.is_empty() && self.name.len() <= 64 && self.custodies.len() == self.ratios.len()
+        !self.name.is_empty() && self.name.len() <= 64
     }
 
     pub fn get_token_id(&self, custody: &Pubkey) -> Result<usize> {
@@ -293,25 +256,6 @@ impl Pool {
 
     pub fn get_liquidation_fee(&self, size: u64, custody: &Custody) -> Result<u64> {
         Self::get_fee_amount(custody.fees.liquidation, size)
-    }
-
-    pub fn check_token_ratio(
-        &self,
-        token_id: usize,
-        amount_add: u64,
-        amount_remove: u64,
-        custody: &Custody,
-        token_price: &OraclePrice,
-    ) -> Result<bool> {
-        let new_ratio = self.get_new_ratio(amount_add, amount_remove, custody, token_price)?;
-
-        if new_ratio < self.ratios[token_id].min {
-            Ok(new_ratio >= self.get_current_ratio(custody, token_price)?)
-        } else if new_ratio > self.ratios[token_id].max {
-            Ok(new_ratio <= self.get_current_ratio(custody, token_price)?)
-        } else {
-            Ok(true)
-        }
     }
 
     pub fn check_available_amount(&self, amount: u64, custody: &Custody) -> Result<bool> {
@@ -720,76 +664,6 @@ impl Pool {
         )?)
     }
 
-    // private helpers
-    fn get_current_ratio(&self, custody: &Custody, token_price: &OraclePrice) -> Result<u64> {
-        if self.aum_usd == 0 || custody.is_virtual {
-            return Ok(0);
-        }
-        let ratio = math::checked_as_u64(math::checked_div(
-            math::checked_mul(
-                token_price.get_asset_amount_usd(custody.assets.owned, custody.decimals)? as u128,
-                Perpetuals::BPS_POWER,
-            )?,
-            self.aum_usd,
-        )?)?;
-        Ok(std::cmp::min(ratio, Perpetuals::BPS_POWER as u64))
-    }
-
-    fn get_new_ratio(
-        &self,
-        amount_add: u64,
-        amount_remove: u64,
-        custody: &Custody,
-        token_price: &OraclePrice,
-    ) -> Result<u64> {
-        if custody.is_virtual {
-            return Ok(0);
-        }
-        let (new_token_aum_usd, new_pool_aum_usd) = if amount_add > 0 && amount_remove > 0 {
-            return Err(ProgramError::InvalidArgument.into());
-        } else if amount_add == 0 && amount_remove == 0 {
-            (
-                token_price.get_asset_amount_usd(custody.assets.owned, custody.decimals)? as u128,
-                self.aum_usd,
-            )
-        } else if amount_add > 0 {
-            let added_aum_usd =
-                token_price.get_asset_amount_usd(amount_add, custody.decimals)? as u128;
-
-            (
-                token_price.get_asset_amount_usd(
-                    math::checked_add(custody.assets.owned, amount_add)?,
-                    custody.decimals,
-                )? as u128,
-                math::checked_add(self.aum_usd, added_aum_usd)?,
-            )
-        } else {
-            let removed_aum_usd =
-                token_price.get_asset_amount_usd(amount_remove, custody.decimals)? as u128;
-
-            if removed_aum_usd >= self.aum_usd || amount_remove >= custody.assets.owned {
-                (0, 0)
-            } else {
-                (
-                    token_price.get_asset_amount_usd(
-                        math::checked_sub(custody.assets.owned, amount_remove)?,
-                        custody.decimals,
-                    )? as u128,
-                    math::checked_sub(self.aum_usd, removed_aum_usd)?,
-                )
-            }
-        };
-        if new_token_aum_usd == 0 || new_pool_aum_usd == 0 {
-            return Ok(0);
-        }
-
-        let ratio = math::checked_as_u64(math::checked_div(
-            math::checked_mul(new_token_aum_usd, Perpetuals::BPS_POWER)?,
-            new_pool_aum_usd,
-        )?)?;
-        Ok(std::cmp::min(ratio, Perpetuals::BPS_POWER as u64))
-    }
-
     fn get_price(
         &self,
         token_price: &OraclePrice,
@@ -847,178 +721,16 @@ impl Pool {
 
     fn get_fee(
         &self,
-        token_id: usize,
+        _token_id: usize,
         base_fee: u64,
         amount_add: u64,
         amount_remove: u64,
         custody: &Custody,
-        token_price: &OraclePrice,
+        _token_price: &OraclePrice,
     ) -> Result<u64> {
         require!(!custody.is_virtual, PerpetualsError::InstructionNotAllowed);
 
-        if custody.fees.mode == FeesMode::Fixed {
-            Self::get_fee_amount(base_fee, std::cmp::max(amount_add, amount_remove))
-        } else if custody.fees.mode == FeesMode::Linear {
-            self.get_fee_linear(
-                token_id,
-                base_fee,
-                amount_add,
-                amount_remove,
-                custody,
-                token_price,
-            )
-        } else {
-            self.get_fee_optimal(
-                token_id,
-                base_fee,
-                amount_add,
-                amount_remove,
-                custody,
-                token_price,
-            )
-        }
-    }
-
-    fn get_fee_linear(
-        &self,
-        token_id: usize,
-        base_fee: u64,
-        amount_add: u64,
-        amount_remove: u64,
-        custody: &Custody,
-        token_price: &OraclePrice,
-    ) -> Result<u64> {
-        // if token ratio is improved:
-        //    fee = base_fee / ratio_fee
-        // otherwise:
-        //    fee = base_fee * ratio_fee
-        // where:
-        //   if new_ratio < ratios.target:
-        //     ratio_fee = 1 + custody.fees.ratio_mult * (ratios.target - new_ratio) / (ratios.target - ratios.min);
-        //   otherwise:
-        //     ratio_fee = 1 + custody.fees.ratio_mult * (new_ratio - ratios.target) / (ratios.max - ratios.target);
-
-        let ratios = &self.ratios[token_id];
-        let current_ratio = self.get_current_ratio(custody, token_price)?;
-        let new_ratio = self.get_new_ratio(amount_add, amount_remove, custody, token_price)?;
-
-        let improved = match new_ratio.cmp(&ratios.target) {
-            Ordering::Less => {
-                new_ratio > current_ratio
-                    || (current_ratio > ratios.target
-                        && current_ratio - ratios.target > ratios.target - new_ratio)
-            }
-            Ordering::Greater => {
-                new_ratio < current_ratio
-                    || (current_ratio < ratios.target
-                        && ratios.target - current_ratio > new_ratio - ratios.target)
-            }
-            Ordering::Equal => current_ratio != ratios.target,
-        };
-
-        let ratio_fee = if new_ratio <= ratios.target {
-            if ratios.target == ratios.min {
-                Perpetuals::BPS_POWER
-            } else {
-                math::checked_add(
-                    Perpetuals::BPS_POWER,
-                    math::checked_div(
-                        math::checked_mul(
-                            custody.fees.ratio_mult as u128,
-                            math::checked_sub(ratios.target, new_ratio)? as u128,
-                        )?,
-                        math::checked_sub(ratios.target, ratios.min)? as u128,
-                    )?,
-                )?
-            }
-        } else if ratios.target == ratios.max {
-            Perpetuals::BPS_POWER
-        } else {
-            math::checked_add(
-                Perpetuals::BPS_POWER,
-                math::checked_div(
-                    math::checked_mul(
-                        custody.fees.ratio_mult as u128,
-                        math::checked_sub(new_ratio, ratios.target)? as u128,
-                    )?,
-                    math::checked_sub(ratios.max, ratios.target)? as u128,
-                )?,
-            )?
-        };
-
-        let fee = if improved {
-            math::checked_div(
-                math::checked_mul(base_fee as u128, Perpetuals::BPS_POWER)?,
-                ratio_fee,
-            )?
-        } else {
-            math::checked_div(
-                math::checked_mul(base_fee as u128, ratio_fee)?,
-                Perpetuals::BPS_POWER,
-            )?
-        };
-
-        Self::get_fee_amount(
-            math::checked_as_u64(fee)?,
-            std::cmp::max(amount_add, amount_remove),
-        )
-    }
-
-    fn get_fee_optimal(
-        &self,
-        token_id: usize,
-        base_fee: u64,
-        amount_add: u64,
-        amount_remove: u64,
-        custody: &Custody,
-        token_price: &OraclePrice,
-    ) -> Result<u64> {
-        // Fee calculations must temporarily be in i64 because of negative slope.
-        let fee_max: i64 = custody.fees.fee_max as i64;
-        let fee_optimal: i64 = custody.fees.fee_optimal as i64;
-
-        let target_ratio: i64 = self.ratios[token_id].target as i64;
-        let min_ratio: i64 = self.ratios[token_id].min as i64;
-        let max_ratio: i64 = self.ratios[token_id].max as i64;
-        let post_lp_ratio: i64 =
-            self.get_new_ratio(amount_add, amount_remove, custody, token_price)? as i64;
-
-        let base_fee: i64 = base_fee as i64;
-
-        let slope_denominator: i64 = if post_lp_ratio > target_ratio {
-            math::checked_sub(max_ratio, target_ratio)?
-        } else {
-            math::checked_sub(target_ratio, min_ratio)?
-        };
-
-        let slope_numerator: i64 = if amount_add != 0 {
-            if post_lp_ratio > max_ratio {
-                return err!(PerpetualsError::TokenRatioOutOfRange);
-            }
-            fee_max - fee_optimal
-        } else {
-            if post_lp_ratio < min_ratio {
-                return err!(PerpetualsError::TokenRatioOutOfRange);
-            }
-            fee_optimal - fee_max
-        };
-
-        // Delay applying slope_denominator until the very end to avoid losing precision.
-        // b = fee_optimal - target_ratio * slope
-        // lp_fee = slope * post_lp_ratio + b
-        let b: i64 = math::checked_sub(
-            math::checked_mul(fee_optimal, slope_denominator)?,
-            math::checked_mul(target_ratio, slope_numerator)?,
-        )?;
-        let lp_fee: i64 = math::checked_div(
-            math::checked_add(math::checked_mul(slope_numerator, post_lp_ratio)?, b)?,
-            slope_denominator,
-        )?;
-
-        Self::get_fee_amount(
-            math::checked_as_u64(math::checked_add(lp_fee, base_fee)?)?,
-            std::cmp::max(amount_add, amount_remove),
-        )
+        Self::get_fee_amount(base_fee, std::cmp::max(amount_add, amount_remove))
     }
 }
 
@@ -1034,12 +746,6 @@ mod test {
     };
 
     fn get_fixture() -> (Pool, Custody, Position, OraclePrice, OraclePrice) {
-        let ratios = TokenRatios {
-            target: 5_000,
-            min: 1_000,
-            max: 9_000,
-        };
-
         let oracle = OracleParams {
             oracle_account: Pubkey::default(),
             oracle_type: OracleType::Custom,
@@ -1073,8 +779,6 @@ mod test {
         };
 
         let fees = Fees {
-            mode: FeesMode::Linear,
-            ratio_mult: 20_000,
             utilization_mult: 20_000,
             add_liquidity: 0,
             remove_liquidity: 0,
@@ -1082,8 +786,6 @@ mod test {
             close_position: 0,
             liquidation: 50,
             protocol_share: 25,
-            fee_max: 0,
-            fee_optimal: 0,
         };
 
         let custody = Custody {
@@ -1121,7 +823,6 @@ mod test {
         (
             Pool {
                 name: "Test Pool".to_string(),
-                ratios: vec![ratios, ratios],
                 ..Default::default()
             },
             custody,
@@ -1140,64 +841,6 @@ mod test {
             math::checked_float_mul(amount, 10u64.pow(decimals as u32) as f64).unwrap(),
         )
         .unwrap()
-    }
-
-    #[test]
-    fn test_get_new_ratio() {
-        let (mut pool, mut custody, _position, token_price, _token_ema_price) = get_fixture();
-
-        // add tokens to empty custody
-        assert_eq!(
-            scale(1, Perpetuals::BPS_DECIMALS),
-            pool.get_new_ratio(1_000, 0, &custody, &token_price)
-                .unwrap()
-        );
-
-        // remove tokens from empty custody
-        assert_eq!(
-            0,
-            pool.get_new_ratio(0, 1_000, &custody, &token_price)
-                .unwrap()
-        );
-
-        // cannot provide both add and remove
-        assert!(pool
-            .get_new_ratio(1_000, 1_000, &custody, &token_price)
-            .is_err());
-
-        // doesn't change ratio
-        assert_eq!(0, pool.get_new_ratio(0, 0, &custody, &token_price).unwrap());
-
-        // add value to the pool for the custody to be 50% ratio
-        pool.aum_usd = scale(50_000_000, Perpetuals::USD_DECIMALS) as u128;
-        custody.assets.owned = scale(1_000, custody.decimals);
-
-        // add tokens to go 50%+ ratio
-        assert_eq!(
-            5238,
-            pool.get_new_ratio(scale(100, custody.decimals), 0, &custody, &token_price)
-                .unwrap()
-        );
-
-        // removes tokens to get 50%- ratio
-        assert_eq!(
-            4_736,
-            pool.get_new_ratio(0, scale(100, custody.decimals), &custody, &token_price)
-                .unwrap()
-        );
-
-        // removes all tokens to get to 0% ratio
-        assert_eq!(
-            0,
-            pool.get_new_ratio(0, scale(1_000, custody.decimals), &custody, &token_price)
-                .unwrap()
-        );
-
-        // changes nothing should return same ratio
-        assert_eq!(
-            5_000,
-            pool.get_new_ratio(0, 0, &custody, &token_price).unwrap()
-        );
     }
 
     #[test]
@@ -1442,7 +1085,6 @@ mod test {
     fn test_get_fee() {
         let (mut pool, mut custody, _position, token_price, _token_ema_price) = get_fixture();
 
-        custody.fees.mode = FeesMode::Fixed;
         assert_eq!(
             scale_f64(0.2, custody.decimals),
             pool.get_fee(
@@ -1454,180 +1096,6 @@ mod test {
                 &token_price
             )
             .unwrap()
-        );
-
-        custody.fees.mode = FeesMode::Linear;
-
-        custody.assets.owned = scale(15, custody.decimals); // $375,000
-        pool.ratios[0].min = 1_000;
-        pool.ratios[0].target = 5_000;
-        pool.ratios[0].max = 9_000;
-
-        // makes custody ratio higher than target
-        pool.aum_usd = scale(600_000, Perpetuals::USD_DECIMALS) as u128;
-
-        // move further away from target
-        assert_eq!(
-            97_000_000,
-            pool.get_fee(
-                0,
-                100,
-                scale(5, custody.decimals),
-                0,
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-
-        // move toward target
-        assert_eq!(
-            13_600_000,
-            pool.get_fee(
-                0,
-                100,
-                0,
-                scale(2, custody.decimals),
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-
-        // match target
-        assert_eq!(
-            60_000_000,
-            pool.get_fee(
-                0,
-                100,
-                0,
-                scale(6, custody.decimals),
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-
-        // makes custody ratio lower than target
-        pool.aum_usd = scale(1_200_000, Perpetuals::USD_DECIMALS) as u128;
-
-        // move toward target
-        assert_eq!(
-            30_500_000,
-            pool.get_fee(
-                0,
-                100,
-                scale(5, custody.decimals),
-                0,
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-
-        // move away from target
-        assert_eq!(
-            116_500_000,
-            pool.get_fee(
-                0,
-                100,
-                0,
-                scale(5, custody.decimals),
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-
-        // match target
-        assert_eq!(
-            180_000_000,
-            pool.get_fee(
-                0,
-                100,
-                scale(18, custody.decimals),
-                0,
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-
-        // Test Optimal fees
-        custody.fees.mode = FeesMode::Optimal;
-        custody.fees.fee_max = 250; // 0.025
-        custody.fees.fee_optimal = 10; // 0.001
-        assert_eq!(
-            18_000_000, /* 0.1% fee because we approach target ratio. */
-            pool.get_fee(
-                0,
-                custody.fees.add_liquidity,
-                scale(18, custody.decimals),
-                0,
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            4_014_000_000, /* 2.23% fee because we exceed target ratio, nearing max ratio. */
-            pool.get_fee(
-                0,
-                custody.fees.add_liquidity,
-                scale(180, custody.decimals),
-                0,
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            13_100_000, /* 1.31% fee for removing a little liquidity. */
-            pool.get_fee(
-                0,
-                custody.fees.remove_liquidity,
-                0,
-                scale(1, custody.decimals),
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-        assert_eq!(
-            231_000_000, /* 2.31% fee because almost all liquidity is removed. */
-            pool.get_fee(
-                0,
-                custody.fees.remove_liquidity,
-                0,
-                scale(10, custody.decimals),
-                &custody,
-                &token_price,
-            )
-            .unwrap()
-        );
-        // Removing too much liquidity takes the token ratio out of range.
-        assert_eq!(
-            err!(PerpetualsError::TokenRatioOutOfRange),
-            pool.get_fee(
-                0,
-                custody.fees.remove_liquidity,
-                0,
-                scale(15, custody.decimals),
-                &custody,
-                &token_price,
-            )
-        );
-        // Adding too much liquidity takes the token ratio out of range.
-        assert_eq!(
-            err!(PerpetualsError::TokenRatioOutOfRange),
-            pool.get_fee(
-                0,
-                custody.fees.add_liquidity,
-                scale(1800, custody.decimals),
-                0,
-                &custody,
-                &token_price,
-            )
         );
     }
 

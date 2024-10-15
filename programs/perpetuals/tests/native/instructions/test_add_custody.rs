@@ -106,12 +106,8 @@ pub async fn test_add_custody(
     {
         let idx = pool_account.get_token_id(&custody_pda).unwrap();
         let custody = pool_account.custodies[idx];
-        let ratios = pool_account.ratios[idx];
 
         assert_eq!(custody, custody_pda);
-        assert_eq!(ratios.target, params.ratios[idx].target);
-        assert_eq!(ratios.min, params.ratios[idx].min);
-        assert_eq!(ratios.max, params.ratios[idx].max);
     }
 
     Ok((custody_pda, custody_bump))

@@ -14,7 +14,6 @@ export type PricingParams = Types["PricingParams"];
 export type Permissions = Types["Permissions"];
 export type Fees = Types["Fees"];
 export type BorrowRateParams = Types["BorrowRateParams"];
-export type TokenRatio = Types["TokenRatios"];
 export type SetCustomOraclePriceParams = Types["SetCustomOraclePriceParams"];
 export type AmountAndFee = Types["AmountAndFee"];
 export type NewPositionPricesAndFee = Types["NewPositionPricesAndFee"];

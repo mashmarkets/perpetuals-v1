@@ -7,7 +7,7 @@ use {
     perpetuals::{
         instructions::SetCustodyConfigParams,
         math,
-        state::{custody::Custody, perpetuals::Perpetuals, pool::TokenRatios},
+        state::{custody::Custody, perpetuals::Perpetuals},
     },
     solana_program::{
         clock::DEFAULT_MS_PER_SLOT, epoch_schedule::DEFAULT_SLOTS_PER_EPOCH, program_pack::Pack,
@@ -246,39 +246,6 @@ pub async fn create_and_execute_perpetuals_ix<T: InstructionData, U: Signers>(
     }
 
     Ok(())
-}
-
-#[allow(clippy::too_many_arguments)]
-pub async fn set_custody_ratios(
-    program_test_ctx: &RwLock<ProgramTestContext>,
-    custody_admin: &Keypair,
-    payer: &Keypair,
-    custody_pda: &Pubkey,
-    ratios: Vec<TokenRatios>,
-    multisig_signers: &[&Keypair],
-) {
-    let custody_account = get_account::<Custody>(program_test_ctx, *custody_pda).await;
-
-    instructions::test_set_custody_config(
-        program_test_ctx,
-        custody_admin,
-        payer,
-        &custody_account.pool,
-        custody_pda,
-        SetCustodyConfigParams {
-            is_stable: custody_account.is_stable,
-            is_virtual: custody_account.is_virtual,
-            oracle: custody_account.oracle,
-            pricing: custody_account.pricing,
-            permissions: custody_account.permissions,
-            fees: custody_account.fees,
-            borrow_rate: custody_account.borrow_rate,
-            ratios,
-        },
-        multisig_signers,
-    )
-    .await
-    .unwrap();
 }
 
 #[derive(Clone, Copy)]

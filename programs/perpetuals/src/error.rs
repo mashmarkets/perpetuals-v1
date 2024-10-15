@@ -48,8 +48,6 @@ pub enum PerpetualsError {
     CustodyAmountLimit,
     #[msg("Position amount limit exceeded")]
     PositionAmountLimit,
-    #[msg("Token ratio out of range")]
-    TokenRatioOutOfRange,
     #[msg("Token is not supported")]
     UnsupportedToken,
     #[msg("Instruction is not allowed at this time")]

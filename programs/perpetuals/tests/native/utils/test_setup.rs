@@ -10,7 +10,6 @@ use {
         state::{
             custody::{BorrowRateParams, Fees, PricingParams},
             perpetuals::Permissions,
-            pool::TokenRatios,
         },
     },
     solana_program::pubkey::Pubkey,
@@ -34,9 +33,6 @@ pub struct SetupCustodyParams<'a> {
 
     pub is_stable: bool,
     pub is_virtual: bool,
-    pub target_ratio: u64,
-    pub min_ratio: u64,
-    pub max_ratio: u64,
     pub initial_price: u64,
     pub initial_conf: u64,
     pub pricing_params: Option<PricingParams>,
@@ -252,31 +248,13 @@ impl TestSetup {
         let custodies_info: Vec<SetupCustodyInfo> = {
             let mut custodies_info: Vec<SetupCustodyInfo> = Vec::new();
 
-            let mut ratios = vec![];
-
-            for (idx, custody_param) in custodies_params.iter().enumerate() {
+            for (_idx, custody_param) in custodies_params.iter().enumerate() {
                 let mint_info = mints
                     .get(&custody_param.setup_custody_params.mint_name.to_string())
                     .unwrap();
 
                 let custom_oracle_pda =
                     utils::get_custom_oracle_account(&pool_pda, &mint_info.pubkey).0;
-
-                let target_ratio = 10_000 / (idx + 1) as u64;
-
-                // Force ratio 0 to 100% to be able to provide liquidity
-                ratios.push(TokenRatios {
-                    target: target_ratio,
-                    min: 0,
-                    max: 10_000,
-                });
-
-                ratios.iter_mut().for_each(|x| x.target = target_ratio);
-
-                if 10000 % (idx + 1) != 0 {
-                    let len = ratios.len();
-                    ratios[len - 1].target += 10_000 % (idx + 1) as u64;
-                }
 
                 let custody_pda = {
                     let add_custody_params = AddCustodyParams {
@@ -299,9 +277,6 @@ impl TestSetup {
                             .setup_custody_params
                             .borrow_rate
                             .unwrap_or_else(fixtures::borrow_rate_regular),
-
-                        // in BPS, 10_000 = 100%
-                        ratios: ratios.clone(),
                     };
 
                     instructions::test_add_custody(
@@ -391,38 +366,6 @@ impl TestSetup {
                 )
                 .await
                 .unwrap();
-            }
-        }
-
-        // Set proper ratios for custodies
-        {
-            let target_ratio = 10_000 / custodies_params.len() as u64;
-
-            let mut ratios: Vec<TokenRatios> = custodies_params
-                .iter()
-                .map(|x| TokenRatios {
-                    target: target_ratio,
-                    min: x.setup_custody_params.min_ratio,
-                    max: x.setup_custody_params.max_ratio,
-                })
-                .collect();
-
-            if 10_000 % custodies_params.len() != 0 {
-                let len = ratios.len();
-
-                ratios[len - 1].target += 10_000 % custodies_params.len() as u64;
-            }
-
-            for (idx, _params) in custodies_params.as_slice().iter().enumerate() {
-                utils::set_custody_ratios(
-                    &program_test_ctx,
-                    &multisig_members_keypairs[0],
-                    payer_keypair,
-                    &custodies_info[idx].custody_pda,
-                    ratios.clone(),
-                    &multisig_signers,
-                )
-                .await;
             }
         }
 

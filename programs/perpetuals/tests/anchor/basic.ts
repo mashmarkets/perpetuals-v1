@@ -18,7 +18,6 @@ describe("perpetuals", () => {
   let permissions;
   let fees;
   let borrowRate;
-  let ratios;
   let isStable;
   let isVirtual;
   let perpetualsExpected;
@@ -118,7 +117,6 @@ describe("perpetuals", () => {
     let poolExpected = {
       name: "test pool",
       custodies: [],
-      ratios: [],
       aumUsd: new BN(0),
       bump: tc.pool.bump,
       lpTokenBump: pool.lpTokenBump,
@@ -163,8 +161,6 @@ describe("perpetuals", () => {
       allowSizeChange: true,
     };
     fees = {
-      mode: { linear: {} },
-      ratioMult: new BN(20000),
       utilizationMult: new BN(20000),
       addLiquidity: new BN(100),
       removeLiquidity: new BN(100),
@@ -172,8 +168,6 @@ describe("perpetuals", () => {
       closePosition: new BN(100),
       liquidation: new BN(100),
       protocolShare: new BN(10),
-      feeMax: new BN(250),
-      feeOptimal: new BN(10),
     };
     borrowRate = {
       baseRate: new BN(0),
@@ -181,25 +175,6 @@ describe("perpetuals", () => {
       slope2: new BN(120000),
       optimalUtilization: new BN(800000000),
     };
-    ratios = [
-      {
-        target: new BN(5000),
-        min: new BN(10),
-        max: new BN(10000),
-      },
-      {
-        target: new BN(5000),
-        min: new BN(10),
-        max: new BN(10000),
-      },
-    ];
-    let ratios1 = [
-      {
-        target: new BN(10000),
-        min: new BN(10),
-        max: new BN(10000),
-      },
-    ];
     isStable = false;
     isVirtual = false;
     await tc.addCustody(
@@ -210,8 +185,7 @@ describe("perpetuals", () => {
       pricing,
       permissions,
       fees,
-      borrowRate,
-      ratios1
+      borrowRate
     );
 
     let token = await tc.program.account.custody.fetch(tc.custodies[0].custody);
@@ -252,8 +226,6 @@ describe("perpetuals", () => {
         allowSizeChange: true,
       },
       fees: {
-        mode: { linear: {} },
-        ratioMult: "20000",
         utilizationMult: "20000",
         addLiquidity: "100",
         removeLiquidity: "100",
@@ -261,8 +233,6 @@ describe("perpetuals", () => {
         closePosition: "100",
         liquidation: "100",
         protocolShare: "10",
-        feeMax: "250",
-        feeOptimal: "10",
       },
       borrowRate: {
         baseRate: "0",
@@ -326,7 +296,9 @@ describe("perpetuals", () => {
       bump: token.bump,
       tokenAccountBump: token.tokenAccountBump,
     };
-    expect(JSON.stringify(token)).to.equal(JSON.stringify(tokenExpected));
+    expect(JSON.stringify(token, null, 2)).to.equal(
+      JSON.stringify(tokenExpected, null, 2)
+    );
 
     let oracleConfig2 = Object.assign({}, oracleConfig);
     oracleConfig2.oracleAccount = tc.custodies[1].oracleAccount;
@@ -338,11 +310,10 @@ describe("perpetuals", () => {
       pricing,
       permissions,
       fees,
-      borrowRate,
-      ratios
+      borrowRate
     );
 
-    await tc.removeCustody(tc.custodies[1], ratios1);
+    await tc.removeCustody(tc.custodies[1]);
     await tc.ensureFails(
       tc.program.account.custody.fetch(tc.custodies[1].custody)
     );
@@ -355,8 +326,7 @@ describe("perpetuals", () => {
       pricing,
       permissions,
       fees,
-      borrowRate,
-      ratios
+      borrowRate
     );
   });
 
@@ -364,7 +334,6 @@ describe("perpetuals", () => {
     oracleConfig.maxPriceAgeSec = 90;
     permissions.allowPnlWithdrawal = false;
     fees.liquidation = new BN(200);
-    ratios[0].min = new BN(90);
     await tc.setCustodyConfig(
       tc.custodies[0],
       isStable,
@@ -373,8 +342,7 @@ describe("perpetuals", () => {
       pricing,
       permissions,
       fees,
-      borrowRate,
-      ratios
+      borrowRate
     );
 
     let token = await tc.program.account.custody.fetch(tc.custodies[0].custody);

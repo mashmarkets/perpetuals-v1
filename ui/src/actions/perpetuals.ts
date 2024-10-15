@@ -86,7 +86,6 @@ export async function addCustody(
       permissions: params.permissions,
       fees: params.fees,
       borrowRate: params.borrowRate,
-      ratios: params.ratios,
     })
     .accounts({
       admin: ADMIN_KEY.publicKey,
