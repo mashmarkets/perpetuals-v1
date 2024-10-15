@@ -1,14 +1,9 @@
 use {
-    crate::instructions,
     anchor_lang::{prelude::*, InstructionData},
     anchor_spl::token::spl_token,
     bonfida_test_utils::ProgramTestContextExt,
     borsh::BorshDeserialize,
-    perpetuals::{
-        instructions::SetCustodyConfigParams,
-        math,
-        state::{custody::Custody, perpetuals::Perpetuals},
-    },
+    perpetuals::{math, state::perpetuals::Perpetuals},
     solana_program::{
         clock::DEFAULT_MS_PER_SLOT, epoch_schedule::DEFAULT_SLOTS_PER_EPOCH, program_pack::Pack,
     },

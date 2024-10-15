@@ -141,49 +141,6 @@ pub struct Custody {
     pub token_account_bump: u8,
 }
 
-#[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
-pub struct DeprecatedPricingParams {
-    pub use_ema: bool,
-    // whether to account for unrealized pnl in assets under management calculations
-    pub use_unrealized_pnl_in_aum: bool,
-    // pricing params have implied BPS_DECIMALS decimals
-    pub trade_spread_long: u64,
-    pub trade_spread_short: u64,
-    pub min_initial_leverage: u64,
-    pub max_leverage: u64,
-    // max_user_profit = position_size * max_payoff_mult
-    pub max_payoff_mult: u64,
-}
-
-#[account]
-#[derive(Default, Debug)]
-pub struct DeprecatedCustody {
-    // static parameters
-    pub pool: Pubkey,
-    pub mint: Pubkey,
-    pub token_account: Pubkey,
-    pub decimals: u8,
-    pub is_stable: bool,
-    pub oracle: OracleParams,
-    pub pricing: PricingParams,
-    pub permissions: Permissions,
-    pub fees: Fees,
-    pub borrow_rate: BorrowRateParams,
-
-    // dynamic variables
-    pub assets: Assets,
-    pub collected_fees: FeesStats,
-    pub volume_stats: VolumeStats,
-    pub trade_stats: TradeStats,
-    pub long_positions: PositionStats,
-    pub short_positions: PositionStats,
-    pub borrow_rate_state: BorrowRateState,
-
-    // bumps for address validation
-    pub bump: u8,
-    pub token_account_bump: u8,
-}
-
 impl Fees {
     pub fn validate(&self) -> bool {
         self.add_liquidity as u128 <= Perpetuals::BPS_POWER
@@ -581,10 +538,6 @@ impl Custody {
 
         Ok(())
     }
-}
-
-impl DeprecatedCustody {
-    pub const LEN: usize = 8 + std::mem::size_of::<DeprecatedCustody>();
 }
 
 #[cfg(test)]

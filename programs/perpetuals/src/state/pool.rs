@@ -1083,7 +1083,7 @@ mod test {
 
     #[test]
     fn test_get_fee() {
-        let (mut pool, mut custody, _position, token_price, _token_ema_price) = get_fixture();
+        let (pool, custody, _position, token_price, _token_ema_price) = get_fixture();
 
         assert_eq!(
             scale_f64(0.2, custody.decimals),

@@ -525,15 +525,6 @@ async function withdrawFees(
     });
 
   program
-    .command("upgrade-custody")
-    .description("Upgrade deprecated custody to the new version")
-    .argument("<string>", "Pool name")
-    .argument("<pubkey>", "Token mint")
-    .action(async (poolName, tokenMint, options) => {
-      await upgradeCustody(poolName, new PublicKey(tokenMint));
-    });
-
-  program
     .command("set-oracle-price")
     .description("Set custom oracle price")
     .argument("<string>", "Pool name")
