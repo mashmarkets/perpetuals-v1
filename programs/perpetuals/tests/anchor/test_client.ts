@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Perpetuals } from "../target/types/perpetuals";
+import { Perpetuals } from "../../../../target/types/perpetuals";
 import {
   PublicKey,
   Keypair,
@@ -11,14 +11,25 @@ import {
   AddressLookupTableProgram,
   TransactionMessage,
   VersionedTransaction,
+  Transaction,
 } from "@solana/web3.js";
 import * as nacl from "tweetnacl";
 import * as spl from "@solana/spl-token";
+import {
+  createMint,
+  createAssociatedTokenAccount,
+  mintTo,
+  getAccount,
+} from "spl-token-bankrun";
 import BN from "bn.js";
+import { ProgramTestContext } from "solana-bankrun";
+import { BankrunProvider } from "anchor-bankrun";
+import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
 export type PositionSide = "long" | "short";
 
 export class TestClient {
+  context: ProgramTestContext;
   provider: anchor.AnchorProvider;
   program: anchor.Program<Perpetuals>;
   printErrors: boolean;
@@ -52,10 +63,15 @@ export class TestClient {
     positionAccountsShort: PublicKey[];
   }[];
 
-  constructor() {
-    this.provider = anchor.AnchorProvider.env();
+  constructor(
+    context: ProgramTestContext,
+    program: anchor.Program<Perpetuals>
+  ) {
+    this.context = context;
+    const provider = new BankrunProvider(context);
+    this.provider = provider as unknown as anchor.AnchorProvider;
     anchor.setProvider(this.provider);
-    this.program = anchor.workspace.Perpetuals as anchor.Program<Perpetuals>;
+    this.program = program;
     this.printErrors = true;
 
     anchor.BN.prototype.toJSON = function () {
@@ -111,12 +127,12 @@ export class TestClient {
     }
 
     // airdrop funds
-    await this.confirmTx(await this.requestAirdrop(this.admins[0].publicKey));
+    await this.requestAirdrop(this.admins[0].publicKey);
 
     // create mints
     for (const custody of this.custodies) {
-      await spl.createMint(
-        this.provider.connection,
+      await createMint(
+        this.context.banksClient,
         this.admins[0],
         this.admins[0].publicKey,
         null,
@@ -126,8 +142,8 @@ export class TestClient {
     }
 
     // fees receiving account
-    this.feesAccount = await spl.createAssociatedTokenAccount(
-      this.provider.connection,
+    this.feesAccount = await createAssociatedTokenAccount(
+      this.context.banksClient,
       this.admins[0],
       this.custodies[0].mint.publicKey,
       this.admins[0].publicKey
@@ -143,8 +159,8 @@ export class TestClient {
       let positionAccountsLong = [];
       let positionAccountsShort = [];
       for (const custody of this.custodies) {
-        let tokenAccount = await spl.createAssociatedTokenAccount(
-          this.provider.connection,
+        let tokenAccount = await createAssociatedTokenAccount(
+          this.context.banksClient,
           this.admins[0],
           custody.mint.publicKey,
           wallet.publicKey
@@ -185,9 +201,19 @@ export class TestClient {
   };
 
   requestAirdrop = async (pubkey: PublicKey) => {
-    if ((await this.getSolBalance(pubkey)) < 1e9 / 2) {
-      return this.provider.connection.requestAirdrop(pubkey, 1e9);
+    if ((await this.getSolBalance(pubkey)) >= 1e9 / 2) {
+      return;
     }
+    const accountInfo = await this.context.banksClient.getAccount(pubkey);
+    const newBalance =
+      BigInt(accountInfo ? accountInfo.lamports : 0) + BigInt(1e9);
+
+    this.context.setAccount(pubkey, {
+      lamports: Number(newBalance),
+      data: Buffer.alloc(0),
+      owner: PublicKey.default,
+      executable: false,
+    });
   };
 
   mintTokens = async (
@@ -196,14 +222,13 @@ export class TestClient {
     mint: PublicKey,
     destiantionWallet: PublicKey
   ) => {
-    await spl.mintToChecked(
-      this.provider.connection,
+    await mintTo(
+      this.context.banksClient,
       this.admins[0],
       mint,
       destiantionWallet,
       this.admins[0],
-      this.toTokenAmount(uiAmount, decimals).toNumber(),
-      decimals
+      this.toTokenAmount(uiAmount, decimals).toNumber()
     );
   };
 
@@ -248,16 +273,7 @@ export class TestClient {
   };
 
   confirmTx = async (txSignature: anchor.web3.TransactionSignature) => {
-    const latestBlockHash = await this.provider.connection.getLatestBlockhash();
-
-    await this.provider.connection.confirmTransaction(
-      {
-        blockhash: latestBlockHash.blockhash,
-        lastValidBlockHeight: latestBlockHash.lastValidBlockHeight,
-        signature: txSignature,
-      },
-      { commitment: "processed" }
-    );
+    return txSignature;
   };
 
   confirmAndLogTx = async (txSignature: anchor.web3.TransactionSignature) => {
@@ -269,35 +285,31 @@ export class TestClient {
   };
 
   getBalance = async (pubkey: PublicKey) => {
-    return spl
-      .getAccount(this.provider.connection, pubkey)
+    return getAccount(this.context.banksClient, pubkey)
       .then((account) => Number(account.amount))
       .catch(() => 0);
   };
 
   getSolBalance = async (pubkey: PublicKey) => {
-    return this.provider.connection
+    return this.context.banksClient
       .getBalance(pubkey)
-      .then((balance) => balance)
+      .then((balance) => Number(balance))
       .catch(() => 0);
   };
 
   getExtraSolBalance = async (pubkey: PublicKey) => {
-    let balance = await this.provider.connection
-      .getBalance(pubkey)
-      .then((balance) => balance)
-      .catch(() => 0);
+    let balance = await this.getSolBalance(pubkey);
     let accountInfo = await this.provider.connection.getAccountInfo(pubkey);
+    const rent = await this.context.banksClient.getRent();
+
     let dataSize = accountInfo ? accountInfo.data.length : 0;
-    let minBalance =
-      await this.provider.connection.getMinimumBalanceForRentExemption(
-        dataSize
-      );
+    let minBalance = Number(rent.minimumBalance(BigInt(dataSize)));
+
     return balance > minBalance ? balance - minBalance : 0;
   };
 
   getTokenAccount = async (pubkey: PublicKey) => {
-    return spl.getAccount(this.provider.connection, pubkey);
+    return getAccount(this.context.banksClient, pubkey);
   };
 
   getTime() {
@@ -453,13 +465,23 @@ export class TestClient {
 
     // set lp token accounts
     for (let i = 0; i < 2; ++i) {
-      let tokenAccount = await spl.getOrCreateAssociatedTokenAccount(
-        this.provider.connection,
-        this.admins[0],
+      const associatedToken = getAssociatedTokenAddressSync(
         this.lpToken.publicKey,
         this.users[i].wallet.publicKey
       );
-      this.users[i].lpTokenAccount = tokenAccount.address;
+      const account = await this.context.banksClient.getAccount(
+        associatedToken
+      );
+      if (account === null) {
+        await createAssociatedTokenAccount(
+          this.context.banksClient,
+          this.admins[0],
+          this.lpToken.publicKey,
+          this.users[i].wallet.publicKey
+        );
+      }
+
+      this.users[i].lpTokenAccount = associatedToken;
     }
   };
 
@@ -683,7 +705,7 @@ export class TestClient {
             expo: -3,
             conf: new BN(0),
             ema: new BN(price * 1000),
-            publishTime: new BN(this.getTime()),
+            publishTime: new BN(await this.getTime()),
           })
           .accounts({
             admin: this.admins[i].publicKey,
@@ -743,7 +765,7 @@ export class TestClient {
         pool: this.pool.publicKey,
         custody: custody.custody,
         oracleAccount: custody.oracleAccount,
-        systemProgram: SystemProgram.programId,
+        // systemProgram: SystemProgram.programId,
         ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
       });
 

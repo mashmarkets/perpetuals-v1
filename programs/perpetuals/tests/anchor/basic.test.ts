@@ -1,18 +1,16 @@
+import { describe, it, expect } from "vitest";
 import * as anchor from "@coral-xyz/anchor";
+import IDL from "../../../../target/idl/perpetuals.json";
 import { TestClient } from "./test_client";
-import {
-  Keypair,
-  PublicKey,
-  SystemProgram,
-  SYSVAR_RENT_PUBKEY,
-} from "@solana/web3.js";
-import * as spl from "@solana/spl-token";
-import { expect, assert } from "chai";
+import { Keypair, PublicKey } from "@solana/web3.js";
+import { BankrunProvider } from "anchor-bankrun";
+import { startAnchor } from "solana-bankrun";
 import BN from "bn.js";
+import { Program } from "@coral-xyz/anchor";
+import { Perpetuals } from "../../../../target/types/perpetuals";
 
 describe("perpetuals", () => {
-  let tc = new TestClient();
-  tc.printErrors = true;
+  let tc: TestClient;
   let oracleConfig;
   let pricing;
   let permissions;
@@ -26,11 +24,22 @@ describe("perpetuals", () => {
   let positionExpected;
 
   it("init", async () => {
+    const context = await startAnchor(".", [], []);
+    const provider = new BankrunProvider(context);
+    const PERPETUALS_ADDRESS = new PublicKey(IDL.metadata.address);
+    const program = new Program<Perpetuals>(
+      IDL as any,
+      PERPETUALS_ADDRESS,
+      provider
+    );
+
+    tc = new TestClient(context, program);
+    tc.printErrors = true;
     await tc.initFixture();
     await tc.init();
 
     let err = await tc.ensureFails(tc.init());
-    assert(err.logs[3].includes("already in use"));
+    expect(err.logs[3]).includes("already in use");
 
     perpetualsExpected = {
       permissions: {
@@ -370,13 +379,17 @@ describe("perpetuals", () => {
   });
 
   it("setCustomOraclePricePermissionless", async () => {
+    let oracle = await tc.program.account.customOracle.fetch(
+      tc.custodies[0].oracleAccount
+    );
     await tc.setCustomOraclePricePermissionless(
       tc.oracleAuthority,
       500,
-      tc.custodies[0]
+      tc.custodies[0],
+      oracle.publishTime.add(new BN(1))
     );
 
-    let oracle = await tc.program.account.customOracle.fetch(
+    oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount
     );
     let oracleExpected = {
@@ -393,7 +406,7 @@ describe("perpetuals", () => {
       tc.oracleAuthority,
       400,
       tc.custodies[0],
-      tc.getTime() - 20
+      oracle.publishTime.sub(new BN(20))
     );
     oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount
@@ -406,7 +419,7 @@ describe("perpetuals", () => {
       tc.oracleAuthority,
       1000,
       tc.custodies[0],
-      tc.getTime() + 10,
+      oracle.publishTime.add(new BN(10)),
       null,
       null,
       true
@@ -433,36 +446,47 @@ describe("perpetuals", () => {
   });
 
   it("setCustomOraclePricePermissionless Errors", async () => {
-    // Attempting to update with a payload signed by a bogus key should fail.
-    let bogusKeypair = Keypair.generate();
-    await tc.ensureFails(
-      tc.setCustomOraclePricePermissionless(bogusKeypair, 100, tc.custodies[1])
+    tc.printErrors = false;
+    const oracle = await tc.program.account.customOracle.fetch(
+      tc.custodies[0].oracleAccount
     );
+    const publishTime = oracle.publishTime.add(new BN(1));
+    // // Attempting to update with a payload signed by a bogus key should fail.
+    let bogusKeypair = Keypair.generate();
+    await expect(
+      tc.setCustomOraclePricePermissionless(
+        bogusKeypair,
+        100,
+        tc.custodies[1],
+        publishTime
+      )
+    ).rejects.toThrow("as");
 
     // Sending the permissionless update without signature verification should fail.
-    await tc.ensureFails(
+    await expect(
       tc.setCustomOraclePricePermissionless(
         tc.oracleAuthority,
         100,
         tc.custodies[1],
-        null,
+        publishTime,
         true
       )
-    );
+    ).rejects.toThrow(/PermissionlessOracleMissingSignature/);
 
     // Sending the permissionless update with malformed message should fail.
     let randomMessage = Buffer.alloc(68);
     randomMessage.fill(0xab);
-    await tc.ensureFails(
+    await expect(
       tc.setCustomOraclePricePermissionless(
         tc.oracleAuthority,
         100,
         tc.custodies[1],
-        null,
+        publishTime,
         null,
         randomMessage
       )
-    );
+    ).rejects.toThrow(/PermissionlessOracleMessageMismatch/);
+    tc.printErrors = true;
   });
 
   it("setTestTime", async () => {
