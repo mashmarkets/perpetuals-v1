@@ -58,7 +58,7 @@ export const tokenList: Token[] = [
       "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
     extensions: {
       coingeckoId: "wrapped-solana",
-      faucet: 1,
+      faucet: 10,
     },
   },
   {
@@ -70,7 +70,7 @@ export const tokenList: Token[] = [
       "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So/logo.png",
     extensions: {
       coingeckoId: "msol",
-      faucet: 1,
+      faucet: 10,
     },
   },
   {
@@ -82,7 +82,7 @@ export const tokenList: Token[] = [
       "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png",
     extensions: {
       coingeckoId: "usd-coin",
-      faucet: 1000,
+      faucet: 10_000,
     },
   },
 ].map((x) => ({

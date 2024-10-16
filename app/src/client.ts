@@ -326,7 +326,7 @@ export class PerpetualsClient {
   ///////
   // instructions
 
-  init = async (admins: PublicKey[], config: InitParams): Promise<void> => {
+  init = async (admins: PublicKey[], config: InitParams): Promise<string> => {
     const perpetualsProgramData = PublicKey.findProgramAddressSync(
       [this.program.programId.toBuffer()],
       new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111")
@@ -342,7 +342,7 @@ export class PerpetualsClient {
       });
     }
 
-    await this.program.methods
+    return await this.program.methods
       .init(config)
       .accounts({
         upgradeAuthority: this.provider.wallet.publicKey,
@@ -394,8 +394,8 @@ export class PerpetualsClient {
     }
   };
 
-  addPool = async (name: string): Promise<void> => {
-    await this.program.methods
+  addPool = async (name: string): Promise<string> => {
+    return await this.program.methods
       .addPool({ name })
       .accounts({
         admin: this.admin.publicKey,
@@ -443,8 +443,8 @@ export class PerpetualsClient {
     permissions: Permissions,
     fees: Fees,
     borrowRate: BorrowRateParams
-  ): Promise<void> => {
-    await this.program.methods
+  ): Promise<string> => {
+    return await this.program.methods
       .addCustody({
         oracle: oracleConfig,
         pricing: pricingConfig,

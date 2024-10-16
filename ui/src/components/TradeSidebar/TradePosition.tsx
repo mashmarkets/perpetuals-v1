@@ -12,7 +12,6 @@ import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
 import { TradeDetails } from "@/components/TradeSidebar/TradeDetails";
 import { usePrice } from "@/hooks/price";
-import { getPositionData } from "@/hooks/storeHelpers/fetchPositions";
 import { useBalance } from "@/hooks/token";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { getTokenPublicKey, TokenE, tokens } from "@/lib/Token";
@@ -36,10 +35,7 @@ enum Input {
 export function TradePosition(props: Props) {
   const queryClient = useQueryClient();
   const poolData = useGlobalStore((state) => state.poolData);
-  const custodyData = useGlobalStore((state) => state.custodyData);
   const positionData = useGlobalStore((state) => state.positionData);
-
-  const setPositionData = useGlobalStore((state) => state.setPositionData);
 
   const { publicKey, wallet } = useWallet();
   const walletContextState = useWallet();
@@ -84,8 +80,6 @@ export function TradePosition(props: Props) {
       side: props.side,
       leverage,
     });
-    const positionInfos = await getPositionData(custodyData);
-    setPositionData(positionInfos);
 
     queryClient.invalidateQueries({
       queryKey: ["balance", publicKey?.toString(), getTokenPublicKey(payToken)],

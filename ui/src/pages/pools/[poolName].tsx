@@ -44,10 +44,10 @@ export default function SinglePool() {
           </div>
         </div>
         <div className="flex w-full flex-col">
-          <PoolGeneralStats pool={pool!} className="mb-8" />
+          <PoolGeneralStats poolKey={new PublicKey(poolKey)} className="mb-8" />
           <PoolTokenStats pool={pool!} poolKey={new PublicKey(poolKey)} />
         </div>
-        <LiquidityCard pool={pool} />
+        <LiquidityCard pool={pool} poolKey={new PublicKey(poolKey)} />
       </PoolLayout>
     );
   }

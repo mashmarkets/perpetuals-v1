@@ -1,14 +1,11 @@
-[toolchain]
-
 [features]
 seeds = false
 skip-lint = false
-
 [programs.devnet]
-perpetuals = "EdVAT8DSqZ2vUCdXCVWRjyJaF8hiDHfat7W7nbazcfdY"
+perpetuals = "5Ws7mKtjDAoujNajobNat1Z16EUUnAq68ps2Y93PYq9u"
 
 [programs.localnet]
-perpetuals = "EdVAT8DSqZ2vUCdXCVWRjyJaF8hiDHfat7W7nbazcfdY"
+perpetuals = "5Ws7mKtjDAoujNajobNat1Z16EUUnAq68ps2Y93PYq9u"
 
 [registry]
 url = "https://api.apr.dev"

@@ -1,8 +1,10 @@
 import Add from "@carbon/icons-react/lib/Add";
 import Subtract from "@carbon/icons-react/lib/Subtract";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { useEffect, useRef, useState } from "react";
 import { changeLiquidity } from "src/actions/changeLiquidity";
+import { findPerpetualsAddressSync } from "src/actions/perpetuals";
 import { twMerge } from "tailwind-merge";
 
 import AirdropButton from "@/components/AirdropButton";
@@ -12,8 +14,9 @@ import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
 import { getCustodyData } from "@/hooks/storeHelpers/fetchCustodies";
 import { getPoolData } from "@/hooks/storeHelpers/fetchPools";
+import { useBalance, useMint } from "@/hooks/token";
 import { PoolAccount } from "@/lib/PoolAccount";
-import { TokenE } from "@/lib/Token";
+import { getTokenPublicKey, TokenE, tokens } from "@/lib/Token";
 import { Tab } from "@/lib/types";
 import { useGlobalStore } from "@/stores/store";
 import { getPerpetualProgramAndProvider } from "@/utils/constants";
@@ -22,6 +25,7 @@ import { ViewHelper } from "@/utils/viewHelpers";
 interface Props {
   className?: string;
   pool: PoolAccount;
+  poolKey: PublicKey;
 }
 
 export default function LiquidityCard(props: Props) {
@@ -42,10 +46,27 @@ export default function LiquidityCard(props: Props) {
   const setPoolData = useGlobalStore((state) => state.setPoolData);
   const setCustodyData = useGlobalStore((state) => state.setCustodyData);
 
-  const userData = useGlobalStore((state) => state.userData);
+  const { data: payTokenBalance } = useBalance(
+    getTokenPublicKey(payToken!),
+    publicKey,
+  );
+
+  const payTokenBalanceUi =
+    Number(payTokenBalance ?? 0) /
+    10 ** tokens[getTokenPublicKey(payToken!).toString()]!.decimals;
 
   // @ts-ignore
-  let liqBalance = userData.lpBalances[props.pool.address.toString()];
+  const lpMint = findPerpetualsAddressSync(
+    "lp_token_mint",
+    new PublicKey(props.poolKey),
+  );
+  const mint = useMint(lpMint);
+  const lp = useBalance(lpMint, publicKey === null ? undefined : publicKey);
+
+  let liqBalance =
+    lp?.data === undefined || mint?.data === undefined
+      ? 0
+      : Number(lp.data) / 10 ** mint.data.decimals;
 
   const [pendingRateConversion, setPendingRateConversion] = useState(false);
 
@@ -189,11 +210,7 @@ export default function LiquidityCard(props: Props) {
               <>
                 <div className="text-sm font-medium text-white">You Add</div>
                 {publicKey && (
-                  <div>
-                    Balance:{" "}
-                    {userData.tokenBalances[payToken] &&
-                      userData.tokenBalances[payToken].toFixed(2)}
-                  </div>
+                  <div>Balance: {payTokenBalanceUi.toFixed(2)}</div>
                 )}
               </>
             ) : (
@@ -213,11 +230,7 @@ export default function LiquidityCard(props: Props) {
               onChangeAmount={setTokenAmount}
               onSelectToken={handleSelectToken}
               tokenList={props.pool.getTokenList()}
-              maxBalance={
-                userData.tokenBalances[payToken]
-                  ? userData.tokenBalances[payToken]
-                  : 0
-              }
+              maxBalance={payTokenBalanceUi}
             />
           ) : (
             <LpSelector
@@ -240,9 +253,7 @@ export default function LiquidityCard(props: Props) {
             ) : (
               <>
                 {publicKey && (
-                  <div>
-                    Balance: {userData.tokenBalances[payToken].toFixed(2)}
-                  </div>
+                  <div>Balance: {payTokenBalanceUi.toFixed(2)}</div>
                 )}
               </>
             )}

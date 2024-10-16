@@ -1559,14 +1559,6 @@ export type Perpetuals = {
             "type": "u8"
           },
           {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
-          {
             "name": "oracle",
             "type": {
               "defined": "OracleParams"
@@ -1622,12 +1614,6 @@ export type Perpetuals = {
           },
           {
             "name": "longPositions",
-            "type": {
-              "defined": "PositionStats"
-            }
-          },
-          {
-            "name": "shortPositions",
             "type": {
               "defined": "PositionStats"
             }
@@ -1827,12 +1813,6 @@ export type Perpetuals = {
             "type": "i64"
           },
           {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          },
-          {
             "name": "price",
             "type": "u64"
           },
@@ -1894,14 +1874,6 @@ export type Perpetuals = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
           {
             "name": "oracle",
             "type": {
@@ -2006,12 +1978,6 @@ export type Perpetuals = {
           {
             "name": "size",
             "type": "u64"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
           }
         ]
       }
@@ -2147,12 +2113,6 @@ export type Perpetuals = {
           {
             "name": "size",
             "type": "u64"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
           }
         ]
       }
@@ -2216,14 +2176,6 @@ export type Perpetuals = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
           {
             "name": "oracle",
             "type": {
@@ -2496,10 +2448,6 @@ export type Perpetuals = {
           },
           {
             "name": "oiLongUsd",
-            "type": "u64"
-          },
-          {
-            "name": "oiShortUsd",
             "type": "u64"
           }
         ]
@@ -4648,14 +4596,6 @@ export const IDL: Perpetuals = {
             "type": "u8"
           },
           {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
-          {
             "name": "oracle",
             "type": {
               "defined": "OracleParams"
@@ -4711,12 +4651,6 @@ export const IDL: Perpetuals = {
           },
           {
             "name": "longPositions",
-            "type": {
-              "defined": "PositionStats"
-            }
-          },
-          {
-            "name": "shortPositions",
             "type": {
               "defined": "PositionStats"
             }
@@ -4916,12 +4850,6 @@ export const IDL: Perpetuals = {
             "type": "i64"
           },
           {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          },
-          {
             "name": "price",
             "type": "u64"
           },
@@ -4983,14 +4911,6 @@ export const IDL: Perpetuals = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
           {
             "name": "oracle",
             "type": {
@@ -5095,12 +5015,6 @@ export const IDL: Perpetuals = {
           {
             "name": "size",
             "type": "u64"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
           }
         ]
       }
@@ -5236,12 +5150,6 @@ export const IDL: Perpetuals = {
           {
             "name": "size",
             "type": "u64"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
           }
         ]
       }
@@ -5305,14 +5213,6 @@ export const IDL: Perpetuals = {
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
           {
             "name": "oracle",
             "type": {
@@ -5585,10 +5485,6 @@ export const IDL: Perpetuals = {
           },
           {
             "name": "oiLongUsd",
-            "type": "u64"
-          },
-          {
-            "name": "oiShortUsd",
             "type": "u64"
           }
         ]

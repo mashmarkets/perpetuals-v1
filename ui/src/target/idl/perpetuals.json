@@ -1559,14 +1559,6 @@
             "type": "u8"
           },
           {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
-          {
             "name": "oracle",
             "type": {
               "defined": "OracleParams"
@@ -1622,12 +1614,6 @@
           },
           {
             "name": "longPositions",
-            "type": {
-              "defined": "PositionStats"
-            }
-          },
-          {
-            "name": "shortPositions",
             "type": {
               "defined": "PositionStats"
             }
@@ -1827,12 +1813,6 @@
             "type": "i64"
           },
           {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
-          },
-          {
             "name": "price",
             "type": "u64"
           },
@@ -1894,14 +1874,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
           {
             "name": "oracle",
             "type": {
@@ -2006,12 +1978,6 @@
           {
             "name": "size",
             "type": "u64"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
           }
         ]
       }
@@ -2147,12 +2113,6 @@
           {
             "name": "size",
             "type": "u64"
-          },
-          {
-            "name": "side",
-            "type": {
-              "defined": "Side"
-            }
           }
         ]
       }
@@ -2216,14 +2176,6 @@
       "type": {
         "kind": "struct",
         "fields": [
-          {
-            "name": "isStable",
-            "type": "bool"
-          },
-          {
-            "name": "isVirtual",
-            "type": "bool"
-          },
           {
             "name": "oracle",
             "type": {
@@ -2496,10 +2448,6 @@
           },
           {
             "name": "oiLongUsd",
-            "type": "u64"
-          },
-          {
-            "name": "oiShortUsd",
             "type": "u64"
           }
         ]
@@ -3086,6 +3034,6 @@
     }
   ],
   "metadata": {
-    "address": "EdVAT8DSqZ2vUCdXCVWRjyJaF8hiDHfat7W7nbazcfdY"
+    "address": "5Ws7mKtjDAoujNajobNat1Z16EUUnAq68ps2Y93PYq9u"
   }
 }

@@ -1,84 +1,113 @@
+import { useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { findPerpetualsAddressSync } from "src/actions/perpetuals";
 import { twMerge } from "tailwind-merge";
 
-import { LoadingSpinner } from "@/components/Atoms/LoadingSpinner";
-import { PoolAccount } from "@/lib/PoolAccount";
-import { useGlobalStore } from "@/stores/store";
+import { Custody, usePool, usePoolCustodies } from "@/hooks/perpetuals";
+import { useBalance, useMint } from "@/hooks/token";
 import { formatNumberCommas } from "@/utils/formatters";
-import { getLiquidityBalance, getLiquidityShare } from "@/utils/retrieveData";
 
-interface Props {
-  pool: PoolAccount;
-  className?: string;
-}
-
-export default function PoolGeneralStats(props: Props) {
-  const userData = useGlobalStore((state) => state.userData);
-
-  if (props.pool.lpData === null) {
-    return <LoadingSpinner className="absolute text-4xl" />;
-  } else {
+const getTradeVolume = (custodies: Custody[]) => {
+  return custodies.reduce((acc: number, c) => {
     return (
-      <div
-        className={twMerge(
-          "grid",
-          "grid-cols-4",
-          "gap-x-4",
-          "gap-y-8",
-          props.className,
-        )}
-      >
-        {[
-          {
-            label: "Liquidity",
-            value: `$${formatNumberCommas(props.pool.getLiquidities())}`,
-          },
-          {
-            label: "Volume",
-            value: `$${formatNumberCommas(props.pool.getTradeVolumes())}`,
-          },
-          {
-            label: "OI Long",
-            value: (
-              <>
-                {`$${formatNumberCommas(props.pool.getOiLong())} `}
-                <span className="text-zinc-500"> </span>
-              </>
-            ),
-          },
-          {
-            label: "Fees",
-            value: `$${formatNumberCommas(props.pool.getFees())}`,
-          },
-          {
-            label: "Your Liquidity",
-            value: `$${formatNumberCommas(
-              getLiquidityBalance(
-                props.pool,
-                userData.getUserLpBalance(props.pool.address.toString()),
-              ),
-            )}`,
-          },
-          {
-            label: "Your Share",
-            value: `${formatNumberCommas(
-              Number(
-                getLiquidityShare(
-                  props.pool,
-                  userData.getUserLpBalance(props.pool.address.toString()),
-                ),
-              ),
-            )}%`,
-          },
-        ].map(({ label, value }, i) => (
-          <div
-            className={twMerge("border-zinc-700", "border-t", "pt-3")}
-            key={i}
-          >
-            <div className="text-sm text-zinc-400">{label}</div>
-            <div className="text-sm text-white">{value}</div>
-          </div>
-        ))}
-      </div>
+      acc +
+      Object.values(c.volumeStats).reduce(
+        (acc, val) => Number(acc) + Number(val),
+        0,
+      )
     );
-  }
+  }, 0);
+};
+
+const getCollectedFees = (custodies: Custody[]) => {
+  return custodies.reduce((acc: number, c) => {
+    return (
+      acc +
+      Object.values(c.collectedFees).reduce(
+        (acc, val) => Number(acc) + Number(val),
+        0,
+      )
+    );
+  }, 0);
+};
+
+const getOiLong = (custodies: Custody[]) =>
+  custodies.reduce((acc: number, c) => {
+    return acc + Number(c.tradeStats.oiLongUsd);
+  }, 0);
+
+export default function PoolGeneralStats({
+  className,
+  poolKey,
+}: {
+  poolKey: PublicKey;
+  className?: string;
+}) {
+  const { publicKey } = useWallet();
+  const custodies = usePoolCustodies(poolKey);
+  const poolData = usePool(poolKey);
+
+  const lpMint = findPerpetualsAddressSync("lp_token_mint", poolKey);
+  const mint = useMint(lpMint);
+  const lp = useBalance(lpMint, publicKey);
+
+  const userShare =
+    lp?.data !== undefined && mint?.data !== undefined
+      ? Number(lp?.data) / Number(mint?.data.supply)
+      : 0;
+
+  const aum =
+    poolData?.data === undefined
+      ? 0
+      : poolData?.data.aumUsd.toNumber() / 10 ** 6;
+
+  console.log("Custodies: ", custodies);
+  return (
+    <div
+      className={twMerge(
+        "grid",
+        "grid-cols-4",
+        "gap-x-4",
+        "gap-y-8",
+        className,
+      )}
+    >
+      {[
+        {
+          label: "Liquidity",
+          value: `$${formatNumberCommas(aum)}`,
+        },
+        {
+          label: "Volume",
+          value: `$${formatNumberCommas(getTradeVolume(Object.values(custodies)) / 10 ** 6)}`,
+        },
+        {
+          label: "OI Long",
+          value: (
+            <>
+              {`$${formatNumberCommas(getOiLong(Object.values(custodies)) / 10 ** 6)} `}
+              <span className="text-zinc-500"> </span>
+            </>
+          ),
+        },
+        {
+          label: "Fees",
+          value: `$${formatNumberCommas(getCollectedFees(Object.values(custodies)) / 10 ** 6)}`,
+        },
+        {
+          label: "Your Liquidity",
+          value: `$${formatNumberCommas(aum * userShare)}`,
+        },
+        {
+          label: "Your Share",
+          value: `${formatNumberCommas(userShare * 100)}%`,
+        },
+      ].map(({ label, value }, i) => (
+        <div className={twMerge("border-zinc-700", "border-t", "pt-3")} key={i}>
+          <div className="text-sm text-zinc-400">{label}</div>
+          <div className="text-sm text-white">{value}</div>
+        </div>
+      ))}
+    </div>
+  );
 }

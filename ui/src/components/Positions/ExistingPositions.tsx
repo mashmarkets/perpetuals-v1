@@ -8,6 +8,7 @@ import PoolPositionRow from "@/components/Positions/PoolPositionRow";
 import { useGlobalStore } from "@/stores/store";
 import { countDictList, getPoolSortedPositions } from "@/utils/organizers";
 
+import { LoadingSpinner } from "../Atoms/LoadingSpinner";
 import { PoolTokens } from "../PoolTokens";
 import { PositionColumn } from "./PositionColumn";
 
@@ -23,6 +24,10 @@ export function ExistingPositions() {
     allPositions = getPoolSortedPositions(positionData, publicKey);
   } else {
     allPositions = getPoolSortedPositions(positionData);
+  }
+
+  if (positionData.status === "pending") {
+    return <LoadingSpinner className="text-4xl" />;
   }
 
   if (countDictList(allPositions) === 0) {

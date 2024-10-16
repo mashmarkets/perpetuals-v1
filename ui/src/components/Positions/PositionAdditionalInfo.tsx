@@ -8,7 +8,6 @@ import { twMerge } from "tailwind-merge";
 import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/SolidButton";
 import { usePrice } from "@/hooks/price";
-import { getPositionData } from "@/hooks/storeHelpers/fetchPositions";
 import { PositionAccount } from "@/lib/PositionAccount";
 import { getTokenPublicKey } from "@/lib/Token";
 import { Side } from "@/lib/types";
@@ -34,8 +33,6 @@ export function PositionAdditionalInfo(props: Props) {
   const poolData = useGlobalStore((state) => state.poolData);
   const custodyData = useGlobalStore((state) => state.custodyData);
 
-  const setPositionData = useGlobalStore((state) => state.setPositionData);
-
   const positionPool = poolData[props.position.pool.toString()]!;
   const positionCustody = custodyData[props.position.custody.toString()]!;
 
@@ -49,8 +46,6 @@ export function PositionAdditionalInfo(props: Props) {
       new BN(price!.currentPrice * 10 ** 6),
     );
 
-    const positionInfos = await getPositionData(custodyData);
-    setPositionData(positionInfos);
     queryClient.invalidateQueries({
       queryKey: [
         "balance",

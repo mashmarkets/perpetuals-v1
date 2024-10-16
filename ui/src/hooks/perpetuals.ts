@@ -73,3 +73,37 @@ export const useCustodies = (custodies: PublicKey[]) => {
     })),
   });
 };
+
+export const usePoolCustodies = (poolKey: PublicKey) => {
+  const { connection } = useConnection();
+  const program = useProgram();
+  const pool = usePool(poolKey);
+
+  const custodies = pool?.data?.custodies ?? [];
+
+  return useQueries({
+    queries: custodies.map((custody) => ({
+      queryKey: ["custody", custody.toString()],
+      enabled: !!program || pool.data !== undefined,
+      queryFn: () =>
+        connectionBatcher(connection)
+          .fetch(custody)
+          .then((info) => {
+            const coder = program.account.custody.coder;
+            return coder.accounts.decode("custody", info!.data!);
+          }) as Promise<Custody>,
+    })),
+    combine: (results) => {
+      return results.reduce(
+        (acc, v, i) => {
+          if (v.data === undefined) {
+            return acc;
+          }
+          acc[custodies[i]!.toString()] = v.data!;
+          return acc;
+        },
+        {} as Record<string, Custody>,
+      );
+    },
+  });
+};

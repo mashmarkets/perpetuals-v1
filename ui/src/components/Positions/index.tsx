@@ -15,12 +15,6 @@ interface Props {
 export function Positions(props: Props) {
   const { publicKey } = useWallet();
 
-  const positionData = useGlobalStore((state) => state.positionData);
-
-  if (positionData.status === "pending") {
-    return <LoadingSpinner className="text-4xl" />;
-  }
-
   if (!publicKey) {
     return (
       <div className={props.className}>
@@ -37,9 +31,6 @@ export function Positions(props: Props) {
     <div className={props.className}>
       <header className="mb-5 flex items-center space-x-4">
         <div className="font-medium text-white">My Positions</div>
-        {positionData.status === "pending" && (
-          <LoadingDots className="text-white" />
-        )}
       </header>
       <ExistingPositions />
     </div>

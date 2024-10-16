@@ -13,7 +13,6 @@ import { SidebarTab } from "@/components/SidebarTab";
 import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
 import { usePrices } from "@/hooks/price";
-import { getPositionData } from "@/hooks/storeHelpers/fetchPositions";
 import { useBalance } from "@/hooks/token";
 import { PositionAccount } from "@/lib/PositionAccount";
 import { getTokenPublicKey, tokens } from "@/lib/Token";
@@ -50,10 +49,6 @@ export function CollateralModal(props: Props) {
   let payToken = props.position.collateralToken;
 
   let payTokenBalance = Number(balance) / 10 ** decimals;
-
-  const custodyData = useGlobalStore((state) => state.custodyData);
-
-  const setPositionData = useGlobalStore((state) => state.setPositionData);
 
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [depositAmount, setDepositAmount] = useState(0);
@@ -170,9 +165,6 @@ export function CollateralModal(props: Props) {
       tab === Tab.Add ? depositAmount : withdrawAmount,
       tab,
     );
-
-    const positionInfos = await getPositionData(custodyData);
-    setPositionData(positionInfos);
   }
 
   return (
