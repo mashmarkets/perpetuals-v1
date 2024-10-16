@@ -17,7 +17,6 @@ describe("perpetuals", () => {
   let permissions;
   let fees;
   let borrowRate;
-  let isStable;
   let perpetualsExpected;
   let multisigExpected;
   let tokenExpected;
@@ -191,10 +190,8 @@ describe("perpetuals", () => {
       slope2: new BN(120000),
       optimalUtilization: new BN(800000000),
     };
-    isStable = false;
     await tc.addCustody(
       tc.custodies[0],
-      isStable,
       oracleConfig,
       pricing,
       permissions,
@@ -208,7 +205,6 @@ describe("perpetuals", () => {
       mint: tc.custodies[0].mint.publicKey,
       tokenAccount: tc.custodies[0].tokenAccount,
       decimals: 9,
-      isStable,
       oracle: {
         oracleAccount: tc.custodies[0].oracleAccount,
         oracleType: { custom: {} },
@@ -305,7 +301,6 @@ describe("perpetuals", () => {
     oracleConfig2.oracleAccount = tc.custodies[1].oracleAccount;
     await tc.addCustody(
       tc.custodies[1],
-      isStable,
       oracleConfig2,
       pricing,
       permissions,
@@ -320,7 +315,6 @@ describe("perpetuals", () => {
 
     await tc.addCustody(
       tc.custodies[1],
-      isStable,
       oracleConfig2,
       pricing,
       permissions,
@@ -335,7 +329,6 @@ describe("perpetuals", () => {
     fees.liquidation = new BN(200);
     await tc.setCustodyConfig(
       tc.custodies[0],
-      isStable,
       oracleConfig,
       pricing,
       permissions,

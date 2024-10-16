@@ -20,7 +20,6 @@ export class CustodyAccount {
   public mint: PublicKey;
   public tokenAccount: PublicKey;
   public decimals: number;
-  public isStable: boolean;
   public oracle: OracleParams;
   public pricing: PricingParams;
   public permissions: Permissions;
@@ -46,7 +45,6 @@ export class CustodyAccount {
     this.mint = custody.mint;
     this.tokenAccount = custody.tokenAccount;
     this.decimals = custody.decimals;
-    this.isStable = custody.isStable;
     this.oracle = custody.oracle;
     this.pricing = custody.pricing;
     this.permissions = custody.permissions;

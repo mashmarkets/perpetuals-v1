@@ -69,7 +69,6 @@ pub async fn test_set_custody_config(
     // Check custody account
     {
         assert_eq!(custody_account.pool, *pool_pda);
-        assert_eq!(custody_account.is_stable, params.is_stable);
         assert_eq!(custody_account.oracle, params.oracle);
         assert_eq!(custody_account.pricing, params.pricing);
         assert_eq!(custody_account.permissions, params.permissions);

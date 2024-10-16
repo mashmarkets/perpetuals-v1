@@ -17,7 +17,6 @@ export interface Custody {
   mint: PublicKey;
   tokenAccount: PublicKey;
   decimals: number;
-  isStable: boolean;
   oracle: OracleParams;
   pricing: PricingParams;
   permissions: Permissions;

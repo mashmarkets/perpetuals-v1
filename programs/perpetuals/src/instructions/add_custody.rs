@@ -84,7 +84,6 @@ pub struct AddCustody<'info> {
 
 #[derive(AnchorSerialize, AnchorDeserialize, Clone)]
 pub struct AddCustodyParams {
-    pub is_stable: bool,
     pub oracle: OracleParams,
     pub pricing: PricingParams,
     pub permissions: Permissions,
@@ -130,7 +129,6 @@ pub fn add_custody<'info>(
     custody.mint = ctx.accounts.custody_token_mint.key();
     custody.token_account = ctx.accounts.custody_token_account.key();
     custody.decimals = ctx.accounts.custody_token_mint.decimals;
-    custody.is_stable = params.is_stable;
     custody.oracle = params.oracle;
     custody.pricing = params.pricing;
     custody.permissions = params.permissions;

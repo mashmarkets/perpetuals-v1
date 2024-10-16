@@ -151,8 +151,7 @@ pub fn add_collateral(ctx: Context<AddCollateral>, params: &AddCollateralParams)
         collateral_custody.pricing.use_ema,
     )?;
 
-    let min_collateral_price = collateral_token_price
-        .get_min_price(&collateral_token_ema_price, collateral_custody.is_stable)?;
+    let min_collateral_price = collateral_token_price.get_min_price(&collateral_token_ema_price)?;
 
     // compute amount to transfer
     let collateral_usd = min_collateral_price

@@ -73,7 +73,6 @@ export async function addCustody(
 
   await program.methods
     .addCustody({
-      isStable: params.isStable,
       oracle: {
         oracleAccount: params.tokenOracle,
         oracleType: params.oracleType,

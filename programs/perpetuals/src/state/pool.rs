@@ -447,8 +447,8 @@ impl Pool {
 
             if potential_profit_usd >= unrealized_loss_usd {
                 let cur_profit_usd = math::checked_sub(potential_profit_usd, unrealized_loss_usd)?;
-                let min_collateral_price = collateral_token_price
-                    .get_min_price(collateral_token_ema_price, collateral_custody.is_stable)?;
+                let min_collateral_price =
+                    collateral_token_price.get_min_price(collateral_token_ema_price)?;
 
                 let max_profit_usd = if curtime <= position.open_time {
                     0
@@ -486,8 +486,8 @@ impl Pool {
                 let cur_profit_usd =
                     math::checked_sub(position.unrealized_profit_usd, potential_loss_usd)?;
 
-                let min_collateral_price = collateral_token_price
-                    .get_min_price(collateral_token_ema_price, collateral_custody.is_stable)?;
+                let min_collateral_price =
+                    collateral_token_price.get_min_price(collateral_token_ema_price)?;
 
                 let max_profit_usd = if curtime <= position.open_time {
                     0
@@ -561,29 +561,21 @@ impl Pool {
             pool_amount_usd = math::checked_add(pool_amount_usd, token_amount_usd as u128)?;
 
             if custody.pricing.use_unrealized_pnl_in_aum {
-                if custody.is_stable {
-                    // compute accumulated interest
-                    let collective_position = custody.get_collective_position()?;
-                    let interest_usd =
-                        custody.get_interest_amount_usd(&collective_position, curtime)?;
-                    pool_amount_usd = math::checked_add(pool_amount_usd, interest_usd as u128)?;
-                } else {
-                    // compute aggregate unrealized pnl
-                    let (long_profit, long_loss, _) = self.get_pnl_usd(
-                        &custody.get_collective_position()?,
-                        &token_price,
-                        &token_ema_price,
-                        &custody,
-                        &token_price,
-                        &token_ema_price,
-                        &custody,
-                        curtime,
-                        false,
-                    )?;
-                    // adjust pool amount by collective profit/loss
-                    pool_amount_usd = math::checked_add(pool_amount_usd, long_loss as u128)?;
-                    pool_amount_usd = pool_amount_usd.saturating_sub(long_profit as u128);
-                }
+                // compute aggregate unrealized pnl
+                let (long_profit, long_loss, _) = self.get_pnl_usd(
+                    &custody.get_collective_position()?,
+                    &token_price,
+                    &token_ema_price,
+                    &custody,
+                    &token_price,
+                    &token_ema_price,
+                    &custody,
+                    curtime,
+                    false,
+                )?;
+                // adjust pool amount by collective profit/loss
+                pool_amount_usd = math::checked_add(pool_amount_usd, long_loss as u128)?;
+                pool_amount_usd = pool_amount_usd.saturating_sub(long_profit as u128);
             }
         }
 

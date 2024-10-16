@@ -1,8 +1,6 @@
 import { MethodsNamespace, IdlTypes, IdlAccounts } from "@coral-xyz/anchor";
 import { Perpetuals } from "../../target/types/perpetuals";
 
-export type PositionSide = "long" | "short";
-
 export type Methods = MethodsNamespace<Perpetuals>;
 export type Accounts = IdlAccounts<Perpetuals>;
 export type Types = IdlTypes<Perpetuals>;

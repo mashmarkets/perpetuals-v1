@@ -109,8 +109,7 @@ pub fn get_entry_price_and_fee(
         collateral_custody.pricing.use_ema,
     )?;
 
-    let min_collateral_price = collateral_token_price
-        .get_min_price(&collateral_token_ema_price, collateral_custody.is_stable)?;
+    let min_collateral_price = collateral_token_price.get_min_price(&collateral_token_ema_price)?;
 
     let entry_price = pool.get_entry_price(&token_price, &token_ema_price, custody)?;
 

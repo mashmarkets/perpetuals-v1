@@ -104,8 +104,7 @@ pub fn get_liquidation_price(
         collateral_custody.pricing.use_ema,
     )?;
 
-    let min_collateral_price = collateral_token_price
-        .get_min_price(&collateral_token_ema_price, collateral_custody.is_stable)?;
+    let min_collateral_price = collateral_token_price.get_min_price(&collateral_token_ema_price)?;
 
     let mut position = ctx.accounts.position.clone();
     position.update_time = ctx.accounts.perpetuals.get_time()?;

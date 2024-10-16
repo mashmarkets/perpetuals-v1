@@ -118,7 +118,6 @@ pub struct Custody {
     pub mint: Pubkey,
     pub token_account: Pubkey,
     pub decimals: u8,
-    pub is_stable: bool,
     pub oracle: OracleParams,
     pub pricing: PricingParams,
     pub permissions: Permissions,

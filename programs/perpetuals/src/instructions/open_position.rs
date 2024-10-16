@@ -121,9 +121,7 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
     let custody = ctx.accounts.custody.as_mut();
     let collateral_custody = ctx.accounts.collateral_custody.as_mut();
     require!(
-        perpetuals.permissions.allow_open_position
-            && custody.permissions.allow_open_position
-            && !custody.is_stable,
+        perpetuals.permissions.allow_open_position && custody.permissions.allow_open_position,
         PerpetualsError::InstructionNotAllowed
     );
 
@@ -172,8 +170,7 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
         collateral_custody.pricing.use_ema,
     )?;
 
-    let min_collateral_price = collateral_token_price
-        .get_min_price(&collateral_token_ema_price, collateral_custody.is_stable)?;
+    let min_collateral_price = collateral_token_price.get_min_price(&collateral_token_ema_price)?;
 
     let position_price = pool.get_entry_price(&token_price, &token_ema_price, custody)?;
     msg!("Entry price: {}", position_price);

@@ -87,7 +87,6 @@ pub async fn test_add_custody(
         assert_eq!(custody_account.mint, *custody_token_mint);
         assert_eq!(custody_account.token_account, custody_token_account_pda);
         assert_eq!(custody_account.decimals, custody_token_decimals);
-        assert_eq!(custody_account.is_stable, params.is_stable);
         assert_eq!(custody_account.oracle, params.oracle);
         assert_eq!(custody_account.pricing, params.pricing);
         assert_eq!(custody_account.permissions, params.permissions);
