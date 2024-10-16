@@ -5,7 +5,7 @@ use {
         state::{
             oracle::{OracleParams, OraclePrice, OracleType},
             perpetuals::{Permissions, Perpetuals},
-            position::{Position, Side},
+            position::Position,
         },
     },
     anchor_lang::prelude::*,
@@ -47,7 +47,6 @@ pub struct TradeStats {
     pub loss_usd: u64,
     // open interest
     pub oi_long_usd: u64,
-    pub oi_short_usd: u64,
 }
 
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
@@ -132,7 +131,6 @@ pub struct Custody {
     pub volume_stats: VolumeStats,
     pub trade_stats: TradeStats,
     pub long_positions: PositionStats,
-    pub short_positions: PositionStats,
     pub borrow_rate_state: BorrowRateState,
 
     // bumps for address validation
@@ -222,12 +220,8 @@ impl Custody {
         Ok(())
     }
 
-    pub fn get_locked_amount(&self, size: u64, side: Side) -> Result<u64> {
-        let max_payoff_mult = if side == Side::Short {
-            std::cmp::min(Perpetuals::BPS_POWER, self.pricing.max_payoff_mult as u128)
-        } else {
-            self.pricing.max_payoff_mult as u128
-        };
+    pub fn get_locked_amount(&self, size: u64) -> Result<u64> {
+        let max_payoff_mult = self.pricing.max_payoff_mult as u128;
         math::checked_as_u64(math::checked_div(
             math::checked_mul(size as u128, max_payoff_mult)?,
             Perpetuals::BPS_POWER,
@@ -329,15 +323,10 @@ impl Custody {
         Ok(())
     }
 
-    pub fn get_collective_position(&self, side: Side) -> Result<Position> {
-        let stats = if side == Side::Long {
-            &self.long_positions
-        } else {
-            &self.short_positions
-        };
+    pub fn get_collective_position(&self) -> Result<Position> {
+        let stats = &self.long_positions;
         if stats.open_positions > 0 {
             Ok(Position {
-                side,
                 price: if stats.total_quantity > 0 {
                     math::checked_as_u64(math::checked_div(
                         stats.weighted_price,
@@ -366,15 +355,11 @@ impl Custody {
         collateral_custody: Option<&mut Custody>,
     ) -> Result<()> {
         // compute accumulated interest
-        let collective_position = self.get_collective_position(position.side)?;
+        let collective_position = self.get_collective_position()?;
         let interest_usd = self.get_interest_amount_usd(&collective_position, curtime)?;
 
         // update positions
-        let stats = if position.side == Side::Long {
-            &mut self.long_positions
-        } else {
-            &mut self.short_positions
-        };
+        let stats = &mut self.long_positions;
 
         stats.open_positions = math::checked_add(stats.open_positions, 1)?;
         stats.size_usd = math::checked_add(stats.size_usd, position.size_usd)?;
@@ -425,14 +410,10 @@ impl Custody {
         // update collateral custody for interest tracking
         if let Some(custody) = collateral_custody {
             // compute accumulated interest
-            let collective_position = custody.get_collective_position(position.side)?;
+            let collective_position = custody.get_collective_position()?;
             let interest_usd = custody.get_interest_amount_usd(&collective_position, curtime)?;
 
-            let stats = if position.side == Side::Long {
-                &mut custody.long_positions
-            } else {
-                &mut custody.short_positions
-            };
+            let stats = &mut custody.long_positions;
 
             stats.cumulative_interest_usd =
                 math::checked_add(stats.cumulative_interest_usd, interest_usd)?;
@@ -453,17 +434,13 @@ impl Custody {
         collateral_custody: Option<&mut Custody>,
     ) -> Result<()> {
         // compute accumulated interest
-        let collective_position = self.get_collective_position(position.side)?;
+        let collective_position = self.get_collective_position()?;
         let interest_usd = self.get_interest_amount_usd(&collective_position, curtime)?;
         let cumulative_interest_snapshot = self.get_cumulative_interest(curtime)?;
         let position_interest_usd = self.get_interest_amount_usd(position, curtime)?;
 
         // update stats
-        let stats = if position.side == Side::Long {
-            &mut self.long_positions
-        } else {
-            &mut self.short_positions
-        };
+        let stats = &mut self.long_positions;
 
         if stats.open_positions == 1 {
             *stats = PositionStats::default();
@@ -504,14 +481,10 @@ impl Custody {
         // update collateral custody for interest tracking
         if let Some(custody) = collateral_custody {
             // compute accumulated interest
-            let collective_position = custody.get_collective_position(position.side)?;
+            let collective_position = custody.get_collective_position()?;
             let interest_usd = custody.get_interest_amount_usd(&collective_position, curtime)?;
 
-            let stats = if position.side == Side::Long {
-                &mut custody.long_positions
-            } else {
-                &mut custody.short_positions
-            };
+            let stats = &mut custody.long_positions;
 
             if stats.open_positions == 1 {
                 *stats = PositionStats::default();

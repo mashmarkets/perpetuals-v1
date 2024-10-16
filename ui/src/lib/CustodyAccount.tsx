@@ -33,7 +33,6 @@ export class CustodyAccount {
   public volumeStats: Stats;
   public tradeStats: TradeStats;
   public longPositions: PositionStats;
-  public shortPositions: PositionStats;
   public borrowRateState: BorrowRateState;
 
   // bumps for address validatio;
@@ -60,7 +59,6 @@ export class CustodyAccount {
     this.volumeStats = custody.volumeStats;
     this.tradeStats = custody.tradeStats;
     this.longPositions = custody.longPositions;
-    this.shortPositions = custody.shortPositions;
     this.borrowRateState = custody.borrowRateState;
 
     this.bump = custody.bump;

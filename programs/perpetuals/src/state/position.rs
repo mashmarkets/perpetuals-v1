@@ -39,7 +39,6 @@ pub struct Position {
 
     pub open_time: i64,
     pub update_time: i64,
-    pub side: Side,
     pub price: u64,
     pub size_usd: u64,
     pub borrow_size_usd: u64,

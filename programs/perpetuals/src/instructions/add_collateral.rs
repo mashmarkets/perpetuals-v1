@@ -58,7 +58,7 @@ pub struct AddCollateral<'info> {
                  owner.key().as_ref(),
                  pool.key().as_ref(),
                  custody.key().as_ref(),
-                 &[position.side as u8]],
+                 &[Side::Long as u8]],
         bump = position.bump
     )]
     pub position: Box<Account<'info, Position>>,
@@ -201,9 +201,7 @@ pub fn add_collateral(ctx: Context<AddCollateral>, params: &AddCollateralParams)
         math::checked_add(collateral_custody.assets.collateral, params.collateral)?;
 
     // if custody and collateral_custody accounts are the same, ensure that data is in sync
-    if position.side == Side::Long {
-        *custody = collateral_custody.clone();
-    }
+    *custody = collateral_custody.clone();
 
     Ok(())
 }

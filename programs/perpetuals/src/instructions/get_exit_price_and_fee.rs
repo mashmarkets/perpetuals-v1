@@ -31,7 +31,7 @@ pub struct GetExitPriceAndFee<'info> {
                  position.owner.as_ref(),
                  pool.key().as_ref(),
                  custody.key().as_ref(),
-                 &[position.side as u8]],
+                 &[Side::Long as u8]],
         bump = position.bump
     )]
     pub position: Box<Account<'info, Position>>,
@@ -56,13 +56,13 @@ pub struct GetExitPriceAndFee<'info> {
                  collateral_custody.mint.as_ref()],
         bump = collateral_custody.bump
     )]
-    pub collateral_custody: Box<Account<'info, Custody>>,
+    pub collateral_custody: Box<Account<'info, Custody>>, // NOTE:- Not Used
 
     /// CHECK: oracle account for the collateral token
     #[account(
         constraint = collateral_custody_oracle_account.key() == collateral_custody.oracle.oracle_account
     )]
-    pub collateral_custody_oracle_account: AccountInfo<'info>,
+    pub collateral_custody_oracle_account: AccountInfo<'info>, // NOTE:- Not Used
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -77,7 +77,6 @@ pub fn get_exit_price_and_fee(
     let pool = &ctx.accounts.pool;
     let curtime = ctx.accounts.perpetuals.get_time()?;
     let custody = &ctx.accounts.custody;
-    let collateral_custody = &ctx.accounts.collateral_custody;
 
     let token_price = OraclePrice::new_from_oracle(
         &ctx.accounts.custody_oracle_account.to_account_info(),
@@ -93,26 +92,11 @@ pub fn get_exit_price_and_fee(
         custody.pricing.use_ema,
     )?;
 
-    let collateral_token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts
-            .collateral_custody_oracle_account
-            .to_account_info(),
-        &collateral_custody.oracle,
-        curtime,
-        collateral_custody.pricing.use_ema,
-    )?;
-
-    let price = pool.get_exit_price(&token_price, &token_ema_price, position.side, custody)?;
+    let price = pool.get_exit_price(&token_price, &token_ema_price, custody)?;
 
     let size = token_ema_price.get_token_amount(position.size_usd, custody.decimals)?;
 
-    let mut fee = pool.get_exit_fee(size, custody)?;
-
-    if position.side == Side::Short {
-        let fee_amount_usd = token_ema_price.get_asset_amount_usd(fee, custody.decimals)?;
-        fee = collateral_token_ema_price
-            .get_token_amount(fee_amount_usd, collateral_custody.decimals)?;
-    }
+    let fee = pool.get_exit_fee(size, custody)?;
 
     Ok(PriceAndFee { price, fee })
 }

@@ -1,3 +1,4 @@
+import fs from "fs";
 import { describe, it, expect } from "vitest";
 import * as anchor from "@coral-xyz/anchor";
 import IDL from "../../../../target/idl/perpetuals.json";
@@ -25,7 +26,14 @@ describe("perpetuals", () => {
   it("init", async () => {
     const context = await startAnchor(".", [], []);
     const provider = new BankrunProvider(context);
-    const PERPETUALS_ADDRESS = new PublicKey(IDL.metadata.address);
+    // Anchor <0.30.0 doesn't populate address on build, so get it from the keypair directly
+    const PERPETUALS_ADDRESS = Keypair.fromSecretKey(
+      new Uint8Array(
+        JSON.parse(
+          fs.readFileSync("./target/deploy/perpetuals-keypair.json", "utf-8")
+        )
+      )
+    ).publicKey;
     const program = new Program<Perpetuals>(
       IDL as any,
       PERPETUALS_ADDRESS,
@@ -269,20 +277,8 @@ describe("perpetuals", () => {
         profitUsd: "0",
         lossUsd: "0",
         oiLongUsd: "0",
-        oiShortUsd: "0",
       },
       longPositions: {
-        openPositions: "0",
-        collateralUsd: "0",
-        sizeUsd: "0",
-        borrowSizeUsd: "0",
-        lockedAmount: "0",
-        weightedPrice: "0",
-        totalQuantity: "0",
-        cumulativeInterestUsd: "0",
-        cumulativeInterestSnapshot: "0",
-      },
-      shortPositions: {
         openPositions: "0",
         collateralUsd: "0",
         sizeUsd: "0",
@@ -532,7 +528,6 @@ describe("perpetuals", () => {
       125,
       tc.toTokenAmount(1, tc.custodies[0].decimals),
       tc.toTokenAmount(7, tc.custodies[0].decimals),
-      "long",
       tc.users[0],
       tc.users[0].tokenAccounts[0],
       tc.users[0].positionAccountsLong[0],
@@ -549,7 +544,6 @@ describe("perpetuals", () => {
       collateralCustody: tc.custodies[0].custody.toBase58(),
       openTime: "111",
       updateTime: "0",
-      side: { long: {} },
       price: "124230000",
       sizeUsd: "869610000",
       borrowSizeUsd: "869610000",
@@ -603,7 +597,6 @@ describe("perpetuals", () => {
       125,
       tc.toTokenAmount(1, tc.custodies[0].decimals),
       tc.toTokenAmount(7, tc.custodies[0].decimals),
-      "long",
       tc.users[0],
       tc.users[0].tokenAccounts[0],
       tc.users[0].positionAccountsLong[0],

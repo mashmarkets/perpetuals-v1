@@ -29,7 +29,7 @@ pub async fn test_open_position(
         pda::get_custody_token_account_pda(pool_pda, custody_token_mint).0;
 
     let (position_pda, position_bump) =
-        pda::get_position_pda(&owner.pubkey(), pool_pda, &custody_pda, params.side);
+        pda::get_position_pda(&owner.pubkey(), pool_pda, &custody_pda);
 
     let funding_account_address =
         utils::find_associated_token_account(&owner.pubkey(), custody_token_mint).0;
@@ -94,7 +94,6 @@ pub async fn test_open_position(
         //     utils::get_current_unix_timestamp(program_test_ctx).await
         // );
         assert_eq!(position_account.update_time, 0);
-        assert_eq!(position_account.side, params.side);
         assert_eq!(position_account.unrealized_profit_usd, 0);
         assert_eq!(position_account.unrealized_loss_usd, 0);
         assert_eq!(position_account.collateral_amount, params.collateral);

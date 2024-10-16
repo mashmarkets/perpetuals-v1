@@ -6,7 +6,7 @@ use {
         oracle::OraclePrice,
         perpetuals::{Perpetuals, ProfitAndLoss},
         pool::Pool,
-        position::Position,
+        position::{Position, Side},
     },
     anchor_lang::prelude::*,
 };
@@ -31,7 +31,7 @@ pub struct GetPnl<'info> {
                  position.owner.as_ref(),
                  pool.key().as_ref(),
                  custody.key().as_ref(),
-                 &[position.side as u8]],
+                 &[Side::Long as u8]],
         bump = position.bump
     )]
     pub position: Box<Account<'info, Position>>,

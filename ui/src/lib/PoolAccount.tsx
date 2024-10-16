@@ -127,17 +127,6 @@ export class PoolAccount {
     return totalAmount / 10 ** 6;
   }
 
-  getOiShort(): number {
-    const totalAmount = Object.values(this.custodies).reduce(
-      (acc: number, tokenCustody: CustodyAccount) => {
-        return Number(acc) + Number(tokenCustody.tradeStats.oiShortUsd);
-      },
-      0,
-    );
-
-    return totalAmount / 10 ** 6;
-  }
-
   getFees(): number {
     const totalAmount = Object.values(this.custodies).reduce(
       (acc: number, tokenCustody: CustodyAccount) => {

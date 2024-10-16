@@ -56,7 +56,7 @@ pub struct ClosePosition<'info> {
                  owner.key().as_ref(),
                  pool.key().as_ref(),
                  custody.key().as_ref(),
-                 &[position.side as u8]],
+                 &[Side::Long as u8]],
         bump = position.bump,
         close = owner
     )]
@@ -157,17 +157,13 @@ pub fn close_position(ctx: Context<ClosePosition>, params: &ClosePositionParams)
         collateral_custody.pricing.use_ema,
     )?;
 
-    let exit_price = pool.get_exit_price(&token_price, &token_ema_price, position.side, custody)?;
+    let exit_price = pool.get_exit_price(&token_price, &token_ema_price, custody)?;
     msg!("Exit price: {}", exit_price);
 
-    if position.side == Side::Long {
-        require_gte!(exit_price, params.price, PerpetualsError::MaxPriceSlippage);
-    } else {
-        require_gte!(params.price, exit_price, PerpetualsError::MaxPriceSlippage);
-    }
+    require_gte!(exit_price, params.price, PerpetualsError::MaxPriceSlippage);
 
     msg!("Settle position");
-    let (transfer_amount, mut fee_amount, profit_usd, loss_usd) = pool.get_close_amount(
+    let (transfer_amount, fee_amount, profit_usd, loss_usd) = pool.get_close_amount(
         position,
         &token_price,
         &token_ema_price,
@@ -180,10 +176,6 @@ pub fn close_position(ctx: Context<ClosePosition>, params: &ClosePositionParams)
     )?;
 
     let fee_amount_usd = token_ema_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
-    if position.side == Side::Short {
-        fee_amount = collateral_token_ema_price
-            .get_token_amount(fee_amount_usd, collateral_custody.decimals)?;
-    }
 
     msg!("Net profit: {}, loss: {}", profit_usd, loss_usd);
     msg!("Collected fee: {}", fee_amount);
@@ -244,60 +236,28 @@ pub fn close_position(ctx: Context<ClosePosition>, params: &ClosePositionParams)
     }
 
     // if custody and collateral_custody accounts are the same, ensure that data is in sync
-    if position.side == Side::Long {
-        collateral_custody.volume_stats.close_position_usd = collateral_custody
-            .volume_stats
-            .close_position_usd
-            .wrapping_add(position.size_usd);
+    collateral_custody.volume_stats.close_position_usd = collateral_custody
+        .volume_stats
+        .close_position_usd
+        .wrapping_add(position.size_usd);
 
-        if position.side == Side::Long {
-            collateral_custody.trade_stats.oi_long_usd = collateral_custody
-                .trade_stats
-                .oi_long_usd
-                .saturating_sub(position.size_usd);
-        } else {
-            collateral_custody.trade_stats.oi_short_usd = collateral_custody
-                .trade_stats
-                .oi_short_usd
-                .saturating_sub(position.size_usd);
-        }
+    collateral_custody.trade_stats.oi_long_usd = collateral_custody
+        .trade_stats
+        .oi_long_usd
+        .saturating_sub(position.size_usd);
 
-        collateral_custody.trade_stats.profit_usd = collateral_custody
-            .trade_stats
-            .profit_usd
-            .wrapping_add(profit_usd);
-        collateral_custody.trade_stats.loss_usd = collateral_custody
-            .trade_stats
-            .loss_usd
-            .wrapping_add(loss_usd);
+    collateral_custody.trade_stats.profit_usd = collateral_custody
+        .trade_stats
+        .profit_usd
+        .wrapping_add(profit_usd);
+    collateral_custody.trade_stats.loss_usd = collateral_custody
+        .trade_stats
+        .loss_usd
+        .wrapping_add(loss_usd);
 
-        collateral_custody.remove_position(position, curtime, None)?;
-        collateral_custody.update_borrow_rate(curtime)?;
-        *custody = collateral_custody.clone();
-    } else {
-        custody.volume_stats.close_position_usd = custody
-            .volume_stats
-            .close_position_usd
-            .wrapping_add(position.size_usd);
-
-        if position.side == Side::Long {
-            custody.trade_stats.oi_long_usd = custody
-                .trade_stats
-                .oi_long_usd
-                .saturating_sub(position.size_usd);
-        } else {
-            custody.trade_stats.oi_short_usd = custody
-                .trade_stats
-                .oi_short_usd
-                .saturating_sub(position.size_usd);
-        }
-
-        custody.trade_stats.profit_usd = custody.trade_stats.profit_usd.wrapping_add(profit_usd);
-        custody.trade_stats.loss_usd = custody.trade_stats.loss_usd.wrapping_add(loss_usd);
-
-        custody.remove_position(position, curtime, Some(collateral_custody))?;
-        collateral_custody.update_borrow_rate(curtime)?;
-    }
+    collateral_custody.remove_position(position, curtime, None)?;
+    collateral_custody.update_borrow_rate(curtime)?;
+    *custody = collateral_custody.clone();
 
     Ok(())
 }

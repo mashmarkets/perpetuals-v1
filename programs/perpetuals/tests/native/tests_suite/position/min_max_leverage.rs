@@ -1,10 +1,7 @@
 use {
     crate::{instructions, utils},
     maplit::hashmap,
-    perpetuals::{
-        instructions::OpenPositionParams,
-        state::{custody::PricingParams, position::Side},
-    },
+    perpetuals::{instructions::OpenPositionParams, state::custody::PricingParams},
 };
 
 const ETH_DECIMALS: u8 = 9;
@@ -97,7 +94,6 @@ pub async fn min_max_leverage() {
             price: utils::scale(1_550, ETH_DECIMALS),
             collateral: utils::scale(1, ETH_DECIMALS),
             size: utils::scale(10, ETH_DECIMALS),
-            side: Side::Long,
         },
     )
     .await
@@ -115,7 +111,6 @@ pub async fn min_max_leverage() {
             price: utils::scale(1_550, ETH_DECIMALS),
             collateral: utils::scale(1, ETH_DECIMALS),
             size: utils::scale_f64(0.5, ETH_DECIMALS),
-            side: Side::Long,
         },
     )
     .await

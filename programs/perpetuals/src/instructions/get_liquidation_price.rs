@@ -4,8 +4,11 @@ use {
     crate::{
         math,
         state::{
-            custody::Custody, oracle::OraclePrice, perpetuals::Perpetuals, pool::Pool,
-            position::Position,
+            custody::Custody,
+            oracle::OraclePrice,
+            perpetuals::Perpetuals,
+            pool::Pool,
+            position::{Position, Side},
         },
     },
     anchor_lang::prelude::*,
@@ -31,7 +34,7 @@ pub struct GetLiquidationPrice<'info> {
                  position.owner.as_ref(),
                  pool.key().as_ref(),
                  custody.key().as_ref(),
-                 &[position.side as u8]],
+                 &[Side::Long as u8]],
         bump = position.bump
     )]
     pub position: Box<Account<'info, Position>>,

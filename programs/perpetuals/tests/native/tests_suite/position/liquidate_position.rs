@@ -3,7 +3,7 @@ use {
     maplit::hashmap,
     perpetuals::{
         instructions::{OpenPositionParams, SetCustomOraclePriceParams},
-        state::{custody::PricingParams, position::Side},
+        state::custody::PricingParams,
     },
     solana_sdk::signer::Signer,
 };
@@ -105,7 +105,6 @@ pub async fn liquidate_position() {
             price: utils::scale(1_550, ETH_DECIMALS),
             collateral: utils::scale(1, ETH_DECIMALS),
             size: utils::scale(5, ETH_DECIMALS),
-            side: Side::Long,
         },
     )
     .await

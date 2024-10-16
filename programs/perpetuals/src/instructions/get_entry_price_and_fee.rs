@@ -6,7 +6,7 @@ use {
         oracle::OraclePrice,
         perpetuals::{NewPositionPricesAndFee, Perpetuals},
         pool::Pool,
-        position::{Position, Side},
+        position::Position,
     },
     anchor_lang::prelude::*,
     solana_program::program_error::ProgramError,
@@ -60,7 +60,6 @@ pub struct GetEntryPriceAndFee<'info> {
 pub struct GetEntryPriceAndFeeParams {
     collateral: u64,
     size: u64,
-    side: Side,
 }
 
 pub fn get_entry_price_and_fee(
@@ -68,7 +67,7 @@ pub fn get_entry_price_and_fee(
     params: &GetEntryPriceAndFeeParams,
 ) -> Result<NewPositionPricesAndFee> {
     // validate inputs
-    if params.collateral == 0 || params.size == 0 || params.side == Side::None {
+    if params.collateral == 0 || params.size == 0 {
         return Err(ProgramError::InvalidArgument.into());
     }
     let pool = &ctx.accounts.pool;
@@ -113,7 +112,7 @@ pub fn get_entry_price_and_fee(
     let min_collateral_price = collateral_token_price
         .get_min_price(&collateral_token_ema_price, collateral_custody.is_stable)?;
 
-    let entry_price = pool.get_entry_price(&token_price, &token_ema_price, params.side, custody)?;
+    let entry_price = pool.get_entry_price(&token_price, &token_ema_price, custody)?;
 
     let position_oracle_price = OraclePrice {
         price: entry_price,
@@ -123,17 +122,9 @@ pub fn get_entry_price_and_fee(
     let collateral_usd = min_collateral_price
         .get_asset_amount_usd(params.collateral, collateral_custody.decimals)?;
 
-    let locked_amount = if params.side == Side::Short {
-        custody.get_locked_amount(
-            min_collateral_price.get_token_amount(size_usd, collateral_custody.decimals)?,
-            params.side,
-        )?
-    } else {
-        custody.get_locked_amount(params.size, params.side)?
-    };
+    let locked_amount = custody.get_locked_amount(params.size)?;
 
     let position = Position {
-        side: params.side,
         price: entry_price,
         size_usd,
         collateral_usd,
@@ -149,18 +140,12 @@ pub fn get_entry_price_and_fee(
         curtime,
     )?;
 
-    let mut fee = pool.get_entry_fee(
+    let fee = pool.get_entry_fee(
         custody.fees.open_position,
         params.size,
         locked_amount,
         collateral_custody,
     )?;
-
-    if params.side == Side::Short {
-        let fee_amount_usd = token_ema_price.get_asset_amount_usd(fee, custody.decimals)?;
-        fee = collateral_token_ema_price
-            .get_token_amount(fee_amount_usd, collateral_custody.decimals)?;
-    }
 
     Ok(NewPositionPricesAndFee {
         entry_price,

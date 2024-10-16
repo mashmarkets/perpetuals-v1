@@ -29,7 +29,6 @@ export interface Custody {
   volumeStats: Stats;
   tradeStats: TradeStats;
   longPositions: PositionStats;
-  shortPositions: PositionStats;
   borrowRateState: BorrowRateState;
 
   bump: number;
@@ -122,7 +121,6 @@ export interface TradeStats {
   profitUsd: BN;
   lossUsd: BN;
   oiLongUsd: BN;
-  oiShortUsd: BN;
 }
 
 export enum Side {

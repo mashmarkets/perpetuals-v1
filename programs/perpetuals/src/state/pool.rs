@@ -61,18 +61,13 @@ impl Pool {
         &self,
         token_price: &OraclePrice,
         token_ema_price: &OraclePrice,
-        side: Side,
         custody: &Custody,
     ) -> Result<u64> {
         let price = self.get_price(
             token_price,
             token_ema_price,
-            side,
-            if side == Side::Long {
-                custody.pricing.trade_spread_long
-            } else {
-                custody.pricing.trade_spread_short
-            },
+            Side::Long,
+            custody.pricing.trade_spread_long,
         )?;
         require_gt!(price.price, 0, PerpetualsError::MaxPriceSlippage);
 
@@ -140,22 +135,13 @@ impl Pool {
         &self,
         token_price: &OraclePrice,
         token_ema_price: &OraclePrice,
-        side: Side,
         custody: &Custody,
     ) -> Result<u64> {
         let price = self.get_price(
             token_price,
             token_ema_price,
-            if side == Side::Long {
-                Side::Short
-            } else {
-                Side::Long
-            },
-            if side == Side::Long {
-                custody.pricing.trade_spread_short
-            } else {
-                custody.pricing.trade_spread_long
-            },
+            Side::Short,
+            custody.pricing.trade_spread_short,
         )?;
 
         Ok(price
@@ -394,22 +380,12 @@ impl Pool {
             -(Perpetuals::PRICE_DECIMALS as i32),
         )?;
 
-        if position.side == Side::Long {
-            if max_loss_usd >= margin_usd {
-                math::checked_add(position.price, max_price_diff)
-            } else if position.price > max_price_diff {
-                math::checked_sub(position.price, max_price_diff)
-            } else {
-                Ok(0)
-            }
-        } else if max_loss_usd >= margin_usd {
-            if position.price > max_price_diff {
-                math::checked_sub(position.price, max_price_diff)
-            } else {
-                Ok(0)
-            }
-        } else {
+        if max_loss_usd >= margin_usd {
             math::checked_add(position.price, max_price_diff)
+        } else if position.price > max_price_diff {
+            math::checked_sub(position.price, max_price_diff)
+        } else {
+            Ok(0)
         }
     }
 
@@ -431,8 +407,7 @@ impl Pool {
             return Ok((0, 0, 0));
         }
 
-        let exit_price =
-            self.get_exit_price(token_price, token_ema_price, position.side, custody)?;
+        let exit_price = self.get_exit_price(token_price, token_ema_price, custody)?;
 
         let size = token_ema_price.get_token_amount(position.size_usd, custody.decimals)?;
 
@@ -449,16 +424,10 @@ impl Pool {
             position.unrealized_loss_usd,
         )?;
 
-        let (price_diff_profit, price_diff_loss) = if position.side == Side::Long {
-            if exit_price > position.price {
-                (math::checked_sub(exit_price, position.price)?, 0u64)
-            } else {
-                (0u64, math::checked_sub(position.price, exit_price)?)
-            }
-        } else if exit_price < position.price {
-            (math::checked_sub(position.price, exit_price)?, 0u64)
+        let (price_diff_profit, price_diff_loss) = if exit_price > position.price {
+            (math::checked_sub(exit_price, position.price)?, 0u64)
         } else {
-            (0u64, math::checked_sub(exit_price, position.price)?)
+            (0u64, math::checked_sub(position.price, exit_price)?)
         };
 
         let position_price = math::scale_to_exponent(
@@ -594,19 +563,14 @@ impl Pool {
             if custody.pricing.use_unrealized_pnl_in_aum {
                 if custody.is_stable {
                     // compute accumulated interest
-                    let collective_position = custody.get_collective_position(Side::Long)?;
-                    let interest_usd =
-                        custody.get_interest_amount_usd(&collective_position, curtime)?;
-                    pool_amount_usd = math::checked_add(pool_amount_usd, interest_usd as u128)?;
-
-                    let collective_position = custody.get_collective_position(Side::Short)?;
+                    let collective_position = custody.get_collective_position()?;
                     let interest_usd =
                         custody.get_interest_amount_usd(&collective_position, curtime)?;
                     pool_amount_usd = math::checked_add(pool_amount_usd, interest_usd as u128)?;
                 } else {
                     // compute aggregate unrealized pnl
                     let (long_profit, long_loss, _) = self.get_pnl_usd(
-                        &custody.get_collective_position(Side::Long)?,
+                        &custody.get_collective_position()?,
                         &token_price,
                         &token_ema_price,
                         &custody,
@@ -616,23 +580,9 @@ impl Pool {
                         curtime,
                         false,
                     )?;
-                    let (short_profit, short_loss, _) = self.get_pnl_usd(
-                        &custody.get_collective_position(Side::Short)?,
-                        &token_price,
-                        &token_ema_price,
-                        &custody,
-                        &token_price,
-                        &token_ema_price,
-                        &custody,
-                        curtime,
-                        false,
-                    )?;
-
                     // adjust pool amount by collective profit/loss
                     pool_amount_usd = math::checked_add(pool_amount_usd, long_loss as u128)?;
-                    pool_amount_usd = math::checked_add(pool_amount_usd, short_loss as u128)?;
                     pool_amount_usd = pool_amount_usd.saturating_sub(long_profit as u128);
-                    pool_amount_usd = pool_amount_usd.saturating_sub(short_profit as u128);
                 }
             }
         }
@@ -654,7 +604,7 @@ impl Pool {
         &self,
         token_price: &OraclePrice,
         token_ema_price: &OraclePrice,
-        side: Side,
+        side: Side, // Note: Long implies opening positions, short implies closing position
         spread: u64,
     ) -> Result<OraclePrice> {
         if side == Side::Long {
@@ -784,7 +734,6 @@ mod test {
         };
 
         let position = Position {
-            side: Side::Long,
             price: scale(25_000, Perpetuals::PRICE_DECIMALS),
             // x4 leverage
             size_usd: scale(100_000, Perpetuals::USD_DECIMALS),
@@ -873,7 +822,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 0,
-                custody.get_locked_amount(0, Side::Long).unwrap(),
+                custody.get_locked_amount(0).unwrap(),
                 &custody
             )
             .unwrap()
@@ -884,7 +833,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 100_000,
-                custody.get_locked_amount(100_000, Side::Long).unwrap(),
+                custody.get_locked_amount(100_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -895,7 +844,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 150_000,
-                custody.get_locked_amount(150_000, Side::Long).unwrap(),
+                custody.get_locked_amount(150_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -906,7 +855,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 200_000,
-                custody.get_locked_amount(200_000, Side::Long).unwrap(),
+                custody.get_locked_amount(200_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -917,7 +866,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 300_000,
-                custody.get_locked_amount(300_000, Side::Long).unwrap(),
+                custody.get_locked_amount(300_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -932,7 +881,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 100_000,
-                custody.get_locked_amount(100_000, Side::Long).unwrap(),
+                custody.get_locked_amount(100_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -943,7 +892,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 150_000,
-                custody.get_locked_amount(150_000, Side::Long).unwrap(),
+                custody.get_locked_amount(150_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -954,7 +903,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 200_000,
-                custody.get_locked_amount(200_000, Side::Long).unwrap(),
+                custody.get_locked_amount(200_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -965,7 +914,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 300_000,
-                custody.get_locked_amount(300_000, Side::Long).unwrap(),
+                custody.get_locked_amount(300_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -978,7 +927,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 100_000,
-                custody.get_locked_amount(100_000, Side::Long).unwrap(),
+                custody.get_locked_amount(100_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -989,7 +938,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 150_000,
-                custody.get_locked_amount(150_000, Side::Long).unwrap(),
+                custody.get_locked_amount(150_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -1000,7 +949,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 200_000,
-                custody.get_locked_amount(200_000, Side::Long).unwrap(),
+                custody.get_locked_amount(200_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -1011,7 +960,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 300_000,
-                custody.get_locked_amount(300_000, Side::Long).unwrap(),
+                custody.get_locked_amount(300_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -1025,7 +974,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 100_000,
-                custody.get_locked_amount(100_000, Side::Long).unwrap(),
+                custody.get_locked_amount(100_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -1036,7 +985,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 150_000,
-                custody.get_locked_amount(150_000, Side::Long).unwrap(),
+                custody.get_locked_amount(150_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -1047,7 +996,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 200_000,
-                custody.get_locked_amount(200_000, Side::Long).unwrap(),
+                custody.get_locked_amount(200_000).unwrap(),
                 &custody
             )
             .unwrap()
@@ -1058,7 +1007,7 @@ mod test {
             pool.get_entry_fee(
                 custody.fees.open_position,
                 300_000,
-                custody.get_locked_amount(300_000, Side::Long).unwrap(),
+                custody.get_locked_amount(300_000).unwrap(),
                 &custody
             )
             .unwrap()

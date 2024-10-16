@@ -1,10 +1,7 @@
 use {
     crate::{instructions, utils},
     maplit::hashmap,
-    perpetuals::{
-        instructions::{ClosePositionParams, OpenPositionParams, RemoveLiquidityParams},
-        state::position::Side,
-    },
+    perpetuals::instructions::{ClosePositionParams, OpenPositionParams, RemoveLiquidityParams},
     solana_sdk::signer::Signer,
 };
 
@@ -100,7 +97,6 @@ pub async fn basic_interactions() {
                 price: utils::scale(1_550, USDC_DECIMALS),
                 collateral: utils::scale_f64(0.1, ETH_DECIMALS),
                 size: utils::scale_f64(0.1, ETH_DECIMALS),
-                side: Side::Long,
             },
         )
         .await

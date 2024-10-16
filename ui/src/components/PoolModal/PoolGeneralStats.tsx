@@ -46,10 +46,6 @@ export default function PoolGeneralStats(props: Props) {
             ),
           },
           {
-            label: "OI Short",
-            value: `$${formatNumberCommas(props.pool.getOiShort())}`,
-          },
-          {
             label: "Fees",
             value: `$${formatNumberCommas(props.pool.getFees())}`,
           },

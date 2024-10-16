@@ -26,8 +26,6 @@ import { ProgramTestContext } from "solana-bankrun";
 import { BankrunProvider } from "anchor-bankrun";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 
-export type PositionSide = "long" | "short";
-
 export class TestClient {
   context: ProgramTestContext;
   provider: anchor.AnchorProvider;
@@ -60,7 +58,6 @@ export class TestClient {
     tokenAccounts: PublicKey[];
     lpTokenAccount: PublicKey;
     positionAccountsLong: PublicKey[];
-    positionAccountsShort: PublicKey[];
   }[];
 
   constructor(
@@ -157,7 +154,6 @@ export class TestClient {
 
       let tokenAccounts = [];
       let positionAccountsLong = [];
-      let positionAccountsShort = [];
       for (const custody of this.custodies) {
         let tokenAccount = await createAssociatedTokenAccount(
           this.context.banksClient,
@@ -187,7 +183,6 @@ export class TestClient {
           custody.custody,
           [2],
         ]).publicKey;
-        positionAccountsShort.push(positionAccount);
       }
 
       this.users.push({
@@ -195,7 +190,6 @@ export class TestClient {
         tokenAccounts,
         lpTokenAccount: PublicKey.default,
         positionAccountsLong,
-        positionAccountsShort,
       });
     }
   };
@@ -899,7 +893,6 @@ export class TestClient {
     price: number,
     collateral: BN,
     size: BN,
-    side: PositionSide,
     user,
     fundingAccount: PublicKey,
     positionAccount: PublicKey,
@@ -911,7 +904,6 @@ export class TestClient {
           price: new BN(price * 1000000),
           collateral,
           size,
-          side: side === "long" ? { long: {} } : { short: {} },
         })
         .accounts({
           owner: user.wallet.publicKey,
@@ -1080,13 +1072,10 @@ export class TestClient {
     }
   };
 
-  getEntryPriceAndFee = async (size: BN, side: PositionSide, custody) => {
+  getEntryPriceAndFee = async (size: BN, custody) => {
     try {
       return await this.program.methods
-        .getEntryPriceAndFee({
-          size,
-          side: side === "long" ? { long: {} } : { short: {} },
-        })
+        .getEntryPriceAndFee({ size })
         .accounts({
           perpetuals: this.perpetuals.publicKey,
           pool: this.pool.publicKey,
