@@ -120,7 +120,6 @@ pub struct Custody {
     pub token_account: Pubkey,
     pub decimals: u8,
     pub is_stable: bool,
-    pub is_virtual: bool,
     pub oracle: OracleParams,
     pub pricing: PricingParams,
     pub permissions: Permissions,
@@ -180,8 +179,7 @@ impl Custody {
     pub const LEN: usize = 8 + std::mem::size_of::<Custody>();
 
     pub fn validate(&self) -> bool {
-        (!self.is_virtual || !self.is_stable)
-            && self.token_account != Pubkey::default()
+        self.token_account != Pubkey::default()
             && self.mint != Pubkey::default()
             && self.oracle.validate()
             && self.pricing.validate()
@@ -190,8 +188,6 @@ impl Custody {
     }
 
     pub fn lock_funds(&mut self, amount: u64) -> Result<()> {
-        require!(!self.is_virtual, PerpetualsError::InvalidCollateralCustody);
-
         self.assets.locked = math::checked_add(self.assets.locked, amount)?;
 
         // check for max utilization
@@ -217,8 +213,6 @@ impl Custody {
     }
 
     pub fn unlock_funds(&mut self, amount: u64) -> Result<()> {
-        require!(!self.is_virtual, PerpetualsError::InvalidCollateralCustody);
-
         if amount > self.assets.locked {
             self.assets.locked = 0;
         } else {
@@ -241,7 +235,7 @@ impl Custody {
     }
 
     pub fn get_interest_amount_usd(&self, position: &Position, curtime: i64) -> Result<u64> {
-        if position.borrow_size_usd == 0 || self.is_virtual {
+        if position.borrow_size_usd == 0 {
             return Ok(0);
         }
 

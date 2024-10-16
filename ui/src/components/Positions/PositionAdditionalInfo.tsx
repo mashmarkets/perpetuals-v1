@@ -1,6 +1,7 @@
 import CloseIcon from "@carbon/icons-react/lib/Close";
 import { BN } from "@coral-xyz/anchor";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useQueryClient } from "@tanstack/react-query";
 import { closePosition } from "src/actions/closePosition";
 import { twMerge } from "tailwind-merge";
 
@@ -8,7 +9,6 @@ import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/SolidButton";
 import { usePrice } from "@/hooks/price";
 import { getPositionData } from "@/hooks/storeHelpers/fetchPositions";
-import { getAllUserData } from "@/hooks/storeHelpers/fetchUserData";
 import { PositionAccount } from "@/lib/PositionAccount";
 import { getTokenPublicKey } from "@/lib/Token";
 import { Side } from "@/lib/types";
@@ -23,6 +23,7 @@ interface Props {
 }
 
 export function PositionAdditionalInfo(props: Props) {
+  const queryClient = useQueryClient();
   const walletContextState = useWallet();
   const { publicKey } = useWallet();
 
@@ -34,7 +35,6 @@ export function PositionAdditionalInfo(props: Props) {
   const custodyData = useGlobalStore((state) => state.custodyData);
 
   const setPositionData = useGlobalStore((state) => state.setPositionData);
-  const setUserData = useGlobalStore((state) => state.setUserData);
 
   const positionPool = poolData[props.position.pool.toString()]!;
   const positionCustody = custodyData[props.position.custody.toString()]!;
@@ -51,8 +51,13 @@ export function PositionAdditionalInfo(props: Props) {
 
     const positionInfos = await getPositionData(custodyData);
     setPositionData(positionInfos);
-    const userData = await getAllUserData(connection, publicKey, poolData);
-    setUserData(userData);
+    queryClient.invalidateQueries({
+      queryKey: [
+        "balance",
+        publicKey?.toString(),
+        props.position.collateralCustodyMint.toString(),
+      ],
+    });
   }
 
   if (price === undefined) return <p>sdf</p>;

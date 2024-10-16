@@ -478,18 +478,9 @@ impl Pool {
 
             if potential_profit_usd >= unrealized_loss_usd {
                 let cur_profit_usd = math::checked_sub(potential_profit_usd, unrealized_loss_usd)?;
-                let min_collateral_price = if collateral_custody.is_virtual {
-                    // if collateral_custody is virtual it means this function is called from get_assets_under_management_usd()
-                    // (to calculate unrealized pnl of all open positions) and actual collateral custody is a stablecoin.
-                    // we need to use 1USD reference price for such positions
-                    OraclePrice {
-                        price: 10u64.pow(Perpetuals::USD_DECIMALS as u32),
-                        exponent: -(Perpetuals::USD_DECIMALS as i32),
-                    }
-                } else {
-                    collateral_token_price
-                        .get_min_price(collateral_token_ema_price, collateral_custody.is_stable)?
-                };
+                let min_collateral_price = collateral_token_price
+                    .get_min_price(collateral_token_ema_price, collateral_custody.is_stable)?;
+
                 let max_profit_usd = if curtime <= position.open_time {
                     0
                 } else {
@@ -525,15 +516,10 @@ impl Pool {
             } else {
                 let cur_profit_usd =
                     math::checked_sub(position.unrealized_profit_usd, potential_loss_usd)?;
-                let min_collateral_price = if collateral_custody.is_virtual {
-                    OraclePrice {
-                        price: 10u64.pow(Perpetuals::USD_DECIMALS as u32),
-                        exponent: -(Perpetuals::USD_DECIMALS as i32),
-                    }
-                } else {
-                    collateral_token_price
-                        .get_min_price(collateral_token_ema_price, collateral_custody.is_stable)?
-                };
+
+                let min_collateral_price = collateral_token_price
+                    .get_min_price(collateral_token_ema_price, collateral_custody.is_stable)?;
+
                 let max_profit_usd = if curtime <= position.open_time {
                     0
                 } else {
@@ -725,11 +711,9 @@ impl Pool {
         base_fee: u64,
         amount_add: u64,
         amount_remove: u64,
-        custody: &Custody,
+        _custody: &Custody,
         _token_price: &OraclePrice,
     ) -> Result<u64> {
-        require!(!custody.is_virtual, PerpetualsError::InstructionNotAllowed);
-
         Self::get_fee_amount(base_fee, std::cmp::max(amount_add, amount_remove))
     }
 }

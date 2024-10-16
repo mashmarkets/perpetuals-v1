@@ -27,7 +27,6 @@ export const addCustodySchema = z.object({
   poolName: z.string(),
   tokenMint: z.string().transform(transformToPublicKey),
   isStable: z.boolean(),
-  isVirtual: z.boolean(),
   // These should be nested under oracle, but i realized too late and it was too much work...
   tokenOracle: z.string().transform(transformToPublicKey),
   oracleType: z
@@ -84,35 +83,30 @@ const prefills: Record<any, Partial<AddCustodyState>> = {
     tokenMint: "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr",
     tokenOracle: "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",
     isStable: true,
-    isVirtual: false,
     oracleType: "pyth",
   },
   SOL: {
     tokenMint: "So11111111111111111111111111111111111111112",
     tokenOracle: "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE",
     isStable: false,
-    isVirtual: false,
     oracleType: "pyth",
   },
   RAY: {
     tokenMint: "GFz5gtptPcqJpV5dUHqiwtDwvrVamjQyKaLaFrQ9iwH2",
     tokenOracle: "Hhipna3EoWR7u8pDruUg8RxhP5F6XLh6SEHMVDmZhWi8",
     isStable: false,
-    isVirtual: false,
     oracleType: "pyth",
   },
   ORCA: {
     tokenMint: "A5sPEFgEF2ET1Xdo6ZT8vMxwKqdBgQ6bAUaKdqoNApo8",
     tokenOracle: "4CBshVeNBEXz24GZpoj8SrqP5L7VGG3qjGd6tCST1pND",
     isStable: false,
-    isVirtual: false,
     oracleType: "pyth",
   },
   BONK: {
     tokenMint: "Ek9RtoqksVzPfMRFN2BTgCxM7e5QoJ3rZLL18phtz2Ri",
     tokenOracle: "DBE3N8uNjhKPRHfANdwGvCZghWXyLPdqdSbEW2XFwBiX",
     isStable: false,
-    isVirtual: false,
     oracleType: "pyth",
   },
 };
@@ -131,7 +125,6 @@ const AddCustodyForm = ({
     tokenMint: "",
     tokenOracle: "",
     isStable: false,
-    isVirtual: false,
     oracleType: "pyth",
     maxPriceError: "100.00" as string,
     maxPriceAgeSec: "60",
@@ -248,16 +241,6 @@ const AddCustodyForm = ({
           <label className="flex items-center text-white">
             <input type="checkbox" {...register("isStable")} className="mr-2" />
             Is Stablecoin
-          </label>
-        </div>
-        <div>
-          <label className="flex items-center text-white">
-            <input
-              type="checkbox"
-              {...register("isVirtual")}
-              className="mr-2"
-            />
-            Is Virtual
           </label>
         </div>
 

@@ -75,7 +75,6 @@ async function addCustody(
   tokenMint: PublicKey,
   tokenOracle: PublicKey,
   isStable: boolean,
-  isVirtual: boolean,
   oracleType: keyof OracleParams["oracleType"] = "custom"
 ): Promise<void> {
   // to be loaded from config file
@@ -136,7 +135,6 @@ async function addCustody(
     poolName,
     tokenMint,
     isStable,
-    isVirtual,
     oracleConfig,
     pricingConfig,
     permissions,
@@ -485,7 +483,6 @@ async function withdrawFees(
     .argument("<pubkey>", "Token mint")
     .argument("<pubkey>", "Token oracle account")
     .option("-s, --stablecoin", "Stablecoin custody")
-    .option("-v, --virtual", "Virtual asset custody")
     .option("-t, --oracletype <string>", "Oracle type (pyth, none, custom)")
     .action(async (poolName, tokenMint, tokenOracle, options) => {
       await addCustody(
@@ -493,7 +490,6 @@ async function withdrawFees(
         new PublicKey(tokenMint),
         new PublicKey(tokenOracle),
         options.stablecoin,
-        options.virtual,
         options.oracletype
       );
     });

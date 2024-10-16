@@ -52,7 +52,6 @@ pub async fn basic_interactions() {
                 setup_custody_params: utils::SetupCustodyParams {
                     mint_name: "usdc",
                     is_stable: true,
-                    is_virtual: false,
                     initial_price: utils::scale(1, USDC_DECIMALS),
                     initial_conf: utils::scale_f64(0.01, USDC_DECIMALS),
                     pricing_params: None,
@@ -67,7 +66,6 @@ pub async fn basic_interactions() {
                 setup_custody_params: utils::SetupCustodyParams {
                     mint_name: "eth",
                     is_stable: false,
-                    is_virtual: false,
                     initial_price: utils::scale(1_500, ETH_DECIMALS),
                     initial_conf: utils::scale(10, ETH_DECIMALS),
                     pricing_params: None,

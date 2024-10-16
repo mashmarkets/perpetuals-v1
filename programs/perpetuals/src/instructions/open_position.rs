@@ -134,11 +134,11 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
     {
         return Err(ProgramError::InvalidArgument.into());
     }
-    let use_collateral_custody = params.side == Side::Short || custody.is_virtual;
+    let use_collateral_custody = params.side == Side::Short;
     if use_collateral_custody {
         require_keys_neq!(custody.key(), collateral_custody.key());
         require!(
-            collateral_custody.is_stable && !collateral_custody.is_virtual,
+            collateral_custody.is_stable,
             PerpetualsError::InvalidCollateralCustody
         );
     } else {
@@ -328,7 +328,7 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
         math::checked_add(collateral_custody.assets.protocol_fees, protocol_fee)?;
 
     // if custody and collateral_custody accounts are the same, ensure that data is in sync
-    if position.side == Side::Long && !custody.is_virtual {
+    if position.side == Side::Long {
         collateral_custody.volume_stats.open_position_usd = collateral_custody
             .volume_stats
             .open_position_usd
