@@ -7,6 +7,7 @@ import {
   SimulatedTransactionResponse,
   Transaction,
 } from "@solana/web3.js";
+import { OpenPositionParams } from "src/actions/perpetuals";
 
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
@@ -43,7 +44,6 @@ export interface RemoveLiquidityAmountAndFees {
   amount: BN;
   fee: BN;
 }
-
 export class ViewHelper {
   program: Program<Perpetuals>;
   connection: Connection;

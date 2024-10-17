@@ -50,7 +50,7 @@ export class PositionAccount {
     this.openTime = position.openTime;
     this.updateTime = position.updateTime;
 
-    this.side = position.side.hasOwnProperty("long") ? Side.Long : Side.Short;
+    this.side = Side.Long;
     this.price = position.price;
     this.sizeUsd = position.sizeUsd;
     this.collateralUsd = position.collateralUsd;

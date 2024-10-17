@@ -1,13 +1,20 @@
-import { Program, utils } from "@coral-xyz/anchor";
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import { BN, Program, utils } from "@coral-xyz/anchor";
+import {
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import {
   Keypair,
   PublicKey,
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
 } from "@solana/web3.js";
 
-import { AddCustodyParams } from "@/components/AddCustodyForm";
+import { AddCustodyParams } from "@/components/FormListAsset";
+import { getTokenInfo } from "@/lib/Token";
 import IDL from "@/target/idl/perpetuals.json";
 import { Perpetuals } from "@/target/types/perpetuals";
 
@@ -21,7 +28,7 @@ const ADMIN_KEY = Keypair.fromSecretKey(
   ]),
 );
 export const findPerpetualsAddressSync = (
-  ...seeds: Array<Buffer | string | PublicKey>
+  ...seeds: Array<Buffer | string | PublicKey | Uint8Array>
 ) => {
   return PublicKey.findProgramAddressSync(
     seeds.map((x) => {
@@ -105,3 +112,222 @@ export async function addCustody(
     .signers([ADMIN_KEY])
     .rpc();
 }
+
+export async function listAsset(
+  program: Program<Perpetuals>,
+  params: AddCustodyParams,
+) {
+  const pool = findPerpetualsAddressSync("pool", params.poolName);
+  const lpTokenMint = findPerpetualsAddressSync("lp_token_mint", pool);
+
+  const addPoolIx = await program.methods
+    .addPool({ name: params.poolName })
+    .accounts({
+      admin: ADMIN_KEY.publicKey,
+      multisig,
+      transferAuthority: transferAuthority,
+      perpetuals: perpetuals,
+      pool,
+      lpTokenMint,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .instruction();
+
+  const addCustodyIx = await program.methods
+    .addCustody({
+      oracle: {
+        oracleAccount: params.tokenOracle,
+        oracleType: params.oracleType,
+        oracleAuthority: params.oracleAuthority,
+        maxPriceAgeSec: params.maxPriceAgeSec,
+        maxPriceError: params.maxPriceError,
+      },
+      pricing: params.pricingConfig,
+      permissions: params.permissions,
+      fees: params.fees,
+      borrowRate: params.borrowRate,
+    })
+    .accounts({
+      admin: ADMIN_KEY.publicKey,
+      multisig,
+      transferAuthority,
+      perpetuals,
+      pool,
+      custody: findPerpetualsAddressSync("custody", pool, params.tokenMint),
+      custodyTokenAccount: findPerpetualsAddressSync(
+        "custody_token_account",
+        pool,
+        params.tokenMint,
+      ),
+      custodyTokenMint: params.tokenMint,
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      rent: SYSVAR_RENT_PUBKEY,
+    })
+    .instruction();
+
+  const { blockhash, lastValidBlockHeight } =
+    await program.provider.connection.getLatestBlockhash();
+
+  const transaction = new VersionedTransaction(
+    new TransactionMessage({
+      payerKey: program.provider.publicKey!,
+      recentBlockhash: blockhash,
+      instructions: [addPoolIx, addCustodyIx],
+    }).compileToV0Message(),
+  );
+  transaction.sign([ADMIN_KEY]);
+  // send doens't seem to exist
+  const [signature] = await program.provider.sendAll!([{ tx: transaction }]);
+
+  return {
+    signature: signature!,
+    blockhash,
+    lastValidBlockHeight,
+  };
+}
+
+export interface OpenPositionParams {
+  collateral: BN;
+  mint: PublicKey;
+  poolAddress: PublicKey;
+  price: BN;
+  size: BN;
+}
+
+export async function openPosition(
+  program: Program<Perpetuals>,
+  params: OpenPositionParams,
+) {
+  const {
+    extensions: { oracle },
+  } = getTokenInfo(params.mint);
+
+  const custody = findPerpetualsAddressSync(
+    "custody",
+    params.poolAddress,
+    params.mint,
+  );
+
+  return await program.methods
+    .openPosition({
+      price: params.price,
+      collateral: params.collateral,
+      size: params.size,
+    })
+    .accounts({
+      owner: program.provider.publicKey,
+      fundingAccount: getAssociatedTokenAddressSync(
+        params.mint,
+        program.provider.publicKey!,
+      ),
+      transferAuthority,
+      perpetuals,
+      pool: params.poolAddress,
+      position: findPerpetualsAddressSync(
+        "position",
+        program.provider.publicKey!,
+        params.poolAddress,
+        custody,
+        new Uint8Array([1]),
+      ),
+      custody,
+      custodyOracleAccount: oracle,
+      collateralCustody: custody,
+      collateralCustodyOracleAccount: oracle,
+      collateralCustodyTokenAccount: findPerpetualsAddressSync(
+        "custody_token_account",
+        params.poolAddress,
+        params.mint,
+      ),
+      systemProgram: SystemProgram.programId,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .rpc();
+}
+
+export async function getParsedSimulationResult<T>(
+  program: Program<Perpetuals>,
+  ix: TransactionInstruction,
+  name: string,
+): Promise<T | undefined> {
+  const { blockhash } = await program.provider.connection.getLatestBlockhash();
+
+  const transaction = new VersionedTransaction(
+    new TransactionMessage({
+      payerKey: program.provider.publicKey!,
+      recentBlockhash: blockhash,
+      instructions: [ix],
+    }).compileToV0Message(),
+  );
+
+  const typeName = (
+    program.idl.instructions.find((f) => f.name === name) as any
+  )?.returns?.defined;
+
+  if (typeName === undefined) {
+    return undefined;
+  }
+
+  const data =
+    await program.provider.connection.simulateTransaction(transaction);
+
+  if (!data.value.returnData?.data[0]) {
+    return undefined;
+  }
+
+  return program.coder.types.decode(
+    typeName,
+    Buffer.from(data.value.returnData.data[0], "base64"),
+  );
+}
+
+export const getEntryPriceAndFee = async (
+  program: Program<Perpetuals>,
+  params: Omit<OpenPositionParams, "price">,
+) => {
+  const {
+    extensions: { oracle },
+  } = getTokenInfo(params.mint);
+
+  const custody = findPerpetualsAddressSync(
+    "custody",
+    params.poolAddress,
+    params.mint,
+  );
+  const instruction = await program.methods
+    .getEntryPriceAndFee({
+      collateral: params.collateral,
+      size: params.size,
+    })
+    .accounts({
+      perpetuals,
+      pool: params.poolAddress,
+      custody,
+      custodyOracleAccount: oracle,
+      collateralCustody: custody,
+      collateralCustodyOracleAccount: oracle,
+    })
+    .instruction();
+
+  const estimate = await getParsedSimulationResult<{
+    entryPrice: BN;
+    fee: BN;
+    liquidationPrice: BN;
+  }>(program, instruction, "getEntryPriceAndFee");
+
+  if (estimate === undefined) {
+    return {
+      entryPrice: BigInt(0),
+      fee: BigInt(0),
+      liquidationPrice: BigInt(0),
+    };
+  }
+  return {
+    entryPrice: BigInt(estimate.entryPrice.toString()),
+    fee: BigInt(estimate.fee.toString()),
+    liquidationPrice: BigInt(estimate.liquidationPrice.toString()),
+  };
+};

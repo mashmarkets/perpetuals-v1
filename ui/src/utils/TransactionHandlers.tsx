@@ -1,5 +1,7 @@
 import { MethodsBuilder } from "@coral-xyz/anchor/dist/cjs/program/namespace/methods";
+import { useConnection } from "@solana/wallet-adapter-react";
 import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
+import { use } from "chai";
 import { toast } from "react-toastify";
 
 export const TRX_URL = (txid: string) =>
@@ -30,6 +32,118 @@ export async function automaticSendTransaction(
     failMessage,
   });
 }
+
+export const wrapTransactionWithNotification = async (
+  connection: Connection,
+  p: Promise<{
+    signature: string;
+    blockhash: string;
+    lastValidBlockHeight: number;
+  }>,
+) => {
+  const { signature, blockhash, lastValidBlockHeight } = await p;
+  await toast.promise(
+    connection.confirmTransaction({
+      signature,
+      blockhash,
+      lastValidBlockHeight,
+    }),
+    {
+      pending: {
+        render() {
+          return (
+            <div className="processing-transaction">
+              <div>
+                <h2>Confirming transaction {`  `}</h2>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={`${TRX_URL(signature)}`}
+                  className="text-blue-500"
+                >
+                  {" "}
+                  View on explorer
+                </a>
+              </div>
+            </div>
+          );
+        },
+      },
+      success: {
+        render() {
+          return (
+            <div className="processing-transaction">
+              <div>
+                <span className="icon green">
+                  <span
+                    className="iconify"
+                    data-icon="teenyicons:tick-circle-solid"
+                  ></span>
+                </span>
+              </div>
+              <div>
+                <h2>Transaction Confirmed</h2>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={`${TRX_URL(signature)}`}
+                  className="text-blue-500"
+                >
+                  {" "}
+                  View on explorer
+                </a>
+              </div>
+            </div>
+          );
+        },
+        icon: false,
+      },
+      error: {
+        render({ data }) {
+          // When the promise reject, data will contains the error
+          console.log(data);
+          return (
+            <div className="processing-transaction">
+              <div>
+                <span className="icon red">
+                  <span
+                    className="iconify"
+                    data-icon="akar-icons:circle-x-fill"
+                  ></span>
+                </span>
+              </div>
+              <div>
+                <h2>
+                  Transaction Failed
+                  {/* {JSON.stringify(data?.message ?? {}).includes("timed")
+                      ? data.message
+                      : failMessage} */}
+                </h2>
+                <a
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  href={`${TRX_URL(signature)}`}
+                  className="text-blue-500"
+                >
+                  {" "}
+                  View on explorer
+                </a>
+              </div>
+            </div>
+          );
+        },
+        icon: false,
+      },
+    },
+    {
+      position: "bottom-left",
+      autoClose: 4000,
+      className: "processing-transaction",
+    },
+  );
+
+  return signature;
+};
 
 export async function sendAnchorTransactionAndNotify({
   methodBuilder,

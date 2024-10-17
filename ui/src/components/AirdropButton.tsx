@@ -4,6 +4,7 @@ import { PublicKey, Transaction } from "@solana/web3.js";
 import { useQueryClient } from "@tanstack/react-query";
 import { createMintToInstruction } from "src/actions/faucet";
 
+import { usePrice } from "@/hooks/price";
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { getTokenLabel, tokens } from "@/lib/Token";
 import { sendSignedTransactionAndNotify } from "@/utils/TransactionHandlers";
@@ -14,30 +15,47 @@ interface Props {
   className?: string;
   custody: CustodyAccount;
 }
+function roundToOneSignificantFigure(num) {
+  if (num === 0) return 0; // Handle the case for 0 separately
+
+  // Determine the factor by which to multiply to shift the decimal point to the right
+  const exponent = Math.floor(Math.log10(Math.abs(num)));
+
+  // Calculate the rounding factor
+  const factor = Math.pow(10, exponent);
+
+  // Use Math.ceil to round up and then scale back down by the factor
+  return Math.ceil(num / factor) * factor;
+}
 
 export default function AirdropButton(props: Props) {
+  let mint = props.custody.mint;
   const client = useQueryClient();
   const { publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
+  const { data: price } = usePrice(mint);
+  const {
+    decimals,
+    extensions: { mainnet },
+  } = tokens[mint.toString()]!;
 
-  let mint = props.custody.mint;
+  const amount = price
+    ? roundToOneSignificantFigure(
+        (10_000 / price.currentPrice) * 10 ** decimals,
+      )
+    : 0;
 
   async function handleAirdrop() {
     if (!publicKey) return;
     if (mint.toString() === "So11111111111111111111111111111111111111112") {
       await connection.requestAirdrop(publicKey!, 5 * 10 ** 9);
     } else {
-      const {
-        decimals,
-        extensions: { mainnet, faucet },
-      } = tokens[mint.toString()]!;
-
       let transaction = new Transaction();
       transaction = transaction.add(
         createMintToInstruction({
           payer: publicKey,
           seed: new PublicKey(mainnet),
-          amount: new BN(faucet).mul(new BN(10 ** decimals)),
+          amount: new BN(amount),
         }),
       );
       transaction.feePayer = publicKey;

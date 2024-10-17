@@ -62,8 +62,9 @@ export async function getPoolData(
               poolObjs[pool.publicKey.toString()],
             );
             loopStatus = false;
-            await sleep(2000);
-          } catch (error) {}
+          } catch (error) {
+            await sleep(2 * 1000);
+          }
         }
 
         poolObjs[pool.publicKey.toString()].setAum(fetchedAum);

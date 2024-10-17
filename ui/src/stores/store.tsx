@@ -4,7 +4,6 @@ import { devtools } from "zustand/middleware";
 import { PositionRequest } from "@/hooks/storeHelpers/fetchPositions";
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
-import { UserAccount } from "@/lib/UserAccount";
 
 interface StoreState {
   positionData: PositionRequest;
@@ -15,9 +14,6 @@ interface StoreState {
 
   custodyData: Record<string, CustodyAccount>;
   setCustodyData: (custody: Record<string, CustodyAccount>) => void;
-
-  userData: UserAccount;
-  setUserData: (user: UserAccount) => void;
 }
 
 export const useGlobalStore = create<StoreState>()(
@@ -37,8 +33,5 @@ export const useGlobalStore = create<StoreState>()(
     custodyData: {},
     setCustodyData: (custody: Record<string, CustodyAccount>) =>
       set({ custodyData: custody }),
-
-    userData: new UserAccount(),
-    setUserData: (user: UserAccount) => set({ userData: user }),
   })),
 );

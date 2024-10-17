@@ -1,25 +1,24 @@
+import { PublicKey } from "@solana/web3.js";
 import { twMerge } from "tailwind-merge";
 
 import { usePrice } from "@/hooks/price";
-import { getTokenPublicKey, TokenE } from "@/lib/Token";
 import { formatNumberCommas } from "@/utils/formatters";
 
-interface DailyStatsProps {
+export function DailyStats({
+  className,
+  mint,
+}: {
   className?: string;
-  token: TokenE;
-}
-
-export function DailyStats(props: DailyStatsProps) {
-  const { data: stats } = usePrice(getTokenPublicKey(props.token));
+  mint: PublicKey;
+}) {
+  const { data: stats } = usePrice(mint);
 
   if (stats === undefined) {
     return <p>sdf</p>;
   }
 
   return (
-    <div
-      className={twMerge("flex", "items-center", "space-x-5", props.className)}
-    >
+    <div className={twMerge("flex", "items-center", "space-x-5", className)}>
       <div>
         <div className="text-xs text-zinc-500">Current Price</div>
         <div className="text-sm text-white">

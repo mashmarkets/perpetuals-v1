@@ -1,14 +1,14 @@
-import { BN } from "@coral-xyz/anchor";
+import { BN as AnchorBN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { BN } from "bn.js";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "react-toastify";
 import { addCustody as addCustodyFn } from "src/actions/perpetuals";
 
-import AddCustodyForm, { AddCustodyParams } from "@/components/AddCustodyForm";
-import { notify } from "@/components/Notify";
-import { useCustodies, usePool } from "@/hooks/perpetuals";
+import AddCustodyForm, { AddCustodyParams } from "@/components/FormListAsset";
+import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
 import { useProgram } from "@/hooks/useProgram";
 
 const Accordion = ({ title, children }) => {
@@ -27,8 +27,8 @@ const Accordion = ({ title, children }) => {
   );
 };
 
-function stringify(v: any): any {
-  if (v instanceof PublicKey || v instanceof BN) {
+export function stringify(v: any): any {
+  if (v instanceof PublicKey || v instanceof BN || v instanceof AnchorBN) {
     return v.toString();
   }
 
@@ -88,7 +88,7 @@ const ManagePoolPage = () => {
   const queryClient = useQueryClient();
   const { poolAddress } = router.query;
   const { data: pool, isLoading } = usePool(getPublicKey(poolAddress));
-  const custodies = useCustodies(pool?.custodies || []);
+  const custodies = usePoolCustodies(getPublicKey(poolAddress));
 
   const addCustody = useMutation({
     onSuccess: (sig) => {
@@ -111,7 +111,7 @@ const ManagePoolPage = () => {
   });
 
   // TODO:- Custodies passed into Add Parameters needs to be mints (or fetch inside component)
-  if (isLoading || pool === undefined || custodies.some((x) => !x.isFetched)) {
+  if (isLoading || pool === undefined) {
     return (
       <div className="container mx-auto mt-12 rounded-lg bg-zinc-900 p-6 text-white">
         Loading...
@@ -157,7 +157,7 @@ const ManagePoolPage = () => {
       </div>
 
       <div className="text-white">
-        {custodies.map(({ data: custody }, index) => (
+        {Object.values(custodies).map((custody, index) => (
           <div key={index} className="mb-4">
             <Accordion title={`Custody - ${pool.custodies[index]?.toString()}`}>
               {renderDetails(stringify(custody))}
@@ -169,8 +169,8 @@ const ManagePoolPage = () => {
       <Accordion title="Add Custody">
         <div className="mt-2">
           <AddCustodyForm
-            pool={pool}
-            custodies={custodies.map((x) => x.data)}
+            poolName={pool.name}
+            custodies={Object.values(custodies)}
             onSubmit={addCustody.mutate}
           />
         </div>

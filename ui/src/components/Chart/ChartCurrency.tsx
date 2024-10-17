@@ -1,26 +1,27 @@
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
+import { PublicKey } from "@solana/web3.js";
 import { useRouter } from "next/router";
 import { cloneElement, useState } from "react";
+import { findPerpetualsAddressSync } from "src/actions/perpetuals";
 import { twMerge } from "tailwind-merge";
 
 import {
   getTokenIcon,
   getTokenLabel,
-  getTokenPublicKey,
+  getTokenSymbol,
   TOKEN_LIST,
-  TokenE,
 } from "@/lib/Token";
 
 import { TokenSelectorList } from "../TokenSelectorList";
 
-interface Props {
+export function ChartCurrency({
+  mint,
+  className,
+}: {
   className?: string;
-  comparisonCurrency: "usd" | "eur" | TokenE.USDC;
-  token: TokenE;
-}
-
-export function ChartCurrency(props: Props) {
-  const tokenIcon = getTokenIcon(getTokenPublicKey(props.token));
+  mint: PublicKey;
+}) {
+  const tokenIcon = getTokenIcon(mint);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const router = useRouter();
 
@@ -32,7 +33,7 @@ export function ChartCurrency(props: Props) {
           "group",
           "items-center",
           "space-x-2",
-          props.className,
+          className,
         )}
         onClick={() => setSelectorOpen((cur) => !cur)}
       >
@@ -40,9 +41,11 @@ export function ChartCurrency(props: Props) {
           className: twMerge(tokenIcon.props.className, "h-8", "w-8"),
         })}
         <div className="flex items-baseline space-x-2">
-          <div className="text-3xl font-bold text-white">{props.token}</div>
+          <div className="text-3xl font-bold text-white">
+            {getTokenSymbol(mint)}
+          </div>
           <div className="text-sm font-medium text-zinc-500">
-            {getTokenLabel(getTokenPublicKey(props.token))}
+            {getTokenLabel(mint)}
           </div>
         </div>
         <div className="pl-4">
@@ -68,7 +71,7 @@ export function ChartCurrency(props: Props) {
           tokenList={TOKEN_LIST.filter((x) => !["USDC", "USDT"].includes(x))}
           onClose={() => setSelectorOpen(false)}
           onSelectToken={(token) => {
-            router.push(`/trade/${token}`);
+            router.push(`/trade/${findPerpetualsAddressSync("pool", token)}`);
           }}
         />
       )}

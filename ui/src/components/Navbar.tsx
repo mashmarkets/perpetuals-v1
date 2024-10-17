@@ -85,15 +85,14 @@ export const Navbar = () => {
         <NavbarLink href="/pools" icon={<StoragePoolIcon />}>
           Pools
         </NavbarLink>
-        <NavbarLink href="/pools/create" icon={<UserAdmin />}>
-          Create
+        <NavbarLink href="/list" icon={<UserAdmin />}>
+          List
         </NavbarLink>
         <NavbarLink href="/positions" icon={<UserAdmin />}>
           Positions
         </NavbarLink>
       </div>
       <div className="flex flex-row items-center">
-        <p className="text-white">Connect to DEVNET!</p>
         <WalletMultiButtonDynamic className="bg-transparent" />
       </div>
     </nav>

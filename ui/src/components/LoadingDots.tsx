@@ -1,28 +1,28 @@
 import { twMerge } from "tailwind-merge";
 
-interface Props {
+export function LoadingDots({
+  className,
+  numDots = 3,
+  style = "bounce",
+}: {
   className?: string;
-  numDots: number;
-  style: "bounce" | "pulse";
-}
-
-export function LoadingDots(props: Props) {
+  numDots?: number;
+  style?: "bounce" | "pulse";
+}) {
   return (
     <div
       className={twMerge(
-        props.className,
+        className,
         "flex",
         "items-center",
         "justify-center",
         "gap-x-[0.25em]",
       )}
     >
-      {Array.from({ length: props.numDots }).map((_, i) => (
+      {Array.from({ length: numDots }).map((_, i) => (
         <div
           className={twMerge(
-            props.style === "bounce"
-              ? "animate-staggered-bounce"
-              : "animate-pulse",
+            style === "bounce" ? "animate-staggered-bounce" : "animate-pulse",
             "bg-current",
             "flex-shrink-0",
             "h-[0.33em]",
@@ -38,8 +38,3 @@ export function LoadingDots(props: Props) {
     </div>
   );
 }
-
-LoadingDots.defaultProps = {
-  numDots: 3,
-  style: "bounce",
-};

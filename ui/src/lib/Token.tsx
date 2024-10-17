@@ -1,5 +1,8 @@
 import { PublicKey } from "@solana/web3.js";
+import { memoize } from "lodash-es";
 import { getFaucetMint } from "src/actions/faucet";
+
+import { universe } from "./universe";
 
 interface Token {
   address: string;
@@ -10,82 +13,10 @@ interface Token {
   extensions: {
     coingeckoId: string;
     mainnet: string;
-    faucet: number;
+    oracle: string;
   };
 }
-export const tokenList: Token[] = [
-  {
-    address: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-    name: "Bonk",
-    symbol: "Bonk",
-    decimals: 5,
-    logoURI: "https://arweave.net/hQiPZOsRZXGXBJd_82PhVdlM_hACsT_q6wqwf5cSY7I",
-    extensions: {
-      coingeckoId: "bonk",
-      faucet: 100_000_000,
-    },
-  },
-  {
-    address: "orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE",
-    name: "Orca",
-    symbol: "ORCA",
-    decimals: 6,
-    logoURI:
-      "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/orcaEKTdK7LKz57vaAYr9QeNsVEPfiu6QeMU1kektZE/logo.png",
-    extensions: {
-      coingeckoId: "orca",
-      faucet: 1000,
-    },
-  },
-  {
-    address: "4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R",
-    name: "Raydium",
-    symbol: "RAY",
-    decimals: 6,
-    logoURI:
-      "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/4k3Dyjzvzp8eMZWUXbBCjEvwSkkk59S5iCNLY3QrkX6R/logo.png",
-    extensions: {
-      coingeckoId: "raydium",
-      faucet: 1000,
-    },
-  },
-  {
-    address: "So11111111111111111111111111111111111111112",
-    name: "Wrapped SOL",
-    symbol: "SOL",
-    decimals: 9,
-    logoURI:
-      "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
-    extensions: {
-      coingeckoId: "wrapped-solana",
-      faucet: 10,
-    },
-  },
-  {
-    address: "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
-    name: "Marinade staked SOL (mSOL)",
-    symbol: "mSOL",
-    decimals: 9,
-    logoURI:
-      "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So/logo.png",
-    extensions: {
-      coingeckoId: "msol",
-      faucet: 10,
-    },
-  },
-  {
-    address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    name: "USD Coin",
-    symbol: "USDC",
-    decimals: 6,
-    logoURI:
-      "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png",
-    extensions: {
-      coingeckoId: "usd-coin",
-      faucet: 10_000,
-    },
-  },
-].map((x) => ({
+export const tokenList: Token[] = universe.map((x) => ({
   ...x,
   extensions: {
     ...x.extensions,
@@ -97,50 +28,78 @@ export const tokenList: Token[] = [
       : getFaucetMint(new PublicKey(x.address)).toString(),
 }));
 
-export const tokens = tokenList.reduce(
-  (acc, curr) => {
-    acc[curr.address] = curr;
-    return acc;
+export const getTokenList = () => tokenList;
+export const getTokensKeyedBy = memoize(
+  (k: keyof Omit<Token, "extensions">) => {
+    return tokenList.reduce(
+      (acc, curr) => {
+        acc[curr[k]] = curr;
+        return acc;
+      },
+      {} as Record<string, Token>,
+    );
   },
-  {} as Record<string, Token>,
 );
+
+export const tokens = getTokensKeyedBy("address");
+export const getTokenInfo = (mint: PublicKey) => tokens[mint.toString()]!;
 
 // This MUST match UPPER token symbol for now
 export enum TokenE {
+  BLZE = "BLZE",
   Bonk = "Bonk",
-  ORCA = "ORCA",
-  RAY = "RAY",
-  SOL = "SOL",
-  USDC = "USDC",
+  bSOL = "bSOL",
+  BTC = "BTC",
+  ETH = "ETH",
+  FIDA = "FIDA",
+  GOFX = "GOFX",
+  HNT = "HNT",
+  INF = "INF",
+  IOT = "IOT",
+  JitoSOL = "JitoSOL",
+  JLP = "JLP",
+  JTO = "JTO",
+  JUP = "JUP",
+  KMNO = "KMNO",
+  LST = "LST",
+  MEW = "MEW",
+  MNDE = "MNDE",
+  MOBILE = "MOBILE",
   mSOL = "mSOL",
+  NEON = "NEON",
+  ORCA = "ORCA",
+  PRCL = "PRCL",
+  PYTH = "PYTH",
+  RAY = "RAY",
+  RENDER = "RENDER",
+  SAMO = "SAMO",
+  SLND = "SLND",
+  SOL = "SOL",
+  TNSR = "TNSR",
+  USDC = "USDC",
+  USDT = "USDT",
+  W = "W",
+  WBTC = "WBTC",
+  WEN = "WEN",
+  WIF = "WIF",
 }
-export const TOKEN_LIST = [
-  TokenE.SOL,
-  TokenE.USDC,
-  TokenE.RAY,
-  TokenE.ORCA,
-  TokenE.Bonk,
-  TokenE.mSOL,
-];
+export const TOKEN_LIST = Object.values(TokenE);
+
 export const TOKEN_ADDRESSES = tokenList.map((x) => new PublicKey(x.address));
 
 export function asToken(tokenStr: string): TokenE {
-  switch (tokenStr.toUpperCase()) {
-    case "SOL":
-      return TokenE.SOL;
-    case "USDC":
-      return TokenE.USDC;
-    case "RAY":
-      return TokenE.RAY;
-    case "ORCA":
-      return TokenE.ORCA;
-    case "BONK":
-      return TokenE.Bonk;
-    case "MSOL":
-      return TokenE.mSOL;
-    default:
-      throw new Error("Not a valid token string");
+  if (tokenStr === undefined) {
+    return TokenE.SOL;
   }
+  const token = TOKEN_LIST.find(
+    (x) => x.toString().toUpperCase() === tokenStr.toUpperCase(),
+  );
+
+  if (token === undefined) {
+    console.log("Cannot find token for: ", tokenStr);
+    throw new Error("Not a valid token string");
+  }
+  return token;
 }
 
 export function getTokenLabel(token: PublicKey) {
@@ -182,21 +141,9 @@ export function getCoingeckoId(token: PublicKey) {
   return tokens[token.toString()]!.extensions.coingeckoId;
 }
 
-export function getTradingViewSymbol(token: TokenE) {
-  switch (token) {
-    case TokenE.Bonk:
-      return "BONKUSDT";
-    case TokenE.ORCA:
-      return "ORCAUSD";
-    case TokenE.RAY:
-      return "RAYUSD";
-    case TokenE.SOL:
-      return "SOLUSD";
-    case TokenE.USDC:
-      return "USDCUSD";
-    case TokenE.mSOL:
-      return "mSOLUSD";
-  }
+export function getTradingViewSymbol(mint: PublicKey) {
+  const { symbol } = getTokenInfo(mint);
+  return `PYTH:${symbol}USD`;
 }
 
 // Trying to decprecated TokenE and just use PublicKey
@@ -209,6 +156,9 @@ export function tokenAddressToToken(address: string): TokenE | null {
 
 // Trying to decprecated TokenE and just use PublicKey
 export function getTokenPublicKey(token: TokenE) {
+  if (token === undefined) {
+    return PublicKey.default;
+  }
   const info = tokenList.find(
     (x) => x.symbol.toUpperCase() === token.toUpperCase(),
   );

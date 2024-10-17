@@ -16,9 +16,9 @@ import { useGlobalStore } from "@/stores/store";
 export default function SinglePool() {
   const router = useRouter();
 
-  const poolKey = router.query.poolName as string;
+  const poolAddress = router.query.poolAddress as string;
   const poolData = useGlobalStore((state) => state.poolData);
-  let pool = poolData[poolKey];
+  let pool = poolData[poolAddress];
 
   if (!pool) {
     return <LoadingSpinner className="text-4xl" />;
@@ -33,21 +33,21 @@ export default function SinglePool() {
               iconClassName="w-10 h-10"
               // className="mb-8"
             />
-            <Link
-              href="/pools/manage/[poolAddress]"
-              as={`/pools/manage/${poolKey}`}
-            >
+            <Link href="/trade/[poolAddress]" as={`/trade/${poolAddress}`}>
               <div className="rounded-lg px-4 py-2 text-slate-200 text-white">
-                Admin ↗️
+                Trade ↗️
               </div>
             </Link>
           </div>
         </div>
         <div className="flex w-full flex-col">
-          <PoolGeneralStats poolKey={new PublicKey(poolKey)} className="mb-8" />
-          <PoolTokenStats pool={pool!} poolKey={new PublicKey(poolKey)} />
+          <PoolGeneralStats
+            poolKey={new PublicKey(poolAddress)}
+            className="mb-8"
+          />
+          <PoolTokenStats pool={pool!} poolKey={new PublicKey(poolAddress)} />
         </div>
-        <LiquidityCard pool={pool} poolKey={new PublicKey(poolKey)} />
+        <LiquidityCard pool={pool} poolKey={new PublicKey(poolAddress)} />
       </PoolLayout>
     );
   }

@@ -1,21 +1,26 @@
 import GrowthIcon from "@carbon/icons-react/lib/Growth";
-import { useState } from "react";
+import { PublicKey } from "@solana/web3.js";
+import React, { useState } from "react";
+import { toast } from "react-toastify";
 import { twMerge } from "tailwind-merge";
 
 import { SidebarTab } from "@/components/SidebarTab";
 import { TradePosition } from "@/components/TradeSidebar/TradePosition";
 import { Side } from "@/lib/types";
 
-interface Props {
+export function TradeSidebar({
+  className,
+  mint,
+  poolAddress,
+}: {
   className?: string;
-  token: TokenE;
-}
-
-export function TradeSidebar(props: Props) {
+  mint: PublicKey;
+  poolAddress: PublicKey;
+}) {
   const [side, setSide] = useState(Side.Long);
 
   return (
-    <div className={props.className}>
+    <div className={className}>
       <div className="mb-3 font-medium text-white">Place a Market Order</div>
       <div
         className={twMerge("bg-zinc-800", "p-4", "rounded", "overflow-hidden")}
@@ -30,7 +35,12 @@ export function TradeSidebar(props: Props) {
           </SidebarTab>
           <SidebarTab
             selected={side === Side.Short}
-            onClick={() => setSide(Side.Short)}
+            onClick={() => {
+              toast("Short trading is coming soon", {
+                position: "top-right",
+                autoClose: 1000,
+              });
+            }}
           >
             <GrowthIcon className="h-4 w-4 -scale-y-100" />
             <div>Short</div>
@@ -40,16 +50,13 @@ export function TradeSidebar(props: Props) {
           <TradePosition
             className="mt-6"
             side={Side.Long}
-            token={props.token}
+            mint={mint}
+            poolAddress={poolAddress}
           />
         )}
-        {side === Side.Short && (
-          <TradePosition
-            className="mt-6"
-            side={Side.Short}
-            token={props.token}
-          />
-        )}
+        {/* {side === Side.Short && (
+          <TradePosition className="mt-6" side={Side.Short} token={token} />
+        )} */}
       </div>
     </div>
   );

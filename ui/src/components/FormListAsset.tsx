@@ -1,11 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PublicKey } from "@solana/web3.js";
-import BigNumber from "bignumber.js";
 import { BN } from "bn.js";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { Pool } from "@/hooks/perpetuals";
+import { getTokensKeyedBy } from "@/lib/Token";
 import { parseUnits } from "@/utils/viem";
 
 const transformToBN = (decimals: number) => (x: string) =>
@@ -77,56 +76,28 @@ export type AddCustodyParams = z.infer<typeof addCustodySchema>;
 // This is input type values (i.e. before transformation)
 type AddCustodyState = z.input<typeof addCustodySchema>;
 
-const prefills: Record<any, Partial<AddCustodyState>> = {
-  USDC: {
-    tokenMint: "Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr",
-    tokenOracle: "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",
-    oracleType: "pyth",
-  },
-  SOL: {
-    tokenMint: "So11111111111111111111111111111111111111112",
-    tokenOracle: "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE",
-    oracleType: "pyth",
-  },
-  RAY: {
-    tokenMint: "GFz5gtptPcqJpV5dUHqiwtDwvrVamjQyKaLaFrQ9iwH2",
-    tokenOracle: "Hhipna3EoWR7u8pDruUg8RxhP5F6XLh6SEHMVDmZhWi8",
-    oracleType: "pyth",
-  },
-  ORCA: {
-    tokenMint: "A5sPEFgEF2ET1Xdo6ZT8vMxwKqdBgQ6bAUaKdqoNApo8",
-    tokenOracle: "4CBshVeNBEXz24GZpoj8SrqP5L7VGG3qjGd6tCST1pND",
-    oracleType: "pyth",
-  },
-  BONK: {
-    tokenMint: "Ek9RtoqksVzPfMRFN2BTgCxM7e5QoJ3rZLL18phtz2Ri",
-    tokenOracle: "DBE3N8uNjhKPRHfANdwGvCZghWXyLPdqdSbEW2XFwBiX",
-    oracleType: "pyth",
-  },
-};
-
 const AddCustodyForm = ({
   custodies,
-  pool,
+  poolName,
   onSubmit,
 }: {
-  pool: Pool;
+  poolName: string;
   custodies: { mint: PublicKey }[];
   onSubmit: (x: any) => void;
 }) => {
   const defaultValues: AddCustodyState = {
-    poolName: pool.name,
+    poolName: poolName,
     tokenMint: "",
     tokenOracle: "",
     oracleType: "pyth",
     maxPriceError: "100.00" as string,
-    maxPriceAgeSec: "60",
+    maxPriceAgeSec: "600",
     oracleAuthority: PublicKey.default.toString(),
     pricingConfig: {
-      useEma: true,
+      useEma: false,
       useUnrealizedPnlInAum: true,
-      tradeSpreadLong: "1.00",
-      tradeSpreadShort: "1.00",
+      tradeSpreadLong: "0.00",
+      tradeSpreadShort: "0.00",
       minInitialLeverage: "1.0000",
       maxInitialLeverage: "100.0000",
       maxLeverage: "100.0000",
@@ -146,10 +117,10 @@ const AddCustodyForm = ({
     },
     fees: {
       utilizationMult: "200.00",
-      addLiquidity: "1.00",
+      addLiquidity: "0.00",
       removeLiquidity: "1.00",
-      openPosition: "1.00",
-      closePosition: "1.00",
+      openPosition: "0.00",
+      closePosition: "0.00",
       liquidation: "1.00",
       protocolShare: "0.10",
     },
@@ -174,37 +145,50 @@ const AddCustodyForm = ({
   });
 
   const oracleType = watch("oracleType");
-  const feeMode = watch("fees.mode");
-  const tokenMint = watch("tokenMint");
+  const list = getTokensKeyedBy("address");
   return (
-    <div className="container mx-auto bg-zinc-900 p-4">
-      <div>
-        <select
-          id="tokenSelect"
-          value=""
-          onChange={(e) => {
-            e.preventDefault();
-            Object.entries(prefills[e.target.value]).forEach(([key, value]) => {
-              setValue(key as keyof typeof defaultValues, value as any);
-            });
-          }}
-          className="mb-4 w-full rounded border p-2"
-        >
-          <option value="">Prefill For</option>
-          {Object.entries(prefills).map(([key, value]) => {
-            if (
-              custodies.map((x) => x.mint.toString()).includes(value.tokenMint)
-            )
-              return null;
-            return (
-              <option key={key} value={key}>
-                {key}
-              </option>
-            );
-          })}
-        </select>
-      </div>
+    <div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <div>
+          <label htmlFor="poolName" className="mb-1 block text-white">
+            Unique Pool Name:
+          </label>
+          <input
+            id="poolName"
+            type="text"
+            {...register("poolName")}
+            className="mb-2 w-full rounded border p-2"
+            required
+          />
+        </div>
+        <div>
+          <select
+            id="tokenSelect"
+            value=""
+            onChange={(e) => {
+              e.preventDefault();
+              const token = list[e.target.value]!;
+              setValue("tokenMint", token.address, { shouldDirty: true });
+              setValue("tokenOracle", token.extensions.oracle, {
+                shouldDirty: true,
+              });
+            }}
+            className="w-full rounded border p-2"
+          >
+            <option value="">Prefill For</option>
+            {Object.entries(list).map(([key, value]) => {
+              if (
+                custodies.map((x) => x.mint.toString()).includes(value.address)
+              )
+                return null;
+              return (
+                <option key={key} value={key}>
+                  {value.symbol} ({key})
+                </option>
+              );
+            })}
+          </select>
+        </div>
         {/* Basic Info */}
         <div>
           <label htmlFor="tokenMint" className="mb-1 block text-white">
@@ -235,7 +219,7 @@ const AddCustodyForm = ({
         <h2 className="mt-4 text-xl font-semibold text-white">
           Oracle Configuration
         </h2>
-        <div>
+        {/* <div>
           <label htmlFor="oracleType" className="mb-1 block text-white">
             Oracle Type:
           </label>
@@ -248,7 +232,7 @@ const AddCustodyForm = ({
             <option value="pyth">Pyth</option>
             <option value="none">None</option>
           </select>
-        </div>
+        </div> */}
         <div>
           <label htmlFor="maxPriceError" className="mb-1 block text-white">
             Max Price Error (%)
@@ -317,7 +301,7 @@ const AddCustodyForm = ({
         </div>
         <div>
           <label htmlFor="tradeSpreadLong" className="mb-1 block text-white">
-            Trade Spread Long (%):
+            Trade Spread Open (%):
           </label>
           <input
             id="tradeSpreadLong"
@@ -331,7 +315,7 @@ const AddCustodyForm = ({
         </div>
         <div>
           <label htmlFor="tradeSpreadShort" className="mb-1 block text-white">
-            Trade Spread Short (%):
+            Trade Spread Close (%):
           </label>
           <input
             id="tradeSpreadShort"
@@ -470,6 +454,9 @@ const AddCustodyForm = ({
         {/* Fees */}
         <h2 className="mt-4 text-xl font-semibold text-white">Fees</h2>
         {Object.entries(defaultValues.fees).map(([key, value]) => {
+          if (["addLiquidity", "protocolShare"].includes(key)) {
+            return null;
+          }
           return (
             <div key={key}>
               <label htmlFor={key} className="mb-1 block text-white">
@@ -515,10 +502,10 @@ const AddCustodyForm = ({
 
         <button
           type="submit"
-          className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
+          className="w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600"
           disabled={!isValid}
         >
-          Add Custody
+          List Asset
         </button>
       </form>
     </div>
