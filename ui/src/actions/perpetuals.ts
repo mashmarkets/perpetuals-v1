@@ -1,7 +1,16 @@
-import { BN, Program, utils } from "@coral-xyz/anchor";
+import {
+  AnchorProvider,
+  BN,
+  Program,
+  Provider,
+  utils,
+} from "@coral-xyz/anchor";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
+  createCloseAccountInstruction,
+  createSyncNativeInstruction,
   getAssociatedTokenAddressSync,
+  NATIVE_MINT,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import {
@@ -46,9 +55,96 @@ export const findPerpetualsAddressSync = (
   )[0];
 };
 
+export const findPerpetualsPositionAddressSync = (
+  user: PublicKey,
+  poolAddress: PublicKey,
+  custodyAddress: PublicKey,
+) =>
+  findPerpetualsAddressSync(
+    "position",
+    user,
+    poolAddress,
+    custodyAddress,
+    new Uint8Array([1]),
+  );
+
 const multisig = findPerpetualsAddressSync("multisig");
 const perpetuals = findPerpetualsAddressSync("perpetuals");
 const transferAuthority = findPerpetualsAddressSync("transfer_authority");
+
+// Careful - this mutates instructions
+export const addWrappedSolInstructions = (
+  instructions: TransactionInstruction[],
+  publicKey: PublicKey,
+  lamports: bigint = BigInt(0),
+) => {
+  console.log("Adding wrapped sol instructions");
+  const ata = getAssociatedTokenAddressSync(NATIVE_MINT, publicKey);
+  const preInstructions = [
+    createAssociatedTokenAccountIdempotentInstruction(
+      publicKey,
+      ata,
+      publicKey,
+      NATIVE_MINT,
+    ),
+  ];
+
+  // Send SOL to be wrapped if needed
+  if (lamports > BigInt(0)) {
+    preInstructions.push(
+      SystemProgram.transfer({
+        fromPubkey: publicKey,
+        toPubkey: ata,
+        lamports,
+      }),
+      createSyncNativeInstruction(ata, TOKEN_PROGRAM_ID),
+    );
+  }
+
+  // Close wrapped account
+  const postInstructions = [
+    createCloseAccountInstruction(ata, publicKey, publicKey),
+  ];
+
+  // Mutate instructions
+  instructions.unshift(...preInstructions);
+  instructions.push(...postInstructions);
+
+  // Its a promise, incase in future we want to be smart about opening accounts
+  return Promise.resolve(instructions);
+};
+
+export const sendInstructions = async (
+  provider: Provider,
+  instructions: TransactionInstruction[],
+  signers: Keypair[] = [],
+) => {
+  const wallet = (provider as AnchorProvider).wallet;
+  const { connection, publicKey } = provider;
+
+  const { blockhash, lastValidBlockHeight } =
+    await connection.getLatestBlockhash();
+
+  const transaction = new VersionedTransaction(
+    new TransactionMessage({
+      payerKey: publicKey!,
+      recentBlockhash: blockhash,
+      instructions,
+    }).compileToV0Message(),
+  );
+
+  transaction.sign(signers);
+
+  const signedTx = await wallet.signTransaction(transaction);
+  const signature = await connection.sendTransaction(signedTx);
+
+  // Return this format as its best for waiting for confirmation
+  return {
+    signature: signature!,
+    blockhash,
+    lastValidBlockHeight,
+  };
+};
 
 export async function addPool(
   program: Program<Perpetuals>,
@@ -57,7 +153,7 @@ export async function addPool(
   const pool = findPerpetualsAddressSync("pool", name);
   const lpTokenMint = findPerpetualsAddressSync("lp_token_mint", pool);
 
-  return await program.methods
+  const instruction = await program.methods
     .addPool({ name })
     .accounts({
       admin: ADMIN_KEY.publicKey,
@@ -70,8 +166,9 @@ export async function addPool(
       tokenProgram: TOKEN_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
     })
-    .signers([ADMIN_KEY])
-    .rpc();
+    .instruction();
+
+  return sendInstructions(program.provider, [instruction], [ADMIN_KEY]);
 }
 
 export async function addCustody(
@@ -80,7 +177,7 @@ export async function addCustody(
 ) {
   const pool = findPerpetualsAddressSync("pool", params.poolName);
 
-  await program.methods
+  const instruction = await program.methods
     .addCustody({
       oracle: {
         oracleAccount: params.tokenOracle,
@@ -111,8 +208,9 @@ export async function addCustody(
       tokenProgram: TOKEN_PROGRAM_ID,
       rent: SYSVAR_RENT_PUBKEY,
     })
-    .signers([ADMIN_KEY])
-    .rpc();
+    .instruction();
+
+  return sendInstructions(program.provider, [instruction], [ADMIN_KEY]);
 }
 
 export async function listAsset(
@@ -170,25 +268,11 @@ export async function listAsset(
     })
     .instruction();
 
-  const { blockhash, lastValidBlockHeight } =
-    await program.provider.connection.getLatestBlockhash();
-
-  const transaction = new VersionedTransaction(
-    new TransactionMessage({
-      payerKey: program.provider.publicKey!,
-      recentBlockhash: blockhash,
-      instructions: [addPoolIx, addCustodyIx],
-    }).compileToV0Message(),
+  return sendInstructions(
+    program.provider,
+    [addPoolIx, addCustodyIx],
+    [ADMIN_KEY],
   );
-  transaction.sign([ADMIN_KEY]);
-  // send doens't seem to exist
-  const [signature] = await program.provider.sendAll!([{ tx: transaction }]);
-
-  return {
-    signature: signature!,
-    blockhash,
-    lastValidBlockHeight,
-  };
 }
 
 export interface OpenPositionParams {
@@ -213,7 +297,14 @@ export async function openPosition(
     params.mint,
   );
 
-  return await program.methods
+  const position = findPerpetualsAddressSync(
+    "position",
+    program.provider.publicKey!,
+    params.poolAddress,
+    custody,
+    new Uint8Array([1]),
+  );
+  const instruction = await program.methods
     .openPosition({
       price: params.price,
       collateral: params.collateral,
@@ -228,13 +319,7 @@ export async function openPosition(
       transferAuthority,
       perpetuals,
       pool: params.poolAddress,
-      position: findPerpetualsAddressSync(
-        "position",
-        program.provider.publicKey!,
-        params.poolAddress,
-        custody,
-        new Uint8Array([1]),
-      ),
+      position,
       custody,
       custodyOracleAccount: oracle,
       collateralCustody: custody,
@@ -247,7 +332,19 @@ export async function openPosition(
       systemProgram: SystemProgram.programId,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
-    .rpc();
+    .instruction();
+
+  const instructions = [instruction];
+
+  if (NATIVE_MINT.equals(params.mint)) {
+    await addWrappedSolInstructions(
+      instructions,
+      program.provider.publicKey!,
+      BigInt(params.collateral.toString()),
+    );
+  }
+
+  return sendInstructions(program.provider, instructions);
 }
 
 export async function getSimulationResult(
@@ -533,8 +630,7 @@ export async function closePosition(
     throw new Error("Position and Custody do not match");
   }
 
-  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
-  return await program.methods
+  const instruction = await program.methods
     .closePosition({
       price: new BN(price.toString()),
     })
@@ -559,7 +655,15 @@ export async function closePosition(
         custody.mint,
       ),
     })
-    .rpc();
+    .instruction();
+
+  const instructions = [instruction];
+
+  if (NATIVE_MINT.equals(custody.mint)) {
+    await addWrappedSolInstructions(instructions, program.provider.publicKey!);
+  }
+
+  return sendInstructions(program.provider, instructions);
 }
 
 export type ClosePositionParams = Parameters<typeof closePosition>[1];
@@ -576,8 +680,7 @@ export async function addCollateral(
     throw new Error("Position and Custody do not match");
   }
 
-  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
-  return await program.methods
+  const instruction = await program.methods
     .addCollateral({
       collateral: new BN(collateral.toString()),
     })
@@ -602,7 +705,19 @@ export async function addCollateral(
         custody.mint,
       ),
     })
-    .rpc();
+    .instruction();
+
+  const instructions = [instruction];
+
+  if (NATIVE_MINT.equals(custody.mint)) {
+    await addWrappedSolInstructions(
+      instructions,
+      program.provider.publicKey!,
+      BigInt(collateral.toString()),
+    );
+  }
+
+  return sendInstructions(program.provider, instructions);
 }
 
 export async function removeCollateral(
@@ -617,8 +732,7 @@ export async function removeCollateral(
     throw new Error("Position and Custody do not match");
   }
 
-  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
-  return await program.methods
+  const instruction = await program.methods
     .removeCollateral({
       collateralUsd: new BN(collateralUsd.toString()),
     })
@@ -643,7 +757,15 @@ export async function removeCollateral(
         custody.mint,
       ),
     })
-    .rpc();
+    .instruction();
+
+  const instructions = [instruction];
+
+  if (NATIVE_MINT.equals(custody.mint)) {
+    await addWrappedSolInstructions(instructions, program.provider.publicKey!);
+  }
+
+  return sendInstructions(program.provider, instructions);
 }
 
 const getRemainingAccountsFromCustodies = (
@@ -691,20 +813,11 @@ export async function addLiquidity(
     program.provider.publicKey!,
   );
 
-  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
-  return await program.methods
+  const instruction = await program.methods
     .addLiquidity({
       amountIn: new BN(amountIn.toString()),
       minLpAmountOut: new BN(mintLpAmountOut.toString()),
     })
-    .preInstructions([
-      createAssociatedTokenAccountIdempotentInstruction(
-        program.provider.publicKey!,
-        lpTokenAccount,
-        program.provider.publicKey!,
-        lpTokenMint,
-      ),
-    ])
     .accounts({
       owner: program.provider.publicKey,
       fundingAccount,
@@ -719,7 +832,27 @@ export async function addLiquidity(
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .remainingAccounts(getRemainingAccountsFromCustodies([custody]))
-    .rpc();
+    .instruction();
+
+  const instructions = [
+    createAssociatedTokenAccountIdempotentInstruction(
+      program.provider.publicKey!,
+      lpTokenAccount,
+      program.provider.publicKey!,
+      lpTokenMint,
+    ),
+    instruction,
+  ];
+
+  if (NATIVE_MINT.equals(custody.mint)) {
+    await addWrappedSolInstructions(
+      instructions,
+      program.provider.publicKey!,
+      amountIn,
+    );
+  }
+
+  return sendInstructions(program.provider, instructions);
 }
 
 export async function removeLiquidity(
@@ -751,8 +884,7 @@ export async function removeLiquidity(
     program.provider.publicKey!,
   );
 
-  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
-  return await program.methods
+  const instruction = await program.methods
     .removeLiquidity({
       lpAmountIn: new BN(lpAmountIn.toString()),
       minAmountOut: new BN(minAmountOut.toString()),
@@ -771,5 +903,13 @@ export async function removeLiquidity(
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .remainingAccounts(getRemainingAccountsFromCustodies([custody]))
-    .rpc();
+    .instruction();
+
+  const instructions = [instruction];
+
+  if (NATIVE_MINT.equals(custody.mint)) {
+    await addWrappedSolInstructions(instructions, program.provider.publicKey!);
+  }
+
+  return sendInstructions(program.provider, instructions);
 }

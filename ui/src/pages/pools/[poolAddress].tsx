@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useRouter } from "next/router";
 
 import PoolBackButton from "@/components/Atoms/PoolBackButton";
-import { PoolLayout } from "@/components/Layouts/PoolLayout";
 import { TitleHeader } from "@/components/Molecules/PoolHeaders/TitleHeader";
 import LiquidityCard from "@/components/PoolModal/LiquidityCard";
 import PoolGeneralStats from "@/components/PoolModal/PoolGeneralStats";
@@ -21,7 +20,7 @@ export default function SinglePool() {
   }
 
   return (
-    <PoolLayout className="text-white">
+    <div className="mx-auto mt-7 flex max-w-screen-2xl flex-col px-4 text-white lg:px-16">
       <div>
         <PoolBackButton className="mb-6" />
         <div className="align-center mb-8 flex justify-start">
@@ -35,11 +34,14 @@ export default function SinglePool() {
           </Link>
         </div>
       </div>
-      <div className="flex w-full flex-col">
-        <PoolGeneralStats poolAddress={poolAddress} className="mb-8" />
-        <PoolTokenStats poolAddress={poolAddress} />
+
+      <div className="w-full max-w-[1550px] lg:grid lg:grid-cols-[1fr,424px] lg:gap-x-16">
+        <div className="flex w-full flex-col">
+          <PoolGeneralStats poolAddress={poolAddress} className="mb-8" />
+          <PoolTokenStats poolAddress={poolAddress} />
+        </div>
+        <LiquidityCard poolAddress={poolAddress} />
       </div>
-      <LiquidityCard poolAddress={poolAddress} />
-    </PoolLayout>
+    </div>
   );
 }

@@ -10,6 +10,7 @@ import {
   useAllUserPositions,
   useCustodies,
   usePools,
+  usePositions,
 } from "@/hooks/perpetuals";
 import { asToken } from "@/lib/Token";
 import { dedupe } from "@/utils/utils";
@@ -21,10 +22,9 @@ import { PositionColumn } from "./PositionColumn";
 const groupPositionsByPool = (positions: Position[]) => {
   return positions.reduce(
     (acc, pos) => {
-      if (!acc[pos.pool.toString()]) {
-        acc[pos.pool.toString()] = [];
-      }
-      acc[pos.pool.toString()]!.push(pos);
+      const key = pos.pool.toString();
+      acc[key] = acc[key] ?? [];
+      acc[key]!.push(pos);
       return acc;
     },
     {} as Record<string, Position[]>,
@@ -34,22 +34,25 @@ const groupPositionsByPool = (positions: Position[]) => {
 export function ExistingPositions() {
   const { publicKey } = useWallet();
 
-  const { data: positions } = useAllUserPositions(publicKey);
+  const { data: allPositions } = useAllUserPositions(publicKey);
+  const positions = usePositions(allPositions ?? []);
 
   const custodies = useCustodies(
-    dedupe((positions ?? []).flatMap((x) => x.custody)),
+    dedupe(Object.values(positions ?? {}).flatMap((x) => x.custody)),
   );
-  const pools = usePools(dedupe((positions ?? []).map((x) => x.pool)));
+  const pools = usePools(
+    dedupe(Object.values(positions ?? {}).map((x) => x.pool)),
+  );
 
   if (positions === undefined) {
     return <LoadingSpinner className="text-4xl" />;
   }
 
-  if (positions.length === 0) {
+  if (Object.values(positions ?? {}).length === 0) {
     return <NoPositions emptyString="No Open Positions" />;
   }
 
-  const groupedPositions = groupPositionsByPool(positions ?? []);
+  const groupedPositions = groupPositionsByPool(Object.values(positions ?? {}));
   return (
     <>
       {Object.entries(groupedPositions).map(([pool, positions]) => {

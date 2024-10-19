@@ -7,6 +7,7 @@ import { twMerge } from "tailwind-merge";
 
 import { PoolTokens } from "@/components/PoolTokens";
 import { useAllPools, useCustodies } from "@/hooks/perpetuals";
+import { getTokenSymbol } from "@/lib/Token";
 import { dedupe } from "@/utils/utils";
 
 interface Props {
@@ -19,12 +20,12 @@ export function PoolSelector(props: Props) {
   const { poolAddress } = props;
   const [open, setOpen] = useState(false);
 
-  const { data: pools } = useAllPools();
+  const pools = useAllPools();
   const custodies = useCustodies(
     dedupe(Object.values(pools ?? {}).flatMap((x) => x.custodies)),
   );
 
-  const pool = pools?.[poolAddress.toString()];
+  const selectedPool = pools?.[poolAddress.toString()];
   const getTokenList = (address: PublicKey) =>
     (pools?.[address.toString()]?.custodies ?? [])
       .map((x) => custodies[x.toString()]?.mint)
@@ -50,7 +51,7 @@ export function PoolSelector(props: Props) {
       >
         <PoolTokens tokens={getTokenList(poolAddress)} className="h-5 w-5" />
         <div className="truncate text-sm font-medium text-white">
-          {pool?.name}
+          {selectedPool?.name}
         </div>
         <div
           className={twMerge(
@@ -101,7 +102,7 @@ export function PoolSelector(props: Props) {
                     {pool.name}
                   </div>
                   <div className="text-xs text-zinc-500">
-                    {tokenList.slice(0, 3).join(", ")}
+                    {tokenList.map(getTokenSymbol).slice(0, 3).join(", ")}
                     {tokenList.length > 3
                       ? ` +${tokenList.length - 3} more`
                       : ""}

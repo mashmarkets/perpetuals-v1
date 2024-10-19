@@ -19,13 +19,15 @@ export function LeverageSlider(props: Props) {
     <div
       className={twMerge(
         "grid",
-        "grid-cols-[max-content,max-content,1fr,max-content,max-content]",
+        "grid-cols-[max-content,1fr,max-content,max-content]",
         "items-center",
         props.className,
       )}
     >
-      <div className="text-xs text-zinc-400">Leverage</div>
-      <div className="pl-6 pr-3 text-sm text-zinc-400">1x</div>
+      {/* <div className="text-xs text-zinc-400">Leverage</div> */}
+      <div className="pr-2 text-sm text-zinc-400">
+        {Number(props.minLeverage).toFixed(1)}x
+      </div>
       <div>
         <Slider.Root
           min={props.minLeverage}
@@ -64,7 +66,7 @@ export function LeverageSlider(props: Props) {
           "grid-cols-[1fr,max-content]",
           "grid",
           "items-center",
-          "px-3",
+          "px-1",
           "py-2",
           "rounded",
           "w-20",
@@ -73,7 +75,8 @@ export function LeverageSlider(props: Props) {
         <input
           className="w-full bg-transparent text-center text-sm text-white"
           type="number"
-          value={props.value}
+          step="0.1"
+          value={props.value.toFixed(1)}
           onChange={(e) => {
             const text = e.currentTarget.value;
             const number = parseFloat(text);

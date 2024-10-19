@@ -12,16 +12,13 @@ import { useBalance, useMint } from "@/hooks/token";
 import { getTokenIcon, tokens } from "@/lib/Token";
 import { formatNumberCommas } from "@/utils/formatters";
 
-function PoolRow({ poolKey }: { poolKey: string }) {
+function PoolRow({ poolAddress }: { poolAddress: PublicKey }) {
   const { publicKey } = useWallet();
   const router = useRouter();
-  const { data: pool } = usePool(new PublicKey(poolKey));
-  const custodies = usePoolCustodies(new PublicKey(poolKey));
+  const { data: pool } = usePool(poolAddress);
+  const custodies = usePoolCustodies(poolAddress);
 
-  const lpMint = findPerpetualsAddressSync(
-    "lp_token_mint",
-    new PublicKey(poolKey),
-  );
+  const lpMint = findPerpetualsAddressSync("lp_token_mint", poolAddress);
   const mint = useMint(lpMint);
   const lp = useBalance(lpMint, publicKey === null ? undefined : publicKey);
   const tokenIcon = getTokenIcon(Object.values(custodies)?.[0]?.mint);
@@ -56,7 +53,7 @@ function PoolRow({ poolKey }: { poolKey: string }) {
     <tr
       className="cursor-pointer border-b border-zinc-700 text-xs hover:bg-zinc-800"
       key={pool?.name}
-      onClick={() => router.push(`/pools/${poolKey.toString()}`)}
+      onClick={() => router.push(`/pools/${poolAddress.toString()}`)}
     >
       <td className="px-2 py-4">
         <div className="flex flex-row items-center space-x-1">
@@ -87,10 +84,12 @@ function PoolRow({ poolKey }: { poolKey: string }) {
 }
 export default function Pools() {
   const pools = useAllPools();
-
-  if (!pools.isFetched) {
-    return <p className="text-white">Loading...</p>;
-  }
+  const tvl =
+    pools === undefined
+      ? undefined
+      : Object.values(pools).reduce((acc, pool) => {
+          return acc + BigInt(pool.aumUsd.toString());
+        }, BigInt(0));
 
   return (
     <div className="px-16 py-6">
@@ -99,17 +98,12 @@ export default function Pools() {
         <div className="flex flex-row space-x-2 text-sm">
           <p className="text-zinc-500">TVL</p>
           <p className="text-white">
-            $
-            {formatNumberCommas(
-              Object.values(pools.data!).reduce((acc, pool) => {
-                return acc + Number(pool.aumUsd.toNumber() / 10 ** 6);
-              }, 0),
-            )}
+            {tvl && "$" + formatNumberCommas(Number(tvl) / 10 ** 6)}
           </p>
         </div>
       </div>
 
-      {Object.values(pools.data!).length === 0 ? (
+      {Object.values(pools).length === 0 ? (
         <NoPositions emptyString="No Open Pools" />
       ) : (
         <table className={twMerge("table-auto", "text-white", "w-full")}>
@@ -133,8 +127,11 @@ export default function Pools() {
             </tr>
           </thead>
           <tbody>
-            {Object.entries(pools.data!).map(([poolKey, pool]) => (
-              <PoolRow key={poolKey} poolKey={poolKey} />
+            {Object.keys(pools ?? {}).map((poolAddress) => (
+              <PoolRow
+                key={poolAddress.toString()}
+                poolAddress={new PublicKey(poolAddress)}
+              />
             ))}
           </tbody>
         </table>

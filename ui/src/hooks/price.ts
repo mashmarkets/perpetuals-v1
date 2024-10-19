@@ -10,6 +10,7 @@ import {
 import { memoize } from "lodash-es";
 
 import { getCoingeckoId } from "@/lib/Token";
+import { queryClient } from "@/pages/_app";
 import { Perpetuals } from "@/target/types/perpetuals";
 
 import { PerpetualsProgram, useProgram } from "./useProgram";
@@ -56,7 +57,9 @@ const coingeckoBatcher = create({
 });
 
 const ONE_MINUTE = 60 * 1000;
-// Inspired by https://github.com/TanStack/query/discussions/6305
+queryClient.setQueryDefaults(["price"], {
+  refetchInterval: ONE_MINUTE, // 1 MINUTE
+});
 export const usePrice = (mint: PublicKey | undefined) => {
   const program = useProgram();
 

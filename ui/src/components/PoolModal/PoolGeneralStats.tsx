@@ -45,23 +45,15 @@ export default function PoolGeneralStats({
 }) {
   const { publicKey } = useWallet();
   const custodies = usePoolCustodies(poolAddress);
-  const poolData = usePool(poolAddress);
+  const { data: pool } = usePool(poolAddress);
 
   const lpMint = findPerpetualsAddressSync("lp_token_mint", poolAddress);
-  const mint = useMint(lpMint);
-  const lp = useBalance(lpMint, publicKey);
+  const { data: mint } = useMint(lpMint);
+  const { data: lp } = useBalance(lpMint, publicKey);
 
-  const userShare =
-    lp?.data !== undefined && mint?.data !== undefined
-      ? Number(lp?.data) / Number(mint?.data.supply)
-      : 0;
+  const userShare = !!lp && !!mint ? Number(lp) / Number(mint.supply) : 0;
+  const aum = !!pool ? pool?.aumUsd.toNumber() / 10 ** 6 : 0;
 
-  const aum =
-    poolData?.data === undefined
-      ? 0
-      : poolData?.data.aumUsd.toNumber() / 10 ** 6;
-
-  console.log("Custodies: ", custodies);
   return (
     <div
       className={twMerge(

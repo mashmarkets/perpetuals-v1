@@ -1,14 +1,18 @@
 import { MethodsBuilder } from "@coral-xyz/anchor/dist/cjs/program/namespace/methods";
-import { useConnection } from "@solana/wallet-adapter-react";
-import { Connection, Keypair, PublicKey, Transaction } from "@solana/web3.js";
-import { use } from "chai";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  SendTransactionError,
+  Transaction,
+} from "@solana/web3.js";
 import { toast } from "react-toastify";
 
 export const TRX_URL = (txid: string) =>
-  `https://explorer.solana.com/tx/${txid}?cluster=devnet`;
+  `https://solana.fm/tx/${txid}?cluster=devnet-solana`;
 
 export const ACCOUNT_URL = (address: string) =>
-  `https://explorer.solana.com/address/${address}?cluster=devnet`;
+  `https://solana.fm/address/${address}?cluster=devnet-solana`;
 
 export async function sleep(ms: number) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -43,28 +47,47 @@ export const wrapTransactionWithNotification = async (
       }
     | string
   >,
+  messages: {
+    pending?: string;
+    success?: string;
+    error?: string;
+  } = {
+    pending: "Transaction pending",
+    success: "Transaction confirmed",
+    error: "Transaction Failed",
+  },
 ) => {
-  const tx = await p;
-  const signature = typeof tx === "string" ? tx : tx.signature;
+  // There is "two" steps to the promise. First the transaction needs to be broadcasted, then we need to confirm it.
+  let signature: string | undefined = undefined;
+
+  const Link = () => {
+    if (signature === undefined) {
+      return null;
+    }
+    return (
+      <a
+        target="_blank"
+        rel="noopener noreferrer"
+        href={`${TRX_URL(signature)}`}
+        className="text-blue-500"
+      >
+        {" "}
+        View on explorer
+      </a>
+    );
+  };
   await toast.promise(
-    connection.confirmTransaction(tx as any),
+    p.then((tx) => {
+      signature = typeof tx === "string" ? tx : tx.signature;
+      return connection.confirmTransaction(tx as any);
+    }),
     {
       pending: {
         render() {
           return (
-            <div className="processing-transaction">
-              <div>
-                <h2>Confirming transaction {`  `}</h2>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`${TRX_URL(signature)}`}
-                  className="text-blue-500"
-                >
-                  {" "}
-                  View on explorer
-                </a>
-              </div>
+            <div>
+              <h2>{messages.pending}</h2>
+              <Link />
             </div>
           );
         },
@@ -72,7 +95,7 @@ export const wrapTransactionWithNotification = async (
       success: {
         render() {
           return (
-            <div className="processing-transaction">
+            <div>
               <div>
                 <span className="icon green">
                   <span
@@ -82,16 +105,8 @@ export const wrapTransactionWithNotification = async (
                 </span>
               </div>
               <div>
-                <h2>Transaction Confirmed</h2>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`${TRX_URL(signature)}`}
-                  className="text-blue-500"
-                >
-                  {" "}
-                  View on explorer
-                </a>
+                <h2>{messages.success}</h2>
+                <Link />
               </div>
             </div>
           );
@@ -101,9 +116,16 @@ export const wrapTransactionWithNotification = async (
       error: {
         render({ data }) {
           // When the promise reject, data will contains the error
-          console.log(data);
+          console.log("Transaction failed with: ", data);
+          let message = messages.error;
+          if (
+            data instanceof SendTransactionError &&
+            data.message.includes("Transaction simulation failed")
+          ) {
+            message = "Transaction simulation failed";
+          }
           return (
-            <div className="processing-transaction">
+            <div>
               <div>
                 <span className="icon red">
                   <span
@@ -114,31 +136,18 @@ export const wrapTransactionWithNotification = async (
               </div>
               <div>
                 <h2>
-                  Transaction Failed
+                  {message}
                   {/* {JSON.stringify(data?.message ?? {}).includes("timed")
                       ? data.message
                       : failMessage} */}
                 </h2>
-                <a
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  href={`${TRX_URL(signature)}`}
-                  className="text-blue-500"
-                >
-                  {" "}
-                  View on explorer
-                </a>
+                <Link />
               </div>
             </div>
           );
         },
         icon: false,
       },
-    },
-    {
-      position: "bottom-left",
-      autoClose: 4000,
-      className: "processing-transaction",
     },
   );
 

@@ -32,6 +32,9 @@ export function stringify(v: any): any {
   if (v instanceof PublicKey || v instanceof BN || v instanceof AnchorBN) {
     return v.toString();
   }
+  if (v instanceof Date) {
+    return v.toLocaleString();
+  }
 
   if (Array.isArray(v)) {
     return v.map((item) => stringify(item));

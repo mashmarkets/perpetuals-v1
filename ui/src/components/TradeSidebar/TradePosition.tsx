@@ -1,12 +1,13 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { BN } from "bn.js";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 import {
+  findPerpetualsPositionAddressSync,
   getEntryPriceAndFee,
   openPosition,
   OpenPositionParams,
@@ -17,7 +18,11 @@ import { LoadingDots } from "@/components/LoadingDots";
 import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
 import { TradeDetails } from "@/components/TradeSidebar/TradeDetails";
-import { useAllUserPositions, usePoolCustodies } from "@/hooks/perpetuals";
+import {
+  useAllUserPositions,
+  usePoolCustodies,
+  usePositions,
+} from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
 import { useProgram } from "@/hooks/useProgram";
@@ -29,6 +34,8 @@ import {
 } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import { stringify } from "@/pages/pools/manage/[poolAddress]";
+import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
+import { dedupe } from "@/utils/utils";
 
 import { PoolSelector } from "../PoolSelector";
 
@@ -73,15 +80,18 @@ export function TradePosition({
   const program = useProgram();
   const { publicKey } = useWallet();
   const queryClient = useQueryClient();
-  const { data: positions } = useAllUserPositions(publicKey);
+  const { data: allPositions } = useAllUserPositions(publicKey);
+  const positions = usePositions(allPositions ?? []);
 
   const custodies = usePoolCustodies(poolAddress);
   const custody = Object.values(custodies)[0];
   const token = tokenAddressToToken(mint.toString())!;
 
+  const payToken = token;
+  const positionToken = token;
   const [lastChanged, setLastChanged] = useState<Input>(Input.Pay);
-  const [payToken, setPayToken] = useState<TokenE>(token);
-  const [positionToken, setPositionToken] = useState<TokenE>(token);
+  // const [payToken, setPayToken] = useState<TokenE>(token);
+  // const [positionToken, setPositionToken] = useState<TokenE>(token);
   const [payAmount, setPayAmount] = useState(1);
   const [positionAmount, setPositionAmount] = useState(0);
 
@@ -98,22 +108,64 @@ export function TradePosition({
   };
   const { data: estimate } = useEntryEstimate(params);
 
+  const priceSlippage =
+    (Number(
+      custody.pricing.tradeSpreadShort + custody.pricing.tradeSpreadLong,
+    ) +
+      1) /
+    10 ** 4;
+
   const payTokenBalance = balance
     ? Number(balance) / 10 ** decimals
     : undefined;
 
-  async function handleTrade() {
-    if (price === undefined) {
-      return;
-    }
+  const openPositionMutation = useMutation({
+    onSuccess: () => {
+      // Collateral Balance
+      queryClient.invalidateQueries({
+        queryKey: [
+          "balance",
+          publicKey?.toString(),
+          getTokenPublicKey(payToken),
+        ],
+      });
+      // Pool
+      queryClient.invalidateQueries({
+        queryKey: ["pool", poolAddress?.toString()],
+      });
 
-    console.log("Opening position: ", stringify(params));
-    await openPosition(program, params);
+      // Add position, so its fetched
+      queryClient.setQueryData(
+        ["positions", publicKey?.toString()],
+        (p: PublicKey[] | undefined) =>
+          dedupe([
+            ...(p ?? []),
+            findPerpetualsPositionAddressSync(
+              publicKey,
+              poolAddress,
+              custody.address,
+            ),
+          ]),
+      );
+    },
+    mutationFn: async () => {
+      if (price === undefined) {
+        return;
+      }
 
-    queryClient.invalidateQueries({
-      queryKey: ["balance", publicKey?.toString(), getTokenPublicKey(payToken)],
-    });
-  }
+      console.log("Opening position: ", stringify(params));
+
+      return wrapTransactionWithNotification(
+        program.provider.connection,
+        openPosition(program, params),
+        {
+          pending: "Opening Position",
+          success: "Position Opened",
+          error: "Failed to open position",
+        },
+      );
+    },
+  });
 
   if (custody === undefined || price === undefined) {
     return (
@@ -122,7 +174,7 @@ export function TradePosition({
       </div>
     );
   }
-  const isPositionAlreadyOpen = (positions ?? []).some(
+  const isPositionAlreadyOpen = Object.values(positions ?? {}).some(
     (position) => position.custody.toString() === Object.keys(custodies)[0],
   );
 
@@ -151,8 +203,8 @@ export function TradePosition({
           setLastChanged(Input.Pay);
         }}
         onSelectToken={(token) => {
-          setPayToken(token);
-          setPositionToken(token);
+          // setPayToken(token);
+          // setPositionToken(token);
         }}
         tokenList={[token]}
         maxBalance={payTokenBalance ? payTokenBalance : 0}
@@ -167,8 +219,8 @@ export function TradePosition({
           setLastChanged(Input.Position);
         }}
         onSelectToken={(token) => {
-          setPayToken(token);
-          setPositionToken(token);
+          // setPayToken(token);
+          // setPositionToken(token);
         }}
         tokenList={[token]}
       />
@@ -182,20 +234,21 @@ export function TradePosition({
       /> */}
       <LeverageSlider
         className="mt-6"
-        value={positionAmount / payAmount}
+        value={positionAmount / (payAmount - priceSlippage * positionAmount)}
         minLeverage={Number(custody.pricing.minInitialLeverage) / 10000}
         maxLeverage={Number(custody.pricing.maxInitialLeverage) / 10000}
-        onChange={(e) => {
+        onChange={(l) => {
+          console.log(" Leverage: ", l);
           if (lastChanged === Input.Pay) {
-            setPositionAmount(e * payAmount);
+            setPositionAmount((l * payAmount) / (1 + priceSlippage * l));
           } else {
-            setPayAmount(positionAmount / e);
+            setPayAmount(positionAmount / l);
           }
         }}
       />
       <SolidButton
         className="mt-6 w-full bg-emerald-500 font-medium text-black"
-        onClick={handleTrade}
+        onClick={() => openPositionMutation.mutate()}
         disabled={
           !publicKey ||
           payAmount === 0 ||
@@ -206,9 +259,9 @@ export function TradePosition({
       >
         Place Long
       </SolidButton>
-      <p className="mt-2 text-center text-xs text-orange-500">
+      {/* <p className="mt-2 text-center text-xs text-orange-500">
         Leverage current only works until 25x due to immediate loss from fees
-      </p>
+      </p> */}
       {!publicKey && (
         <p className="mt-2 text-center text-xs text-orange-500">
           Connect wallet to execute order

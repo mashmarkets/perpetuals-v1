@@ -1,5 +1,6 @@
 import {
   getAssociatedTokenAddressSync,
+  NATIVE_MINT,
   unpackAccount,
   unpackMint,
 } from "@solana/spl-token";
@@ -34,6 +35,9 @@ export const useBalance = (
     queryKey: ["balance", user?.toString(), mint?.toString()],
     enabled: mint !== undefined && user !== undefined && user !== null,
     queryFn: () => {
+      if (mint?.toString() === NATIVE_MINT.toString()) {
+        return connection.getBalance(user!).then((x) => BigInt(x.toString()));
+      }
       const ata = getAssociatedTokenAddressSync(mint!, user!);
       return connectionBatcher(connection)
         .fetch(ata)

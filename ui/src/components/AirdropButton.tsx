@@ -1,12 +1,13 @@
 import { BN } from "@coral-xyz/anchor";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey, Transaction } from "@solana/web3.js";
-import { useQueryClient } from "@tanstack/react-query";
+import { PublicKey } from "@solana/web3.js";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createMintToInstruction } from "@/actions/faucet";
+import { sendInstructions } from "@/actions/perpetuals";
 import { usePrice } from "@/hooks/price";
+import { useAnchorProvider } from "@/hooks/useProgram";
 import { getTokenSymbol, tokens } from "@/lib/Token";
-import { sendSignedTransactionAndNotify } from "@/utils/TransactionHandlers";
+import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
 import { SolidButton } from "./SolidButton";
 
@@ -30,11 +31,12 @@ export default function AirdropButton({
   className?: string;
   mint: PublicKey;
 }) {
-  const client = useQueryClient();
-  const { publicKey, signTransaction } = useWallet();
-  const { connection } = useConnection();
+  const queryClient = useQueryClient();
+  const provider = useAnchorProvider();
   const { data: price } = usePrice(mint);
+
   const {
+    symbol,
     decimals,
     extensions: { mainnet },
   } = tokens[mint.toString()]!;
@@ -45,61 +47,39 @@ export default function AirdropButton({
       )
     : 0;
 
-  async function handleAirdrop() {
-    if (!publicKey) return;
-    if (mint.toString() === "So11111111111111111111111111111111111111112") {
-      await connection.requestAirdrop(publicKey!, 5 * 10 ** 9);
-    } else {
-      let transaction = new Transaction();
-      transaction = transaction.add(
-        createMintToInstruction({
-          payer: publicKey,
-          seed: new PublicKey(mainnet),
-          amount: new BN(amount),
-        }),
-      );
-      transaction.feePayer = publicKey;
-      transaction.recentBlockhash = (
-        await connection.getLatestBlockhash("finalized")
-      ).blockhash;
-
-      transaction = await signTransaction!(transaction);
-
-      await sendSignedTransactionAndNotify({
-        connection,
-        transaction,
-        successMessage: "Transaction success!",
-        failMessage: "Failed to airdrop",
-        signTransaction: () => {},
-        enableSigning: false,
+  const airdropMutation = useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["balance", provider.publicKey?.toString(), mint?.toString()],
       });
-    }
+    },
+    mutationFn: async () => {
+      if (provider === undefined || provider.publicKey === undefined) {
+        return;
+      }
+      const promise =
+        mint.toString() === "So11111111111111111111111111111111111111112"
+          ? provider.connection.requestAirdrop(provider.publicKey!, 5 * 10 ** 9)
+          : sendInstructions(provider, [
+              createMintToInstruction({
+                payer: provider.publicKey,
+                seed: new PublicKey(mainnet),
+                amount: new BN(amount),
+              }),
+            ]);
 
-    client.invalidateQueries({
-      queryKey: ["balance", publicKey.toString(), mint.toString()],
-    });
-  }
-
-  // if (props.custody.getTokenE() === TokenE.USDC) {
-  //   return (
-  //     <a
-  //       target="_blank"
-  //       rel="noreferrer"
-  //       href={"https://spl-token-faucet.com/?token-name=USDC-Dev"}
-  //     >
-  //       <SolidButton className="my-6 w-full bg-slate-500 hover:bg-slate-200">
-  //         Airdrop {'"'}
-  //         {getTokenLabel(props.custody.mint)}
-  //         {'"'}
-  //       </SolidButton>
-  //     </a>
-  //   );
-  // }
+      return wrapTransactionWithNotification(provider.connection, promise, {
+        pending: "Requesting Airdrop",
+        success: `${symbol} Airdropped`,
+        error: "Failed to airdrop",
+      });
+    },
+  });
 
   return (
     <SolidButton
       className="my-6 w-full bg-slate-500 hover:bg-slate-200"
-      onClick={handleAirdrop}
+      onClick={() => airdropMutation.mutate()}
     >
       Airdrop {getTokenSymbol(mint)}
     </SolidButton>

@@ -1,4 +1,5 @@
-import { useMutation } from "@tanstack/react-query";
+import { PublicKey } from "@solana/web3.js";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import React from "react";
 
@@ -9,18 +10,24 @@ import {
 import FormListList, { AddCustodyParams } from "@/components/FormListAsset";
 import { useProgram } from "@/hooks/useProgram";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
+import { dedupe } from "@/utils/utils";
 
 import { stringify } from "./pools/manage/[poolAddress]";
 
 const CreatePool: React.FC = () => {
   const router = useRouter();
   const program = useProgram();
+  const queryClient = useQueryClient();
 
   const listAsset = useMutation({
     onSuccess: (sig, params: AddCustodyParams) => {
-      router.push(
-        "/pools/" + findPerpetualsAddressSync("pool", params.poolName),
-      );
+      const poolAddress = findPerpetualsAddressSync("pool", params.poolName);
+
+      queryClient.setQueryData(["pools"], (pools: PublicKey[] | undefined) => {
+        return dedupe([...(pools ?? []), poolAddress]);
+      });
+
+      router.push("/pools/" + poolAddress);
     },
     mutationFn: async (params: AddCustodyParams) => {
       if (program === undefined) {
@@ -30,6 +37,11 @@ const CreatePool: React.FC = () => {
       return await wrapTransactionWithNotification(
         program.provider.connection,
         listAssetFn(program, params),
+        {
+          pending: "Listing Asset",
+          success: "Asset Listed",
+          error: "Failed to list asset",
+        },
       );
     },
   });

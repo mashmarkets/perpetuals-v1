@@ -6,13 +6,22 @@ import PerpetualsJson from "@/target/idl/perpetuals.json";
 import { IDL, Perpetuals } from "@/target/types/perpetuals";
 
 export type PerpetualsProgram = Program<Perpetuals>;
-export const useProgram = () => {
-  const { connection } = useConnection();
+export const useAnchorProvider = () => {
   const wallet = useAnchorWallet();
+  const { connection } = useConnection();
+
   if (!wallet || !connection) {
     undefined;
   }
-  const provider = new AnchorProvider(connection, wallet as Wallet, {});
+
+  return new AnchorProvider(connection, wallet as Wallet, {});
+};
+
+export const useProgram = () => {
+  const provider = useAnchorProvider();
+  if (provider === undefined) {
+    undefined;
+  }
   const programId = new PublicKey(PerpetualsJson.metadata.address);
   return new Program<Perpetuals>(IDL, programId, provider);
 };

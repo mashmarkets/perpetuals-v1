@@ -41,9 +41,22 @@ export function PositionAdditionalInfo({
 
   const closePositionMutation = useMutation({
     onSuccess: () => {
+      // Collateral Balance
       queryClient.invalidateQueries({
         queryKey: ["balance", publicKey?.toString(), mint?.toString()],
       });
+      // Pool
+      queryClient.invalidateQueries({
+        queryKey: ["pool", position?.pool?.toString()],
+      });
+      // Remove position
+      queryClient.setQueryData(
+        ["positions", publicKey?.toString()],
+        (p: PublicKey[] | undefined) =>
+          (p ?? []).filter(
+            (x) => x.toString() !== position?.address.toString(),
+          ),
+      );
     },
     mutationFn: async () => {
       if (
@@ -65,6 +78,11 @@ export function PositionAdditionalInfo({
       return await wrapTransactionWithNotification(
         program.provider.connection,
         closePosition(program, params),
+        {
+          pending: "Closing Position",
+          success: "Position Closed",
+          error: "Failed to close position",
+        },
       );
     },
   });

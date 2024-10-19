@@ -9,6 +9,8 @@ import { twMerge } from "tailwind-merge";
 import { CollateralModal } from "@/components/Positions/CollateralModal";
 import { PositionColumn } from "@/components/Positions/PositionColumn";
 import {
+  Custody,
+  Position,
   useCustody,
   usePosition,
   usePositionLiquidationPrice,
@@ -16,8 +18,26 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
+import { stringify } from "@/pages/pools/manage/[poolAddress]";
 import { formatNumberCommas } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
+
+const getPositionLeverage = (
+  position: Position | undefined,
+  custody: Custody | undefined,
+) => {
+  if (!position || !custody) {
+    return undefined;
+  }
+
+  const size = Number(position.sizeUsd);
+  const collateral = Number(position.collateralUsd);
+  const slippage = Number(custody.pricing.tradeSpreadShort) / 10 ** 4;
+  const fees = Number(custody.fees.liquidation) / 10 ** 4;
+  const margin = collateral - slippage * size - fees * collateral;
+
+  return size / margin;
+};
 
 export default function PositionBasicInfo({
   className,
@@ -39,9 +59,7 @@ export default function PositionBasicInfo({
   const { data: price } = usePrice(mint);
   const tokenIcon = getTokenIcon(mint);
 
-  const leverage = position
-    ? Number(position?.sizeUsd) / Number(position?.collateralUsd)
-    : 0;
+  const leverage = getPositionLeverage(position, custody);
 
   const netValue =
     position && pnl
@@ -78,7 +96,9 @@ export default function PositionBasicInfo({
         </div>
       </PositionColumn>
       <PositionColumn num={2}>
-        <div className="text-sm text-white">{leverage.toFixed(3)}x</div>
+        <div className="text-sm text-white">
+          {leverage ? leverage.toFixed(3) : "-"}x
+        </div>
         <div
           className={twMerge(
             "flex",

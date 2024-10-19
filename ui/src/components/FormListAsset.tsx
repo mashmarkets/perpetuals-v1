@@ -4,7 +4,8 @@ import { BN } from "bn.js";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
-import { getTokensKeyedBy } from "@/lib/Token";
+import { useAllPools } from "@/hooks/perpetuals";
+import { getTokensKeyedBy, getTokenSymbol } from "@/lib/Token";
 import { parseUnits } from "@/utils/viem";
 
 const transformToBN = (decimals: number) => (x: string) =>
@@ -85,6 +86,7 @@ const AddCustodyForm = ({
   custodies: { mint: PublicKey }[];
   onSubmit: (x: any) => void;
 }) => {
+  const pools = useAllPools();
   const defaultValues: AddCustodyState = {
     poolName: poolName,
     tokenMint: "",
@@ -96,11 +98,11 @@ const AddCustodyForm = ({
     pricingConfig: {
       useEma: false,
       useUnrealizedPnlInAum: true,
-      tradeSpreadLong: "0.00",
-      tradeSpreadShort: "0.00",
-      minInitialLeverage: "1.0000",
+      tradeSpreadLong: "0.10",
+      tradeSpreadShort: "0.10",
+      minInitialLeverage: "1.1000",
       maxInitialLeverage: "100.0000",
-      maxLeverage: "100.0000",
+      maxLeverage: "500.0000",
       maxPayoffMult: "100.00",
       maxUtilization: "100.00",
       maxPositionLockedUsd: "0",
@@ -118,14 +120,14 @@ const AddCustodyForm = ({
     fees: {
       utilizationMult: "200.00",
       addLiquidity: "0.00",
-      removeLiquidity: "1.00",
+      removeLiquidity: "0.50",
       openPosition: "0.00",
       closePosition: "0.00",
       liquidation: "1.00",
       protocolShare: "0.10",
     },
     borrowRate: {
-      baseRate: "0.0000000",
+      baseRate: "0.0050000",
       slope1: "0.0080000",
       slope2: "0.0120000",
       optimalUtilization: "80.0000000",
@@ -150,18 +152,6 @@ const AddCustodyForm = ({
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
-          <label htmlFor="poolName" className="mb-1 block text-white">
-            Unique Pool Name:
-          </label>
-          <input
-            id="poolName"
-            type="text"
-            {...register("poolName")}
-            className="mb-2 w-full rounded border p-2"
-            required
-          />
-        </div>
-        <div>
           <select
             id="tokenSelect"
             value=""
@@ -172,6 +162,11 @@ const AddCustodyForm = ({
               setValue("tokenOracle", token.extensions.oracle, {
                 shouldDirty: true,
               });
+              const symbol = getTokenSymbol(new PublicKey(token.address));
+              // If no current pool is using this symbol as name, use it as "canonical" name
+              if (!Object.values(pools ?? {}).find((x) => x.name === symbol)) {
+                setValue("poolName", symbol, { shouldDirty: true });
+              }
             }}
             className="w-full rounded border p-2"
           >
@@ -188,6 +183,18 @@ const AddCustodyForm = ({
               );
             })}
           </select>
+        </div>
+        <div>
+          <label htmlFor="poolName" className="mb-1 block text-white">
+            Unique Pool Name:
+          </label>
+          <input
+            id="poolName"
+            type="text"
+            {...register("poolName")}
+            className="mb-2 w-full rounded border p-2"
+            required
+          />
         </div>
         {/* Basic Info */}
         <div>

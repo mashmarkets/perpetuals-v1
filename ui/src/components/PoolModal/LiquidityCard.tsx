@@ -38,7 +38,7 @@ export default function LiquidityCard({
   poolAddress: PublicKey;
 }) {
   const [tab, setTab] = useState(Tab.Add);
-  const [tokenAmount, setTokenAmount] = useState(1);
+  const [tokenAmount, setTokenAmount] = useState(0);
   const [liqAmount, setLiqAmount] = useState(0);
 
   const queryClient = useQueryClient();
@@ -55,17 +55,20 @@ export default function LiquidityCard({
     publicKey,
   );
 
-  const lpMint = findPerpetualsAddressSync(
+  const lpMintAddress = findPerpetualsAddressSync(
     "lp_token_mint",
     new PublicKey(poolAddress),
   );
-  const { data: mint } = useMint(lpMint);
-  const lp = useBalance(lpMint, publicKey === null ? undefined : publicKey);
+  const { data: lpMint } = useMint(lpMintAddress);
+  const lp = useBalance(
+    lpMintAddress,
+    publicKey === null ? undefined : publicKey,
+  );
 
   let liqBalance =
-    lp?.data === undefined || mint === undefined
+    lp?.data === undefined || lpMint === undefined
       ? 0
-      : Number(lp.data) / 10 ** mint.decimals;
+      : Number(lp.data) / 10 ** lpMint.decimals;
 
   const debounced = useDebounce({ tokenAmount, tab, liqAmount }, 400);
   const { data: addLiquidityEstimate } = useGetAddLiquidityAmountAndFee({
@@ -78,23 +81,45 @@ export default function LiquidityCard({
   const { data: removeLiquidityEstimate } = useGetRemoveLiquidityAmountAndFee({
     pool,
     lpAmountIn:
-      debounced.tab === Tab.Remove && mint?.decimals
-        ? BigInt(debounced.liqAmount * 10 ** mint.decimals)
+      debounced.tab === Tab.Remove && lpMint?.decimals
+        ? BigInt(debounced.liqAmount * 10 ** lpMint.decimals)
         : BigInt(0),
   });
 
   const changeLiquidityMutation = useMutation({
     onSuccess: () => {
+      if (tab === Tab.Add) {
+        setTokenAmount(0);
+      } else {
+        setLiqAmount(0);
+      }
+      // LP Balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), mint?.toString()],
+        queryKey: ["balance", publicKey?.toString(), lpMintAddress?.toString()],
+      });
+      // Collateral balance
+      queryClient.invalidateQueries({
+        queryKey: ["balance", publicKey?.toString(), custody?.mint.toString()],
+      });
+      // LP Shares
+      queryClient.invalidateQueries({
+        queryKey: ["mint", lpMintAddress?.toString()],
+      });
+      // Pool
+      queryClient.invalidateQueries({
+        queryKey: ["pool", poolAddress?.toString()],
+      });
+      // Custody
+      queryClient.invalidateQueries({
+        queryKey: ["custody", custody?.address.toString()],
       });
     },
     mutationFn: async () => {
       if (
         program === undefined ||
         custody === undefined ||
-        pool === undefined ||
-        mint === undefined
+        !pool ||
+        lpMint === undefined
       ) {
         return;
       }
@@ -107,16 +132,21 @@ export default function LiquidityCard({
             (addLiquidityEstimate.amount * BigInt(95)) / BigInt(100),
         };
         console.log("Adding liquidity with params", stringify(params));
-        return await wrapTransactionWithNotification(
+        return wrapTransactionWithNotification(
           program.provider.connection,
           addLiquidity(program, params),
+          {
+            pending: "Adding Liquidity",
+            success: "Liquidity Added",
+            error: "Failed to add liquidity",
+          },
         );
       }
       if (tab === Tab.Remove && removeLiquidityEstimate) {
         const params = {
           pool,
           custody,
-          lpAmountIn: BigInt(Math.round(liqAmount * 10 ** mint.decimals)),
+          lpAmountIn: BigInt(Math.round(liqAmount * 10 ** lpMint.decimals)),
           minAmountOut:
             (removeLiquidityEstimate.amount * BigInt(95)) / BigInt(100),
         };
@@ -124,6 +154,11 @@ export default function LiquidityCard({
         return await wrapTransactionWithNotification(
           program.provider.connection,
           removeLiquidity(program, params),
+          {
+            pending: "Removing Liquidity",
+            success: "Liquidity Removed",
+            error: "Failed to remove liquidity",
+          },
         );
       }
 
@@ -227,8 +262,9 @@ export default function LiquidityCard({
               amount={
                 tokenAmount === 0
                   ? 0
-                  : mint && addLiquidityEstimate?.amount
-                    ? Number(addLiquidityEstimate.amount) / 10 ** mint.decimals
+                  : lpMint && addLiquidityEstimate?.amount
+                    ? Number(addLiquidityEstimate.amount) /
+                      10 ** lpMint.decimals
                     : undefined
               }
             />

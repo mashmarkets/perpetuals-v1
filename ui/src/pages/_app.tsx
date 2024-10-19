@@ -25,7 +25,7 @@ import "@/styles/wallet-adapter.css";
 // If loading a variable font, you don't need to specify the font weight
 const inter = Inter({ subsets: ["latin"] });
 
-const queryClient = new QueryClient();
+export const queryClient = new QueryClient();
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -41,6 +41,8 @@ export default function MyApp({ Component, pageProps }: AppProps) {
           pauseOnFocusLoss
           draggable
           pauseOnHover
+          theme="dark"
+          className="mt-12"
         />
         <Navbar />
         <Component {...pageProps} />

@@ -34,7 +34,7 @@ export default function Page() {
   const custodies = usePoolCustodies(safePublicKey(poolAddress));
   const mint = Object.values(custodies)[0]?.mint;
 
-  if (pool.isFetched && pool.data === undefined) {
+  if (pool.isFetched && pool.data === null) {
     return (
       <>
         <div className="mx-auto max-w-xl pt-16 text-center">
@@ -43,7 +43,7 @@ export default function Page() {
           </p>
           <Link href="/list" as={`/list`}>
             <div className="pt-4 text-center text-lg text-slate-400">
-              List ↗️
+              List ↗
             </div>
           </Link>
         </div>
@@ -55,7 +55,7 @@ export default function Page() {
   }
 
   return (
-    <div className="mx-auto flex w-full flex-row justify-center px-4 pt-11 lg:gap-x-16 lg:px-16">
+    <div className="mx-auto flex w-full flex-row justify-center px-4 pt-11 lg:grid lg:grid-cols-[1fr,max-content] lg:gap-x-16 lg:px-16">
       <div>
         <div className="mb-8 flex items-center">
           <ChartCurrency mint={mint} />

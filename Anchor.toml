@@ -2,7 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-perpetuals = "3F6AGgSQpQ4fdqLv2k2erfit2taeCJd1RaSREsuSAq1z"
+perpetuals = "GTVZYFY2YjmWhMN9P8ECCw4xrn3Md5RcvR5oR9nL7EE7"
 
 [programs.localnet]
 perpetuals = "5Ws7mKtjDAoujNajobNat1Z16EUUnAq68ps2Y93PYq9u"

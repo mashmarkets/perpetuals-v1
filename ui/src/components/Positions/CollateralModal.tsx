@@ -4,7 +4,7 @@ import Subtract from "@carbon/icons-react/lib/Subtract";
 import * as Dialog from "@radix-ui/react-dialog";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -41,6 +41,7 @@ export function CollateralModal({
 
   const { publicKey } = useWallet();
   const program = useProgram();
+  const queryClient = useQueryClient();
 
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
@@ -71,6 +72,26 @@ export function CollateralModal({
     : BigInt(0);
 
   const changeCollateral = useMutation({
+    onSuccess: () => {
+      if (tab === Tab.Add) {
+        setDepositAmount(0);
+      } else {
+        setWithdrawAmount(0);
+      }
+
+      // Collateral Balance
+      queryClient.invalidateQueries({
+        queryKey: ["balance", publicKey?.toString(), custody?.mint.toString()],
+      });
+      // Position
+      queryClient.invalidateQueries({
+        queryKey: ["position", positionAddress.toString()],
+      });
+      // Pool
+      queryClient.invalidateQueries({
+        queryKey: ["pool", position?.pool?.toString()],
+      });
+    },
     mutationFn: async () => {
       if (
         program === undefined ||
@@ -95,6 +116,15 @@ export function CollateralModal({
       return wrapTransactionWithNotification(
         program.provider.connection,
         promise,
+        {
+          pending:
+            tab === Tab.Add ? "Adding Collateral" : "Removing Collateral",
+          success: tab === Tab.Add ? "Collateral Added" : "Collateral Removed",
+          error:
+            tab === Tab.Add
+              ? "Failed to add collateral"
+              : "Failed to remove collateral",
+        },
       );
     },
   });

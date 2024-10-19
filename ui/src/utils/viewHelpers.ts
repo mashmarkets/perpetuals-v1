@@ -8,7 +8,6 @@ import {
   Transaction,
 } from "@solana/web3.js";
 
-import { OpenPositionParams } from "@/actions/perpetuals";
 import { CustodyAccount } from "@/lib/CustodyAccount";
 import { PoolAccount } from "@/lib/PoolAccount";
 import { PositionAccount } from "@/lib/PositionAccount";
