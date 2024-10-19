@@ -35,7 +35,7 @@ export function LeverageSlider(props: Props) {
           onValueChange={(values) => props.onChange?.(values[0] || 1)}
         >
           <Slider.Track className="relative block h-2 rounded-sm bg-zinc-900">
-            <Slider.Range className="absolute block h-2 rounded-sm bg-purple-400" />
+            <Slider.Range className="absolute block h-2 rounded-sm bg-blue-400" />
             <Slider.Thumb
               className={twMerge(
                 "-translate-y-1/2",

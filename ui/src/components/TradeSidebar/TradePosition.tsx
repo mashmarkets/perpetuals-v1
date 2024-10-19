@@ -4,14 +4,13 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { BN } from "bn.js";
 import { useState } from "react";
+import { twMerge } from "tailwind-merge";
+
 import {
   getEntryPriceAndFee,
   openPosition,
   OpenPositionParams,
-} from "src/actions/perpetuals";
-import { stringify } from "src/pages/pools/manage/[poolAddress]";
-import { twMerge } from "tailwind-merge";
-
+} from "@/actions/perpetuals";
 import { UserBalance } from "@/components/Atoms/UserBalance";
 import { LeverageSlider } from "@/components/LeverageSlider";
 import { LoadingDots } from "@/components/LoadingDots";
@@ -29,6 +28,9 @@ import {
   TokenE,
 } from "@/lib/Token";
 import { Side } from "@/lib/types";
+import { stringify } from "@/pages/pools/manage/[poolAddress]";
+
+import { PoolSelector } from "../PoolSelector";
 
 enum Input {
   Pay = "pay",
@@ -37,10 +39,10 @@ enum Input {
 
 const useEntryEstimate = (params: Omit<OpenPositionParams, "price">) => {
   const program = useProgram();
-  const debounced = useDebounce(params, 1000);
+  const debounced = useDebounce(params, 400);
   return useQuery({
     queryKey: [
-      "estimate",
+      "getEntryPriceAndFee",
       debounced.poolAddress.toString(),
       debounced.mint.toString(),
       debounced.size.toString(),
@@ -57,7 +59,6 @@ const useEntryEstimate = (params: Omit<OpenPositionParams, "price">) => {
   });
 };
 
-// TODO:- Investigate why leverage can't be 100%
 export function TradePosition({
   className,
   side,
@@ -121,7 +122,7 @@ export function TradePosition({
       </div>
     );
   }
-  const isPositionAlreadyOpen = Object.values(positions ?? {}).some(
+  const isPositionAlreadyOpen = (positions ?? []).some(
     (position) => position.custody.toString() === Object.keys(custodies)[0],
   );
 
@@ -129,7 +130,7 @@ export function TradePosition({
 
   const availableLiquidity =
     (price.currentPrice *
-      Number(custody.assets.owned.sub(custody.assets.locked))) /
+      Number(custody.assets.owned - custody.assets.locked)) /
     10 ** custody.decimals;
 
   const isLiquidityExceeded =
@@ -172,7 +173,13 @@ export function TradePosition({
         tokenList={[token]}
       />
       {/* <div className="mt-4 text-xs text-zinc-400">Pool</div> */}
-      {/* <PoolSelector className="mt-2" pool={pool} onSelectPool={setPool} /> */}
+      {/* <PoolSelector
+        className="mt-2"
+        poolAddress={poolAddress}
+        onSelectPool={(x) => {
+          console.log("CHanging to pool: ", x.toString());
+        }}
+      /> */}
       <LeverageSlider
         className="mt-6"
         value={positionAmount / payAmount}
@@ -187,7 +194,7 @@ export function TradePosition({
         }}
       />
       <SolidButton
-        className="mt-6 w-full"
+        className="mt-6 w-full bg-emerald-500 font-medium text-black"
         onClick={handleTrade}
         disabled={
           !publicKey ||
@@ -197,7 +204,7 @@ export function TradePosition({
           !isBalanceValid
         }
       >
-        Place Order
+        Place Long
       </SolidButton>
       <p className="mt-2 text-center text-xs text-orange-500">
         Leverage current only works until 25x due to immediate loss from fees

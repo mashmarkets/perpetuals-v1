@@ -27,7 +27,6 @@ export const SolidButton = forwardRef<HTMLButtonElement, Props>(
         {...rest}
         ref={ref}
         className={twMerge(
-          "bg-purple-500",
           "flex",
           "group",
           "h-14",
@@ -39,11 +38,12 @@ export const SolidButton = forwardRef<HTMLButtonElement, Props>(
           "text-white",
           "tracking-normal",
           "transition-colors",
+          "bg-zinc-900",
           rest.className,
-          !loading && "active:bg-purple-500",
-          "disabled:bg-zinc-300",
+          // !loading && "active:bg-blue-400",
+          "disabled:bg-zinc-900",
           "disabled:cursor-not-allowed",
-          !loading && "hover:bg-purple-400",
+          // !loading && "hover:bg-blue-400",
           loading && "cursor-not-allowed",
         )}
         onClick={(e) => {

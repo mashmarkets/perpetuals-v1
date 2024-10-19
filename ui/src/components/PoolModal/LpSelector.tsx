@@ -2,16 +2,19 @@ import { twMerge } from "tailwind-merge";
 
 import { MaxButton } from "@/components/Atoms/MaxButton";
 
-interface Props {
+export const LpSelector = ({
+  className,
+  label,
+  amount,
+  onChangeAmount,
+  maxBalance,
+}: {
   className?: string;
   label?: string;
-  amount: number;
+  amount?: number;
   onChangeAmount?(amount: number): void;
   maxBalance?: number;
-  pendingRateConversion?: boolean;
-}
-
-export const LpSelector = (props: Props) => {
+}) => {
   return (
     <div>
       <div
@@ -24,19 +27,16 @@ export const LpSelector = (props: Props) => {
           "p-4",
           "rounded",
           "w-full",
-          props.className,
+          className,
         )}
       >
         <div className="flex items-center space-x-2">
-          <p>{props.label ? props.label : "LP Tokens"}</p>
+          <p>{label ? label : "LP Tokens"}</p>
 
-          <MaxButton
-            maxBalance={props.maxBalance}
-            onChangeAmount={props.onChangeAmount}
-          />
+          <MaxButton maxBalance={maxBalance} onChangeAmount={onChangeAmount} />
         </div>
         <div>
-          {props.pendingRateConversion ? (
+          {amount === undefined ? (
             <div className="text-right text-xs text-zinc-500">Loading...</div>
           ) : (
             <input
@@ -49,19 +49,19 @@ export const LpSelector = (props: Props) => {
                 "top-0",
                 "w-full",
                 "focus:outline-none",
-                typeof props.onChangeAmount === "function"
+                typeof onChangeAmount === "function"
                   ? "cursor-pointer"
                   : "cursor-none",
-                typeof props.onChangeAmount === "function"
+                typeof onChangeAmount === "function"
                   ? "pointer-events-auto"
                   : "pointer-events-none",
               )}
               placeholder="0"
               type="number"
-              value={props.amount.toString()}
+              value={amount.toString()}
               onChange={(e) => {
                 const value = e.currentTarget.valueAsNumber;
-                props.onChangeAmount?.(isNaN(value) ? 0 : value);
+                onChangeAmount?.(isNaN(value) ? 0 : value);
               }}
             />
           )}

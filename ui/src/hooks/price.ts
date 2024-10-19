@@ -57,13 +57,13 @@ const coingeckoBatcher = create({
 
 const ONE_MINUTE = 60 * 1000;
 // Inspired by https://github.com/TanStack/query/discussions/6305
-export const usePrice = (mint: PublicKey) => {
+export const usePrice = (mint: PublicKey | undefined) => {
   const program = useProgram();
 
   return useQuery<PriceStat>({
-    queryKey: ["price", mint.toString()],
-    enabled: !!program,
-    queryFn: () => coingeckoBatcher.fetch(mint) as Promise<PriceStat>,
+    queryKey: ["price", mint?.toString()],
+    enabled: !!program && !!mint,
+    queryFn: () => coingeckoBatcher.fetch(mint!) as Promise<PriceStat>,
     staleTime: 5 * ONE_MINUTE,
   });
 };

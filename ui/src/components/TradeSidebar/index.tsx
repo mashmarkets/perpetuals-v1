@@ -8,6 +8,8 @@ import { SidebarTab } from "@/components/SidebarTab";
 import { TradePosition } from "@/components/TradeSidebar/TradePosition";
 import { Side } from "@/lib/types";
 
+import AirdropButton from "../AirdropButton";
+
 export function TradeSidebar({
   className,
   mint,
@@ -30,8 +32,10 @@ export function TradeSidebar({
             selected={side === Side.Long}
             onClick={() => setSide(Side.Long)}
           >
-            <GrowthIcon className="h-4 w-4" />
-            <div>Long</div>
+            <div className="flex items-center justify-center gap-2">
+              <GrowthIcon className="h-4" />
+              <div>Long</div>
+            </div>
           </SidebarTab>
           <SidebarTab
             selected={side === Side.Short}
@@ -46,6 +50,7 @@ export function TradeSidebar({
             <div>Short</div>
           </SidebarTab>
         </div>
+        <AirdropButton mint={mint} />
         {side === Side.Long && (
           <TradePosition
             className="mt-6"

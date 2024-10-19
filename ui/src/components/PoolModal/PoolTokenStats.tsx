@@ -3,29 +3,21 @@ import { PublicKey } from "@solana/web3.js";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { useCustodies, usePool } from "@/hooks/perpetuals";
+import { usePoolCustodies } from "@/hooks/perpetuals";
 import { usePrices } from "@/hooks/price";
-import { PoolAccount } from "@/lib/PoolAccount";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
-import { useGlobalStore } from "@/stores/store";
 import { formatNumberCommas } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
+import { dedupe } from "@/utils/utils";
 
 export default function PoolTokenStats({
-  pool,
-  poolKey,
-  className,
+  poolAddress,
 }: {
-  pool: PoolAccount;
-  poolKey: PublicKey;
-  className?: string;
+  poolAddress: PublicKey;
 }) {
-  const poolData = usePool(new PublicKey(poolKey));
-  const custodies = useCustodies(
-    poolData.data?.custodies.map((x) => new PublicKey(x)) ?? [],
-  );
+  const custodies = usePoolCustodies(poolAddress);
   const prices = usePrices(
-    custodies.filter((x) => x.data !== undefined).map((x) => x.data?.mint),
+    dedupe(Object.values(custodies ?? {}).map((x) => x.mint)),
   );
 
   return (
@@ -44,11 +36,8 @@ export default function PoolTokenStats({
             </tr>
           </thead>
           <tbody className={twMerge("text-xs")}>
-            {Object.values(pool.custodies).map((custody) => {
-              let token = custody.getTokenE();
-
-              if (!token) return <></>;
-
+            {Object.values(custodies ?? {}).map((custody) => {
+              const price = prices[custody.mint.toString()]?.currentPrice;
               return (
                 <tr
                   key={custody.mint.toString()}
@@ -76,23 +65,35 @@ export default function PoolTokenStats({
                       </a>
                     </div>
                   </td>
-                  <td>{custody.getAddFee()}%</td>
+                  <td>{Number(custody.fees.addLiquidity) / 100}%</td>
                   <td>
                     $
                     {formatNumberCommas(
-                      custody.getCustodyLiquidity(
-                        prices[custody.mint.toString()]?.currentPrice,
-                      ),
+                      price
+                        ? (price *
+                            Number(
+                              custody.assets.owned - custody.assets.locked,
+                            )) /
+                            10 ** custody.decimals
+                        : 0,
+                    )}
+                  </td>
+                  <td>${formatNumberCommas(price)}</td>
+                  <td>
+                    {formatNumberCommas(
+                      Number(custody.assets.owned) / 10 ** custody.decimals,
                     )}
                   </td>
                   <td>
-                    $
                     {formatNumberCommas(
-                      prices[custody.mint.toString()]?.currentPrice,
+                      custody.assets.owned !== BigInt(0)
+                        ? 100 *
+                            (Number(custody.assets.locked) /
+                              Number(custody.assets.owned))
+                        : 0,
                     )}
+                    %
                   </td>
-                  <td>{formatNumberCommas(custody.getAmount())}</td>
-                  <td>{formatNumberCommas(custody.getUtilizationRate())}%</td>
                   <td>
                     <a
                       target="_blank"

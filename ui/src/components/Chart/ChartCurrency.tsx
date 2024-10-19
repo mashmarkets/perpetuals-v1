@@ -2,9 +2,9 @@ import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
 import { PublicKey } from "@solana/web3.js";
 import { useRouter } from "next/router";
 import { cloneElement, useState } from "react";
-import { findPerpetualsAddressSync } from "src/actions/perpetuals";
 import { twMerge } from "tailwind-merge";
 
+import { findPerpetualsAddressSync } from "@/actions/perpetuals";
 import {
   getTokenIcon,
   getTokenLabel,

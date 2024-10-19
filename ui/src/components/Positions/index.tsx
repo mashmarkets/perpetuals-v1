@@ -2,11 +2,8 @@
 
 import { useWallet } from "@solana/wallet-adapter-react";
 
-import { LoadingSpinner } from "@/components/Atoms/LoadingSpinner";
-import { LoadingDots } from "@/components/LoadingDots";
 import { ExistingPositions } from "@/components/Positions/ExistingPositions";
 import { NoPositions } from "@/components/Positions/NoPositions";
-import { useGlobalStore } from "@/stores/store";
 
 interface Props {
   className?: string;

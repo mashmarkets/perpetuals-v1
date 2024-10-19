@@ -6,25 +6,11 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import {
-  BackpackWalletAdapter,
-  BraveWalletAdapter,
-  CloverWalletAdapter,
-  CoinbaseWalletAdapter,
-  ExodusWalletAdapter,
-  GlowWalletAdapter,
-  HuobiWalletAdapter,
-  LedgerWalletAdapter,
-  PhantomWalletAdapter,
-  SlopeWalletAdapter,
-  SolletWalletAdapter,
-  SolongWalletAdapter,
-  TorusWalletAdapter,
-  TrustWalletAdapter,
-} from "@solana/wallet-adapter-wallets";
+import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AppProps } from "next/app";
+import { Inter } from "next/font/google";
 import React, { FC, ReactNode, useMemo } from "react";
 import { ToastContainer } from "react-toastify";
 
@@ -33,16 +19,13 @@ import "react-toastify/dist/ReactToastify.css";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 import { Navbar } from "@/components/Navbar";
-import { useHydrateStore } from "@/hooks/useHydrateStore";
 
-require("@solana/wallet-adapter-react-ui/styles.css");
+import "@/styles/wallet-adapter.css";
+
+// If loading a variable font, you don't need to specify the font weight
+const inter = Inter({ subsets: ["latin"] });
 
 const queryClient = new QueryClient();
-
-const StoreUpdater = () => {
-  useHydrateStore();
-  return null;
-};
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
@@ -60,7 +43,6 @@ export default function MyApp({ Component, pageProps }: AppProps) {
           pauseOnHover
         />
         <Navbar />
-        <StoreUpdater />
         <Component {...pageProps} />
       </Context>
       <ReactQueryDevtools initialIsOpen={false} />
@@ -95,7 +77,7 @@ const Context: FC<{ children: ReactNode }> = ({ children }) => {
   );
 
   return (
-    <div className="min-h-screen bg-black pt-14">
+    <div className={`min-h-screen bg-black pt-14 ${inter.className}`}>
       <ConnectionProvider endpoint={endpoint}>
         <WalletProvider wallets={wallets} autoConnect>
           <WalletModalProvider>{children}</WalletModalProvider>

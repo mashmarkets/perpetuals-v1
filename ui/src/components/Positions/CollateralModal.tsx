@@ -2,170 +2,102 @@ import Add from "@carbon/icons-react/lib/Add";
 import ArrowRight from "@carbon/icons-react/lib/ArrowRight";
 import Subtract from "@carbon/icons-react/lib/Subtract";
 import * as Dialog from "@radix-ui/react-dialog";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { useEffect, useRef, useState } from "react";
-import { changeCollateral } from "src/actions/changeCollateral";
+import { useMutation } from "@tanstack/react-query";
+import { useDebounce } from "@uidotdev/usehooks";
+import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
+import { addCollateral, removeCollateral } from "@/actions/perpetuals";
 import { LpSelector } from "@/components/PoolModal/LpSelector";
 import { SidebarTab } from "@/components/SidebarTab";
 import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
-import { usePrices } from "@/hooks/price";
+import {
+  useCustody,
+  usePosition,
+  usePositionLiquidationPrice,
+} from "@/hooks/perpetuals";
+import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
-import { PositionAccount } from "@/lib/PositionAccount";
-import { getTokenPublicKey, tokens } from "@/lib/Token";
+import { useProgram } from "@/hooks/useProgram";
+import { asToken, getTokenInfo } from "@/lib/Token";
 import { Tab } from "@/lib/types";
-import { useGlobalStore } from "@/stores/store";
-import { getPerpetualProgramAndProvider } from "@/utils/constants";
-import { formatNumberCommas } from "@/utils/formatters";
-import { ViewHelper } from "@/utils/viewHelpers";
+import { formatNumberCommas, formatPrice } from "@/utils/formatters";
+import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
-interface Props {
-  className?: string;
+export function CollateralModal({
+  children,
+  positionAddress,
+}: {
   children?: React.ReactNode;
-  position: PositionAccount;
-  pnl: number;
-}
-
-export function CollateralModal(props: Props) {
-  const [tab, setTab] = useState(Tab.Add);
-  const { publicKey } = useWallet();
-  const walletContextState = useWallet();
-  const { connection } = useConnection();
-
-  const poolData = useGlobalStore((state) => state.poolData);
-  const { address: mint, decimals } =
-    tokens[getTokenPublicKey(props.position.collateralToken)!.toString()]!;
-
-  const { data: balance } = useBalance(
-    new PublicKey(mint),
-    publicKey === null ? undefined : publicKey,
-  );
-
-  let pool = poolData[props.position.pool.toString()]!;
-
-  let payToken = props.position.collateralToken;
-
-  let payTokenBalance = Number(balance) / 10 ** decimals;
-
+  positionAddress: PublicKey;
+}) {
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [depositAmount, setDepositAmount] = useState(0);
-  const [liqPrice, setLiqPrice] = useState(0);
-
-  const [newCollateral, setNewCollateral] = useState(null);
-  const [newLeverage, setNewLeverage] = useState(null);
-  const [newLiqPrice, setNewLiqPrice] = useState(null);
   const [open, setOpen] = useState(false);
+  const [tab, setTab] = useState(Tab.Add);
 
-  const timeoutRef = useRef(null);
+  const { publicKey } = useWallet();
+  const program = useProgram();
 
-  useEffect(() => {
-    async function fetchNewStats() {
-      let { perpetual_program } =
-        await getPerpetualProgramAndProvider(walletContextState);
+  const { data: position } = usePosition(positionAddress);
+  const { data: custody } = useCustody(position?.custody);
+  const { data: collateralBalance } = useBalance(custody?.mint, publicKey);
+  const { data: price } = usePrice(custody?.mint);
 
-      const View = new ViewHelper(
-        perpetual_program.provider.connection,
-        perpetual_program.provider,
-      );
+  const { data: currentLiquidationPrice } =
+    usePositionLiquidationPrice(position);
 
-      let fetchedOldLiq = await View.getLiquidationPrice(props.position);
+  const { decimals } = custody ? getTokenInfo(custody.mint) : { decimals: 0 };
+  const amounts = useDebounce({ depositAmount, withdrawAmount }, 400);
+  const { data: newLiquidationPrice } = usePositionLiquidationPrice(
+    position,
+    BigInt(Math.round(amounts.depositAmount * 10 ** decimals)),
+    BigInt(Math.round(amounts.withdrawAmount * 10 ** 6)),
+  );
 
-      setLiqPrice(Math.round((fetchedOldLiq / 10 ** 6) * 100) / 100);
+  let payToken = custody ? asToken(custody.mint) : undefined;
 
-      if (tab === Tab.Add && depositAmount === 0) {
-        setNewCollateral(null);
-        setNewLeverage(null);
-        setNewLiqPrice(null);
+  const payTokenBalance = Number(collateralBalance) / 10 ** decimals;
+  const changeCollateralUsd =
+    tab === Tab.Add
+      ? BigInt(Math.round((price?.currentPrice ?? 0) * depositAmount * 10 ** 6))
+      : BigInt(Math.round(-1 * withdrawAmount) * 10 ** 6);
+
+  const newCollateralUsd = position
+    ? position.collateralUsd + changeCollateralUsd
+    : BigInt(0);
+
+  const changeCollateral = useMutation({
+    mutationFn: async () => {
+      if (
+        program === undefined ||
+        position === undefined ||
+        custody === undefined
+      ) {
         return;
       }
-
-      if (tab === Tab.Remove && withdrawAmount === 0) {
-        setNewCollateral(null);
-        setNewLeverage(null);
-        setNewLiqPrice(null);
-        return;
-      }
-
-      let liquidationPrice = await View.getLiquidationPrice(
-        props.position,
-        pool.getCustodyAccount(props.position.collateralToken)!,
-        depositAmount,
-        withdrawAmount,
-      );
-
-      let newLiq = Math.round((liquidationPrice / 10 ** 6) * 100) / 100;
-
-      setNewLiqPrice(newLiq);
-
-      let newCollat;
-      if (tab === Tab.Add) {
-        newCollat =
-          props.position.getCollateralUsd() +
-          depositAmount *
-            prices[
-              getTokenPublicKey(props.position.collateralToken).toString()
-            ]!.currentPrice;
-      } else {
-        newCollat = props.position.getCollateralUsd() - withdrawAmount;
-      }
-
-      setNewCollateral(Math.round(newCollat * 100) / 100);
-
-      let newLev;
-      let changeCollateral =
+      const promise =
         tab === Tab.Add
-          ? depositAmount *
-            prices[
-              getTokenPublicKey(props.position.collateralToken).toString()
-            ]!.currentPrice
-          : -1 * withdrawAmount;
+          ? addCollateral(program, {
+              position,
+              custody,
+              collateral: BigInt(Math.round(depositAmount * 10 ** decimals)),
+            })
+          : removeCollateral(program, {
+              position,
+              custody,
+              collateralUsd: BigInt(Math.round(withdrawAmount * 10 ** 6)),
+            });
 
-      newLev =
-        props.position.getSizeUsd() /
-        (props.position.getCollateralUsd() + changeCollateral);
-
-      setNewLeverage(Math.round(newLev * 100) / 100);
-    }
-
-    if (pool && props.position && payTokenBalance) {
-      clearTimeout(timeoutRef.current);
-
-      timeoutRef.current = setTimeout(() => {
-        fetchNewStats();
-      }, 1000);
-    }
-    return () => {
-      clearTimeout(timeoutRef.current);
-    };
-  }, [open, withdrawAmount, depositAmount]);
-
-  const prices = usePrices([
-    getTokenPublicKey(props.position.token),
-    getTokenPublicKey(props.position.collateralToken),
-  ]);
-
-  async function handleChangeCollateral() {
-    let changeAmount;
-    if (tab === Tab.Add) {
-      changeAmount =
-        depositAmount *
-        10 ** pool.getCustodyAccount(props.position.collateralToken)!.decimals;
-    } else {
-      changeAmount = withdrawAmount * 10 ** 6;
-    }
-
-    await changeCollateral(
-      walletContextState,
-      connection,
-      pool,
-      props.position,
-      tab === Tab.Add ? depositAmount : withdrawAmount,
-      tab,
-    );
-  }
+      return wrapTransactionWithNotification(
+        program.provider.connection,
+        promise,
+      );
+    },
+  });
 
   return (
     <Dialog.Root
@@ -176,7 +108,7 @@ export function CollateralModal(props: Props) {
         setDepositAmount(0);
       }}
     >
-      <Dialog.Trigger asChild>{props.children}</Dialog.Trigger>
+      <Dialog.Trigger asChild>{children}</Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed bottom-0 left-0 right-0 top-0 grid place-items-center bg-black/80 text-white">
           <Dialog.Content className="max-w-s mt-6 rounded bg-zinc-800 p-4">
@@ -213,7 +145,13 @@ export function CollateralModal(props: Props) {
                     </div>
                     {publicKey && (
                       <div>
-                        Max: {payTokenBalance && payTokenBalance.toFixed(3)}
+                        Max:{" "}
+                        {collateralBalance &&
+                          custody &&
+                          (
+                            Number(collateralBalance) /
+                            10 ** custody.decimals
+                          ).toFixed(3)}
                       </div>
                     )}
                   </>
@@ -222,9 +160,10 @@ export function CollateralModal(props: Props) {
                     <div className="text-sm font-medium text-white">
                       You Remove
                     </div>
-                    {publicKey && (
+                    {publicKey && position && (
                       <div>
-                        Max: {props.position.getCollateralUsd().toFixed(3)}
+                        Max:{" "}
+                        {(Number(position.collateralUsd) / 10 ** 6).toFixed(3)}
                       </div>
                     )}
                   </>
@@ -236,7 +175,7 @@ export function CollateralModal(props: Props) {
                   amount={depositAmount}
                   token={payToken!}
                   onChangeAmount={setDepositAmount}
-                  tokenList={[props.position.token]}
+                  tokenList={[payToken!]}
                   maxBalance={payTokenBalance}
                 />
               ) : (
@@ -244,7 +183,7 @@ export function CollateralModal(props: Props) {
                   className="mt-2"
                   amount={withdrawAmount}
                   onChangeAmount={setWithdrawAmount}
-                  maxBalance={props.position.getCollateralUsd()}
+                  maxBalance={Number(position?.collateralUsd ?? 0) / 10 ** 6}
                   label={"USD"}
                 />
               )}
@@ -255,37 +194,33 @@ export function CollateralModal(props: Props) {
                 {
                   label: "Collateral",
                   value: `$${formatNumberCommas(
-                    props.position.getCollateralUsd(),
+                    Number(position?.collateralUsd ?? 0) / 10 ** 6,
                   )}`,
-                  newValue: `$${newCollateral}`,
+                  newValue: `$${formatNumberCommas(Number(newCollateralUsd) / 10 ** 6)}`,
                 },
                 {
                   label: "Mark Price",
                   value: `$${
-                    prices[
-                      getTokenPublicKey(props.position.token).toString()
-                    ] != undefined
-                      ? formatNumberCommas(
-                          prices[
-                            getTokenPublicKey(props.position.token).toString()
-                          ]!.currentPrice,
-                        )
-                      : 0
+                    price ? formatNumberCommas(price.currentPrice) : "-"
                   }`,
                 },
                 {
                   label: "Leverage",
-                  value: `${props.position.getLeverage().toFixed(2)}`,
-                  newValue: `${newLeverage}`,
+                  value:
+                    position &&
+                    `${(Number(position.sizeUsd) / Number(position.collateralUsd)).toFixed(2)}`,
+                  newValue:
+                    position &&
+                    `${(Number(position.sizeUsd) / Number(newCollateralUsd)).toFixed(2)}`,
                 },
                 {
                   label: "Size",
-                  value: `$${formatNumberCommas(props.position.getSizeUsd())}`,
+                  value: `$${formatNumberCommas(Number(position?.sizeUsd ?? 0) / 10 ** 6)}`,
                 },
                 {
                   label: "Liq Price",
-                  value: `$${liqPrice}`,
-                  newValue: `$${newLiqPrice}`,
+                  value: `$${formatPrice(Number(currentLiquidationPrice) / 10 ** 6)}`,
+                  newValue: `$${formatPrice(Number(newLiquidationPrice) / 10 ** 6)}`,
                 },
               ].map(({ label, value, newValue }, i) => (
                 <div
@@ -301,18 +236,17 @@ export function CollateralModal(props: Props) {
                   <div className="space flex flex-row items-center space-x-1">
                     <div className="text-sm text-white">{value}</div>
 
-                    {newValue &&
-                      !(newValue === "null" || newValue === "$null") && (
-                        <>
-                          <p className="text-sm text-white">
-                            <ArrowRight />
-                          </p>
+                    {newValue && newValue !== value && (
+                      <>
+                        <p className="text-sm text-white">
+                          <ArrowRight />
+                        </p>
 
-                          <div className="text-sm font-semibold text-white">
-                            {newValue}
-                          </div>
-                        </>
-                      )}
+                        <div className="text-sm font-semibold text-white">
+                          {newValue}
+                        </div>
+                      </>
+                    )}
                   </div>
                 </div>
               ))}
@@ -322,8 +256,13 @@ export function CollateralModal(props: Props) {
               <Dialog.Close asChild>
                 <SolidButton
                   className="w-full"
-                  disabled={!publicKey || (!depositAmount && !withdrawAmount)}
-                  onClick={handleChangeCollateral}
+                  disabled={
+                    !publicKey || (depositAmount === 0 && withdrawAmount === 0)
+                  }
+                  onClick={(e) => {
+                    e.preventDefault();
+                    changeCollateral.mutate();
+                  }}
                 >
                   {tab === Tab.Add ? "Add Collateral" : "Remove Collateral"}
                 </SolidButton>

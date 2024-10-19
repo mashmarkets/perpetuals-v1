@@ -55,18 +55,18 @@ export default function Page() {
   }
 
   return (
-    <div className="mx-auto w-full max-w-[1550px] flex-row-reverse px-4 pt-11 lg:grid lg:grid-cols-[900px,1fr] lg:gap-x-16 lg:px-16">
+    <div className="mx-auto flex w-full flex-row justify-center px-4 pt-11 lg:gap-x-16 lg:px-16">
       <div>
         <div className="mb-8 flex items-center">
           <ChartCurrency mint={mint} />
           <DailyStats className="ml-12" mint={mint} />
           <Link href="/pools/[poolAddress]" as={`/pools/${poolAddress}`}>
-            <div className="rounded-lg px-4 py-2 pl-6 pt-4 text-sm text-slate-400 text-white">
-              Earn ↗️
+            <div className="rounded-lg px-4 py-2 pl-6 pt-4 text-sm text-slate-400">
+              Earn ↗
             </div>
           </Link>
         </div>
-        <div className="h-[350px] md:h-[500px]">
+        <div className="h-[350px] md:h-[700px]">
           <TradingViewWidget
             autosize
             symbol={getTradingViewSymbol(mint)}
@@ -84,9 +84,11 @@ export default function Page() {
             <span className="text-xs text-white"> by TradingView</span>
           </div>
         </div>
-        <Positions className="mt-8" />
+        <Positions className="mt-12" />
       </div>
-      <TradeSidebar mint={mint} poolAddress={new PublicKey(poolAddress)} />
+      <div className="max-w-lg">
+        <TradeSidebar mint={mint} poolAddress={new PublicKey(poolAddress)} />
+      </div>
     </div>
   );
 }

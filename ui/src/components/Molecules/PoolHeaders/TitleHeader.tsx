@@ -1,35 +1,46 @@
 import NewTab from "@carbon/icons-react/lib/NewTab";
+import { PublicKey } from "@solana/web3.js";
 import { twMerge } from "tailwind-merge";
 
 import { PoolTokens } from "@/components/PoolTokens";
-import { PoolAccount } from "@/lib/PoolAccount";
+import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
+import { getTokenSymbol } from "@/lib/Token";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 
-interface Props {
+export function TitleHeader({
+  poolAddress,
+  className,
+  iconClassName,
+}: {
   className?: string;
   iconClassName?: string;
-  pool: PoolAccount;
-}
+  poolAddress: PublicKey;
+}) {
+  const { data: pool } = usePool(poolAddress);
+  const custodies = usePoolCustodies(poolAddress);
 
-export function TitleHeader(props: Props) {
   return (
-    <div className={twMerge("flex", "flex-col", "space-x-1", props.className)}>
+    <div className={twMerge("flex", "flex-col", "space-x-1", className)}>
       <div className="flex flex-row items-center">
         <PoolTokens
-          tokens={props.pool.getTokenList()}
-          className={props.iconClassName}
+          tokens={Object.values(custodies ?? {}).map((x) => x.mint)}
+          className={iconClassName}
         />
-        <p className={twMerge("font-medium", "text-2xl")}>{props.pool.name}</p>
+        <p className={twMerge("font-medium", "text-2xl")}>{pool?.name ?? ""}</p>
         <a
           target="_blank"
           rel="noreferrer"
-          href={`${ACCOUNT_URL(props.pool.address.toString())}`}
+          href={`${ACCOUNT_URL(pool?.address.toString() ?? "")}`}
         >
           <NewTab />
         </a>
       </div>
       <div className="text-s mt-3 flex flex-row font-medium text-zinc-500">
-        <p>{props.pool.getTokenList().join(", ")}</p>
+        <p>
+          {Object.values(custodies ?? {})
+            .map((x) => getTokenSymbol(x.mint))
+            .join(", ")}
+        </p>
       </div>
     </div>
   );

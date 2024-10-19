@@ -5,44 +5,63 @@ import { twMerge } from "tailwind-merge";
 
 import { NoPositions } from "@/components/Positions/NoPositions";
 import PoolPositionRow from "@/components/Positions/PoolPositionRow";
-import { useGlobalStore } from "@/stores/store";
-import { countDictList, getPoolSortedPositions } from "@/utils/organizers";
+import {
+  Position,
+  useAllUserPositions,
+  useCustodies,
+  usePools,
+} from "@/hooks/perpetuals";
+import { asToken } from "@/lib/Token";
+import { dedupe } from "@/utils/utils";
 
 import { LoadingSpinner } from "../Atoms/LoadingSpinner";
 import { PoolTokens } from "../PoolTokens";
 import { PositionColumn } from "./PositionColumn";
 
+const groupPositionsByPool = (positions: Position[]) => {
+  return positions.reduce(
+    (acc, pos) => {
+      if (!acc[pos.pool.toString()]) {
+        acc[pos.pool.toString()] = [];
+      }
+      acc[pos.pool.toString()]!.push(pos);
+      return acc;
+    },
+    {} as Record<string, Position[]>,
+  );
+};
+
 export function ExistingPositions() {
   const { publicKey } = useWallet();
 
-  const positionData = useGlobalStore((state) => state.positionData);
-  const poolData = useGlobalStore((state) => state.poolData);
+  const { data: positions } = useAllUserPositions(publicKey);
 
-  let allPositions;
+  const custodies = useCustodies(
+    dedupe((positions ?? []).flatMap((x) => x.custody)),
+  );
+  const pools = usePools(dedupe((positions ?? []).map((x) => x.pool)));
 
-  if (publicKey) {
-    allPositions = getPoolSortedPositions(positionData, publicKey);
-  } else {
-    allPositions = getPoolSortedPositions(positionData);
-  }
-
-  if (positionData.status === "pending") {
+  if (positions === undefined) {
     return <LoadingSpinner className="text-4xl" />;
   }
 
-  if (countDictList(allPositions) === 0) {
+  if (positions.length === 0) {
     return <NoPositions emptyString="No Open Positions" />;
   }
 
+  const groupedPositions = groupPositionsByPool(positions ?? []);
   return (
     <>
-      {Object.entries(allPositions).map(([pool, positions]) => {
+      {Object.entries(groupedPositions).map(([pool, positions]) => {
         if (positions.length === 0) {
           return <p>No Positions</p>;
         }
-        const allTokens = positions.map((position) => {
-          return position.token;
-        });
+        const allTokens = positions
+          .map((position) => {
+            const custody = custodies[position.custody.toString()];
+            return custody ? asToken(custody.mint) : undefined;
+          })
+          .filter((x) => x !== undefined);
 
         const tokens = Array.from(new Set(allTokens));
 
@@ -65,7 +84,7 @@ export function ExistingPositions() {
                 <div className="flex max-w-fit items-center rounded-t bg-zinc-800 px-2 py-1.5">
                   <PoolTokens tokens={tokens} />
                   <div className="ml-1 text-sm font-medium text-white">
-                    {poolData[positions[0]!.pool.toString()]?.name}
+                    {pools[pool]?.name ?? ""}
                   </div>
                 </div>
               </PositionColumn>
@@ -77,14 +96,13 @@ export function ExistingPositions() {
               <PositionColumn num={7}>Liq. Price</PositionColumn>
             </div>
             {positions.map((position, index) => (
-              // eslint-disable-next-line react/jsx-no-undef
               <PoolPositionRow
                 className={twMerge(
                   "border-zinc-700",
                   index < positions.length - 1 && "border-b",
                 )}
-                position={position}
-                key={index}
+                positionAddress={position.address}
+                key={position.address.toString()}
               />
             ))}
           </div>

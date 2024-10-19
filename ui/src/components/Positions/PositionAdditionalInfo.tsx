@@ -1,59 +1,73 @@
 import CloseIcon from "@carbon/icons-react/lib/Close";
-import { BN } from "@coral-xyz/anchor";
-import { useConnection, useWallet } from "@solana/wallet-adapter-react";
-import { useQueryClient } from "@tanstack/react-query";
-import { closePosition } from "src/actions/closePosition";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { twMerge } from "tailwind-merge";
 
+import { closePosition } from "@/actions/perpetuals";
 import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/SolidButton";
+import {
+  useCustody,
+  usePosition,
+  usePositionLiquidationPrice,
+  usePositionPnl,
+} from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
-import { PositionAccount } from "@/lib/PositionAccount";
-import { getTokenPublicKey } from "@/lib/Token";
-import { Side } from "@/lib/types";
-import { useGlobalStore } from "@/stores/store";
+import { useProgram } from "@/hooks/useProgram";
+import { stringify } from "@/pages/pools/manage/[poolAddress]";
 import { formatPrice } from "@/utils/formatters";
+import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
-interface Props {
+export function PositionAdditionalInfo({
+  className,
+  positionAddress,
+}: {
   className?: string;
-  position: PositionAccount;
-  pnl: number;
-  liqPrice: number;
-}
-
-export function PositionAdditionalInfo(props: Props) {
+  positionAddress: PublicKey;
+}) {
   const queryClient = useQueryClient();
-  const walletContextState = useWallet();
+
+  const { data: position } = usePosition(positionAddress);
+  const { data: custody } = useCustody(position?.custody);
+  const { data: liquidationPrice } = usePositionLiquidationPrice(position);
+  const { data: pnl } = usePositionPnl(position);
+
+  const mint = custody?.mint;
+  const { data: price } = usePrice(mint);
+
   const { publicKey } = useWallet();
+  const program = useProgram();
 
-  const { connection } = useConnection();
-  const token = getTokenPublicKey(props.position.token);
-  const { data: price } = usePrice(token);
+  const closePositionMutation = useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["balance", publicKey?.toString(), mint?.toString()],
+      });
+    },
+    mutationFn: async () => {
+      if (
+        program === undefined ||
+        position === undefined ||
+        custody === undefined ||
+        price === undefined
+      ) {
+        return;
+      }
 
-  const poolData = useGlobalStore((state) => state.poolData);
-  const custodyData = useGlobalStore((state) => state.custodyData);
+      const params = {
+        position,
+        custody,
+        price: BigInt(Math.round(price.currentPrice * 10 ** 6 * 0.95)), // Slippage
+      };
 
-  const positionPool = poolData[props.position.pool.toString()]!;
-  const positionCustody = custodyData[props.position.custody.toString()]!;
-
-  async function handleCloseTrade() {
-    await closePosition(
-      walletContextState,
-      connection,
-      positionPool,
-      props.position,
-      positionCustody,
-      new BN(price!.currentPrice * 10 ** 6),
-    );
-
-    queryClient.invalidateQueries({
-      queryKey: [
-        "balance",
-        publicKey?.toString(),
-        props.position.collateralCustodyMint.toString(),
-      ],
-    });
-  }
+      console.log("Closing position with params", stringify(params));
+      return await wrapTransactionWithNotification(
+        program.provider.connection,
+        closePosition(program, params),
+      );
+    },
+  });
 
   if (price === undefined) return <p>sdf</p>;
 
@@ -66,7 +80,7 @@ export function PositionAdditionalInfo(props: Props) {
         "gap-x-8",
         "items-center",
         "pr-4",
-        props.className,
+        className,
       )}
     >
       <div />
@@ -86,24 +100,32 @@ export function PositionAdditionalInfo(props: Props) {
         <div>
           <div className="text-xs text-zinc-500">Time</div>
           <div className="mt-1 text-sm text-white">
-            {props.position.getTimestamp()}
+            {position && position.openTime.toLocaleString()}
           </div>
         </div>
         <div>
           <div className="text-xs text-zinc-500">PnL</div>
-          <PositionValueDelta
-            className="mt-0.5"
-            valueDelta={props.pnl}
-            valueDeltaPercentage={
-              (props.pnl * 100) / props.position.getCollateralUsd()
-            }
-          />
+          {position && pnl ? (
+            <PositionValueDelta
+              className="mt-0.5"
+              valueDelta={Number(pnl.profit - pnl.loss) / 10 ** 6}
+              valueDeltaPercentage={
+                (Number(pnl.profit - pnl.loss) /
+                  Number(position.collateralUsd)) *
+                100
+              }
+            />
+          ) : (
+            "-"
+          )}
         </div>
         <div>
           <div className="text-xs text-zinc-500">Size</div>
           <div className="mt-1 flex items-center">
             <div className="text-sm text-white">
-              ${formatPrice(props.position.getSizeUsd())}
+              {position
+                ? "$" + formatPrice(Number(position.sizeUsd) / 10 ** 6)
+                : "-"}
             </div>
             {/* <CollateralModal position={props.position} pnl={props.pnl}>
               <button className="group ml-2">
@@ -123,16 +145,21 @@ export function PositionAdditionalInfo(props: Props) {
         <div>
           <div className="text-xs text-zinc-500">Liq. Threshold</div>
           <div className="mt-1 text-sm text-white">
-            $
-            {formatPrice(
-              props.position.side === Side.Long
-                ? price.currentPrice - props.liqPrice
-                : props.liqPrice - price.currentPrice,
-            )}
+            {price && liquidationPrice
+              ? "$" +
+                formatPrice(
+                  price.currentPrice - Number(liquidationPrice) / 10 ** 6,
+                )
+              : "-"}
+            {/* // props.position.side === Side.Long // ? price.currentPrice -
+            props.liqPrice // : props.liqPrice - price.currentPrice, */}
           </div>
         </div>
       </div>
-      <SolidButton className="h-9 w-36" onClick={handleCloseTrade}>
+      <SolidButton
+        className="h-9 w-36"
+        onClick={() => closePositionMutation.mutate()}
+      >
         <CloseIcon className="mr-2 h-4 w-4" />
         <div>Close Position</div>
       </SolidButton>

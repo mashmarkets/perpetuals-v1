@@ -1,8 +1,8 @@
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
-import { findPerpetualsAddressSync } from "src/actions/perpetuals";
 import { twMerge } from "tailwind-merge";
 
+import { findPerpetualsAddressSync } from "@/actions/perpetuals";
 import { Custody, usePool, usePoolCustodies } from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
 import { formatNumberCommas } from "@/utils/formatters";
@@ -38,16 +38,16 @@ const getOiLong = (custodies: Custody[]) =>
 
 export default function PoolGeneralStats({
   className,
-  poolKey,
+  poolAddress,
 }: {
-  poolKey: PublicKey;
+  poolAddress: PublicKey;
   className?: string;
 }) {
   const { publicKey } = useWallet();
-  const custodies = usePoolCustodies(poolKey);
-  const poolData = usePool(poolKey);
+  const custodies = usePoolCustodies(poolAddress);
+  const poolData = usePool(poolAddress);
 
-  const lpMint = findPerpetualsAddressSync("lp_token_mint", poolKey);
+  const lpMint = findPerpetualsAddressSync("lp_token_mint", poolAddress);
   const mint = useMint(lpMint);
   const lp = useBalance(lpMint, publicKey);
 

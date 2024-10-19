@@ -1,6 +1,7 @@
 import { PublicKey } from "@solana/web3.js";
 import { memoize } from "lodash-es";
-import { getFaucetMint } from "src/actions/faucet";
+
+import { getFaucetMint } from "@/actions/faucet";
 
 import { universe } from "./universe";
 
@@ -87,7 +88,13 @@ export const TOKEN_LIST = Object.values(TokenE);
 
 export const TOKEN_ADDRESSES = tokenList.map((x) => new PublicKey(x.address));
 
-export function asToken(tokenStr: string): TokenE {
+export function asToken(tokenStr: string | PublicKey): TokenE {
+  if (tokenStr instanceof PublicKey) {
+    if (tokens[tokenStr.toString()] === undefined) {
+      return TokenE.SOL;
+    }
+    return tokens[tokenStr.toString()]!.symbol as TokenE;
+  }
   if (tokenStr === undefined) {
     return TokenE.SOL;
   }
@@ -102,16 +109,22 @@ export function asToken(tokenStr: string): TokenE {
   return token;
 }
 
-export function getTokenLabel(token: PublicKey) {
-  if (!Object.prototype.hasOwnProperty.call(tokens, token.toString())) {
+export function getTokenLabel(token: PublicKey | undefined) {
+  if (
+    token === undefined ||
+    !Object.prototype.hasOwnProperty.call(tokens, token.toString())
+  ) {
     return "Unknown";
   }
 
   return tokens[token.toString()]!.name;
 }
 
-export function getTokenSymbol(token: PublicKey) {
-  if (!Object.prototype.hasOwnProperty.call(tokens, token.toString())) {
+export function getTokenSymbol(token: PublicKey | undefined) {
+  if (
+    token === undefined ||
+    !Object.prototype.hasOwnProperty.call(tokens, token.toString())
+  ) {
     return "???";
   }
 

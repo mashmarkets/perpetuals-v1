@@ -1,5 +1,6 @@
 import { BN, Program, utils } from "@coral-xyz/anchor";
 import {
+  createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
@@ -14,6 +15,7 @@ import {
 } from "@solana/web3.js";
 
 import { AddCustodyParams } from "@/components/FormListAsset";
+import { Custody, Pool, Position } from "@/hooks/perpetuals";
 import { getTokenInfo } from "@/lib/Token";
 import IDL from "@/target/idl/perpetuals.json";
 import { Perpetuals } from "@/target/types/perpetuals";
@@ -248,40 +250,56 @@ export async function openPosition(
     .rpc();
 }
 
-export async function getParsedSimulationResult<T>(
+export async function getSimulationResult(
   program: Program<Perpetuals>,
   ix: TransactionInstruction,
-  name: string,
-): Promise<T | undefined> {
-  const { blockhash } = await program.provider.connection.getLatestBlockhash();
-
+) {
   const transaction = new VersionedTransaction(
     new TransactionMessage({
       payerKey: program.provider.publicKey!,
-      recentBlockhash: blockhash,
+      // We don't need a real block as we simulating, but we need something to pass
+      recentBlockhash: "So11111111111111111111111111111111111111112",
       instructions: [ix],
     }).compileToV0Message(),
   );
-
-  const typeName = (
-    program.idl.instructions.find((f) => f.name === name) as any
-  )?.returns?.defined;
-
-  if (typeName === undefined) {
-    return undefined;
-  }
-
-  const data =
-    await program.provider.connection.simulateTransaction(transaction);
+  const data = await program.provider.connection.simulateTransaction(
+    transaction,
+    {
+      sigVerify: false,
+      replaceRecentBlockhash: true,
+    },
+  );
 
   if (!data.value.returnData?.data[0]) {
     return undefined;
   }
 
-  return program.coder.types.decode(
-    typeName,
-    Buffer.from(data.value.returnData.data[0], "base64"),
-  );
+  return data.value.returnData.data[0];
+}
+
+// This only works if the function returns struct
+export async function getParsedSimulationResult<T>(
+  program: Program<Perpetuals>,
+  ix: TransactionInstruction,
+  name: string,
+): Promise<T | undefined> {
+  const typeName = (
+    program.idl.instructions.find((f) => f.name === name) as any
+  )?.returns?.defined;
+
+  if (typeName === undefined) {
+    console.log("Cannot find type name for instruction: ", name);
+    return undefined;
+  }
+
+  const result = await getSimulationResult(program, ix);
+
+  if (result === undefined) {
+    console.log("No simulation result returned for instruction: ", name);
+    return undefined;
+  }
+
+  return program.coder.types.decode(typeName, Buffer.from(result, "base64"));
 }
 
 export const getEntryPriceAndFee = async (
@@ -320,7 +338,7 @@ export const getEntryPriceAndFee = async (
 
   if (estimate === undefined) {
     return {
-      entryPrice: BigInt(0),
+      entryPrice: 0n,
       fee: BigInt(0),
       liquidationPrice: BigInt(0),
     };
@@ -331,3 +349,427 @@ export const getEntryPriceAndFee = async (
     liquidationPrice: BigInt(estimate.liquidationPrice.toString()),
   };
 };
+
+export const getLiquidationPrice = async (
+  program: Program<Perpetuals>,
+  {
+    position,
+    custody,
+    addCollateral = BigInt(0),
+    removeCollateral = BigInt(0),
+  }: {
+    position: Position;
+    custody: Custody;
+    addCollateral?: bigint;
+    removeCollateral?: bigint;
+  },
+) => {
+  const instruction = await program.methods
+    .getLiquidationPrice({
+      addCollateral: new BN(addCollateral.toString()),
+      removeCollateral: new BN(removeCollateral.toString()),
+    })
+    .accounts({
+      perpetuals,
+      pool: position.pool,
+      position: position.address,
+      custody: position.custody,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      collateralCustody: position.collateralCustody,
+      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
+    })
+    .instruction();
+
+  const data = await getSimulationResult(program, instruction);
+
+  if (data === undefined) {
+    return undefined;
+  }
+  return BigInt(new BN(Buffer.from(data, "base64"), 10, "le").toString());
+};
+
+export const getAddLiquidityAmountAndFee = async (
+  program: Program<Perpetuals>,
+  {
+    pool,
+    custody,
+    amountIn,
+  }: {
+    pool: Pick<Position, "address">;
+    custody: Pick<Custody, "address"> & {
+      oracle: Pick<Custody["oracle"], "oracleAccount">;
+    };
+    amountIn: bigint;
+  },
+) => {
+  const instruction = await program.methods
+    .getAddLiquidityAmountAndFee({
+      amountIn: new BN(amountIn.toString()),
+    })
+    .accounts({
+      perpetuals,
+      pool: pool.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      lpTokenMint: findPerpetualsAddressSync("lp_token_mint", pool.address),
+    })
+    .remainingAccounts(getRemainingAccountsFromCustodies([custody]))
+    .instruction();
+
+  const estimate = await getParsedSimulationResult<{
+    amount: BN;
+    fee: BN;
+  }>(program, instruction, "getAddLiquidityAmountAndFee");
+
+  if (estimate === undefined) {
+    throw new Error("Unable to get estimate");
+  }
+
+  return {
+    amount: BigInt(estimate.amount.toString()),
+    fee: BigInt(estimate.fee.toString()),
+  };
+};
+export const getRemoveLiquidityAmountAndFee = async (
+  program: Program<Perpetuals>,
+  {
+    pool,
+    custody,
+    lpAmountIn,
+  }: {
+    pool: Pick<Position, "address">;
+    custody: Pick<Custody, "address"> & {
+      oracle: Pick<Custody["oracle"], "oracleAccount">;
+    };
+    lpAmountIn: bigint;
+  },
+) => {
+  const instruction = await program.methods
+    .getRemoveLiquidityAmountAndFee({
+      lpAmountIn: new BN(lpAmountIn.toString()),
+    })
+    .accounts({
+      perpetuals,
+      pool: pool.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      lpTokenMint: findPerpetualsAddressSync("lp_token_mint", pool.address),
+    })
+    .remainingAccounts([
+      { pubkey: custody.address, isSigner: false, isWritable: true },
+      {
+        pubkey: custody.oracle.oracleAccount,
+        isSigner: false,
+        isWritable: true,
+      },
+    ])
+    .instruction();
+
+  const estimate = await getParsedSimulationResult<{
+    amount: BN;
+    fee: BN;
+  }>(program, instruction, "getRemoveLiquidityAmountAndFee");
+
+  if (estimate === undefined) {
+    throw new Error("Unable to get estimate");
+  }
+
+  return {
+    amount: BigInt(estimate.amount.toString()),
+    fee: BigInt(estimate.fee.toString()),
+  };
+};
+
+export const getPnl = async (
+  program: Program<Perpetuals>,
+  {
+    position,
+    custody,
+  }: {
+    position: Position;
+    custody: Custody;
+  },
+) => {
+  const instruction = await program.methods
+    .getPnl({})
+    .accounts({
+      perpetuals,
+      pool: position.pool,
+      position: position.address,
+      custody: position.custody,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      collateralCustody: position.custody,
+      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
+    })
+    .instruction();
+
+  const estimate = await getParsedSimulationResult<{
+    profit: BN;
+    loss: BN;
+  }>(program, instruction, "getPnl");
+
+  if (estimate === undefined) {
+    return {
+      profit: BigInt(0),
+      loss: BigInt(0),
+    };
+  }
+
+  return {
+    profit: BigInt(estimate.profit.toString()),
+    loss: BigInt(estimate.loss.toString()),
+  };
+};
+
+export async function closePosition(
+  program: Program<Perpetuals>,
+  {
+    position,
+    custody,
+    price,
+  }: { position: Position; custody: Custody; price: bigint },
+) {
+  if (position.custody.toString() != custody.address.toString()) {
+    throw new Error("Position and Custody do not match");
+  }
+
+  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
+  return await program.methods
+    .closePosition({
+      price: new BN(price.toString()),
+    })
+    .accounts({
+      owner: program.provider.publicKey,
+      receivingAccount: getAssociatedTokenAddressSync(
+        custody.mint,
+        program.provider.publicKey!,
+      ),
+      transferAuthority,
+      perpetuals,
+      pool: position.pool,
+      position: position.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      collateralCustody: position.collateralCustody,
+      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
+      collateralCustodyTokenAccount: findPerpetualsAddressSync(
+        "custody_token_account",
+        position.pool,
+        custody.mint,
+      ),
+    })
+    .rpc();
+}
+
+export type ClosePositionParams = Parameters<typeof closePosition>[1];
+
+export async function addCollateral(
+  program: Program<Perpetuals>,
+  {
+    position,
+    custody,
+    collateral,
+  }: { position: Position; custody: Custody; collateral: bigint },
+) {
+  if (position.custody.toString() != custody.address.toString()) {
+    throw new Error("Position and Custody do not match");
+  }
+
+  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
+  return await program.methods
+    .addCollateral({
+      collateral: new BN(collateral.toString()),
+    })
+    .accounts({
+      owner: program.provider.publicKey,
+      fundingAccount: getAssociatedTokenAddressSync(
+        custody.mint,
+        program.provider.publicKey!,
+      ),
+      transferAuthority,
+      perpetuals,
+      pool: position.pool,
+      position: position.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      collateralCustody: position.collateralCustody,
+      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
+      collateralCustodyTokenAccount: findPerpetualsAddressSync(
+        "custody_token_account",
+        position.pool,
+        custody.mint,
+      ),
+    })
+    .rpc();
+}
+
+export async function removeCollateral(
+  program: Program<Perpetuals>,
+  {
+    position,
+    custody,
+    collateralUsd,
+  }: { position: Position; custody: Custody; collateralUsd: bigint },
+) {
+  if (position.custody.toString() != custody.address.toString()) {
+    throw new Error("Position and Custody do not match");
+  }
+
+  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
+  return await program.methods
+    .removeCollateral({
+      collateralUsd: new BN(collateralUsd.toString()),
+    })
+    .accounts({
+      owner: program.provider.publicKey,
+      receivingAccount: getAssociatedTokenAddressSync(
+        custody.mint,
+        program.provider.publicKey!,
+      ),
+      transferAuthority,
+      perpetuals,
+      pool: position.pool,
+      position: position.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      collateralCustody: position.collateralCustody,
+      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
+      collateralCustodyTokenAccount: findPerpetualsAddressSync(
+        "custody_token_account",
+        position.pool,
+        custody.mint,
+      ),
+    })
+    .rpc();
+}
+
+const getRemainingAccountsFromCustodies = (
+  custodies: Array<
+    Pick<Custody, "address"> & {
+      oracle: Pick<Custody["oracle"], "oracleAccount">;
+    }
+  >,
+) => {
+  return custodies.flatMap((custody) => [
+    { pubkey: custody.address, isSigner: false, isWritable: true },
+    {
+      pubkey: custody.oracle.oracleAccount,
+      isSigner: false,
+      isWritable: true,
+    },
+  ]);
+};
+export async function addLiquidity(
+  program: Program<Perpetuals>,
+  {
+    pool,
+    custody,
+    amountIn,
+    mintLpAmountOut,
+  }: {
+    pool: Pool;
+    custody: Custody;
+    amountIn: bigint;
+    mintLpAmountOut: bigint;
+  },
+) {
+  if (pool.custodies[0]?.toString() !== custody.address.toString()) {
+    throw new Error("Pool and Custody do not match");
+  }
+  const lpTokenMint = findPerpetualsAddressSync("lp_token_mint", pool.address);
+
+  const fundingAccount = getAssociatedTokenAddressSync(
+    custody.mint,
+    program.provider.publicKey!,
+  );
+
+  const lpTokenAccount = getAssociatedTokenAddressSync(
+    lpTokenMint,
+    program.provider.publicKey!,
+  );
+
+  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
+  return await program.methods
+    .addLiquidity({
+      amountIn: new BN(amountIn.toString()),
+      minLpAmountOut: new BN(mintLpAmountOut.toString()),
+    })
+    .preInstructions([
+      createAssociatedTokenAccountIdempotentInstruction(
+        program.provider.publicKey!,
+        lpTokenAccount,
+        program.provider.publicKey!,
+        lpTokenMint,
+      ),
+    ])
+    .accounts({
+      owner: program.provider.publicKey,
+      fundingAccount,
+      lpTokenAccount,
+      transferAuthority,
+      perpetuals,
+      pool: pool.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      custodyTokenAccount: custody.tokenAccount,
+      lpTokenMint,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .remainingAccounts(getRemainingAccountsFromCustodies([custody]))
+    .rpc();
+}
+
+export async function removeLiquidity(
+  program: Program<Perpetuals>,
+  {
+    pool,
+    custody,
+    lpAmountIn,
+    minAmountOut,
+  }: {
+    pool: Pool;
+    custody: Custody;
+    lpAmountIn: bigint;
+    minAmountOut: bigint;
+  },
+) {
+  if (pool.custodies[0]?.toString() !== custody.address.toString()) {
+    throw new Error("Pool and Custody do not match");
+  }
+  const lpTokenMint = findPerpetualsAddressSync("lp_token_mint", pool.address);
+
+  const receivingAccount = getAssociatedTokenAddressSync(
+    custody.mint,
+    program.provider.publicKey!,
+  );
+
+  const lpTokenAccount = getAssociatedTokenAddressSync(
+    lpTokenMint,
+    program.provider.publicKey!,
+  );
+
+  // TODO:- Handle WSOL, and missing ata - just auto create idepoment
+  return await program.methods
+    .removeLiquidity({
+      lpAmountIn: new BN(lpAmountIn.toString()),
+      minAmountOut: new BN(minAmountOut.toString()),
+    })
+    .accounts({
+      owner: program.provider.publicKey,
+      receivingAccount,
+      lpTokenAccount,
+      transferAuthority,
+      perpetuals,
+      pool: pool.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      custodyTokenAccount: custody.tokenAccount,
+      lpTokenMint,
+      tokenProgram: TOKEN_PROGRAM_ID,
+    })
+    .remainingAccounts(getRemainingAccountsFromCustodies([custody]))
+    .rpc();
+}

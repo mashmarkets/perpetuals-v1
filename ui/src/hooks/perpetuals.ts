@@ -1,22 +1,157 @@
-import { IdlAccounts } from "@coral-xyz/anchor";
+import { BN, IdlAccounts, ProgramAccount } from "@coral-xyz/anchor";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
+import {
+  getAddLiquidityAmountAndFee,
+  getLiquidationPrice,
+  getPnl,
+  getRemoveLiquidityAmountAndFee,
+} from "@/actions/perpetuals";
 import { Perpetuals } from "@/target/types/perpetuals";
 
 import { connectionBatcher } from "./accounts";
 import { useProgram } from "./useProgram";
 
-export type Pool = IdlAccounts<Perpetuals>["pool"];
-export type Custody = IdlAccounts<Perpetuals>["custody"];
-export type Position = IdlAccounts<Perpetuals>["position"];
+const fromBN = (v: BN) => BigInt(v.toString());
+
+const parsePosition = (
+  data: ProgramAccount<IdlAccounts<Perpetuals>["position"]>,
+) => {
+  const p = data.account;
+  return {
+    address: data.publicKey,
+    borrowSizeUsd: fromBN(p.borrowSizeUsd),
+    bump: p.bump,
+    collateralAmount: fromBN(p.collateralUsd),
+    collateralCustody: p.collateralCustody,
+    collateralUsd: fromBN(p.collateralUsd),
+    cumulativeInterestSnapshot: fromBN(p.cumulativeInterestSnapshot),
+    custody: p.custody,
+    lockedAmount: fromBN(p.lockedAmount),
+    openTime: new Date(p.openTime.toNumber() * 1000),
+    owner: p.owner,
+    pool: p.pool,
+    price: fromBN(p.price),
+    sizeUsd: fromBN(p.sizeUsd),
+    unrealizedLossUsd: fromBN(p.unrealizedLossUsd),
+    unrealizedProfitUsd: fromBN(p.unrealizedProfitUsd),
+    updateTime: new Date(p.openTime.toNumber() * 1000),
+  };
+};
+
+const parseCustody = (
+  data: ProgramAccount<IdlAccounts<Perpetuals>["custody"]>,
+) => {
+  const c = data.account;
+  return {
+    address: data.publicKey,
+    bump: c.bump,
+    decimals: c.decimals,
+    mint: c.mint,
+    pool: c.pool,
+    tokenAccount: c.tokenAccount,
+    tokenAccountBump: c.tokenAccountBump,
+    assets: {
+      collateral: fromBN(c.assets.collateral),
+      locked: fromBN(c.assets.locked),
+      owned: fromBN(c.assets.owned),
+      protocolFees: fromBN(c.assets.protocolFees),
+    },
+    borrowRate: {
+      baseRate: fromBN(c.borrowRate.baseRate),
+      optimalUtilization: fromBN(c.borrowRate.optimalUtilization),
+      slope1: fromBN(c.borrowRate.slope1),
+      slope2: fromBN(c.borrowRate.slope2),
+    },
+    borrowRateState: {
+      cumulativeInterest: fromBN(c.borrowRateState.cumulativeInterest),
+      currentRate: fromBN(c.borrowRateState.currentRate),
+      lastUpdate: new Date(c.borrowRateState.lastUpdate.toNumber() * 1000),
+    },
+    collectedFees: {
+      addLiquidityUsd: fromBN(c.collectedFees.addLiquidityUsd),
+      closePositionUsd: fromBN(c.collectedFees.closePositionUsd),
+      liquidationUsd: fromBN(c.collectedFees.liquidationUsd),
+      openPositionUsd: fromBN(c.collectedFees.openPositionUsd),
+      removeLiquidityUsd: fromBN(c.collectedFees.removeLiquidityUsd),
+    },
+    fees: {
+      addLiquidity: fromBN(c.fees.addLiquidity),
+      closePosition: fromBN(c.fees.closePosition),
+      liquidation: fromBN(c.fees.liquidation),
+      openPosition: fromBN(c.fees.openPosition),
+      protocolShare: fromBN(c.fees.protocolShare),
+      removeLiquidity: fromBN(c.fees.removeLiquidity),
+      utilizationMult: fromBN(c.fees.utilizationMult),
+    },
+    longPositions: {
+      borrowSizeUsd: fromBN(c.longPositions.borrowSizeUsd),
+      collateralUsd: fromBN(c.longPositions.collateralUsd),
+      cumulativeInterestSnapshot: fromBN(
+        c.longPositions.cumulativeInterestSnapshot,
+      ),
+      cumulativeInterestUsd: fromBN(c.longPositions.cumulativeInterestUsd),
+      lockedAmount: fromBN(c.longPositions.lockedAmount),
+      openPositions: fromBN(c.longPositions.openPositions),
+      sizeUsd: fromBN(c.longPositions.sizeUsd),
+      totalQuantity: fromBN(c.longPositions.totalQuantity),
+      weightedPrice: fromBN(c.longPositions.weightedPrice),
+    },
+    oracle: {
+      maxPriceAgeSec: c.oracle.maxPriceAgeSec,
+      maxPriceError: fromBN(c.oracle.maxPriceError),
+      oracleAccount: c.oracle.oracleAccount,
+      oracleAuthority: c.oracle.oracleAccount,
+      oracleType: c.oracle.oracleType, // TODO: - Convert to "ENUM"
+    },
+    permissions: {
+      allowAddLiquidity: c.permissions.allowAddLiquidity,
+      allowClosePosition: c.permissions.allowClosePosition,
+      allowCollateralWithdrawal: c.permissions.allowCollateralWithdrawal,
+      allowOpenPosition: c.permissions.allowOpenPosition,
+      allowPnlWithdrawal: c.permissions.allowPnlWithdrawal,
+      allowRemoveLiquidity: c.permissions.allowRemoveLiquidity,
+      allowSizeChange: c.permissions.allowSizeChange,
+    },
+    pricing: {
+      maxInitialLeverage: fromBN(c.pricing.maxInitialLeverage),
+      maxLeverage: fromBN(c.pricing.maxLeverage),
+      maxPayoffMult: fromBN(c.pricing.maxPayoffMult),
+      maxPositionLockedUsd: fromBN(c.pricing.maxPositionLockedUsd),
+      maxTotalLockedUsd: fromBN(c.pricing.maxTotalLockedUsd),
+      maxUtilization: fromBN(c.pricing.maxUtilization),
+      minInitialLeverage: fromBN(c.pricing.minInitialLeverage),
+      tradeSpreadLong: fromBN(c.pricing.tradeSpreadLong),
+      tradeSpreadShort: fromBN(c.pricing.tradeSpreadShort),
+      useEma: c.pricing.useEma,
+      useUnrealizedPnlInAum: c.pricing.useUnrealizedPnlInAum,
+    },
+    tradeStats: {
+      lossUsd: fromBN(c.tradeStats.lossUsd),
+      oiLongUsd: fromBN(c.tradeStats.oiLongUsd),
+      profitUsd: fromBN(c.tradeStats.profitUsd),
+    },
+    volumeStats: {
+      addLiquidityUsd: fromBN(c.volumeStats.addLiquidityUsd),
+      closePositionUsd: fromBN(c.volumeStats.closePositionUsd),
+      liquidationUsd: fromBN(c.volumeStats.liquidationUsd),
+      openPositionUsd: fromBN(c.volumeStats.openPositionUsd),
+      removeLiquidityUsd: fromBN(c.volumeStats.removeLiquidityUsd),
+    },
+  };
+};
+
+export type Pool = IdlAccounts<Perpetuals>["pool"] & { address: PublicKey };
+export type Custody = ReturnType<typeof parseCustody>;
+export type Position = ReturnType<typeof parsePosition>;
 
 export const usePool = (pool: PublicKey | undefined) => {
   const { connection } = useConnection();
   const program = useProgram();
 
-  return useQuery({
+  return useQuery<Pool>({
     queryKey: ["pool", pool?.toString()],
     enabled: !!program && !!pool,
     queryFn: () =>
@@ -24,8 +159,44 @@ export const usePool = (pool: PublicKey | undefined) => {
         .fetch(pool!)
         .then((info) => {
           const coder = program.account.pool.coder;
-          return coder.accounts.decode("pool", info!.data!);
+          return {
+            address: pool!,
+            ...coder.accounts.decode("pool", info!.data!),
+          };
         }) as Promise<Pool>,
+  });
+};
+
+export const usePools = (pools: PublicKey[]) => {
+  const { connection } = useConnection();
+  const program = useProgram();
+  return useQueries({
+    queries: pools.map((pool) => ({
+      queryKey: ["pool", pool.toString()],
+      enabled: !!program,
+      queryFn: () =>
+        connectionBatcher(connection)
+          .fetch(pool)
+          .then((info) => {
+            const coder = program.account.pool.coder;
+            return {
+              address: pool,
+              ...coder.accounts.decode("pool", info!.data!),
+            };
+          }) as Promise<Pool>,
+    })),
+    combine: (results) => {
+      return results.reduce(
+        (acc, v, i) => {
+          if (v.data === undefined) {
+            return acc;
+          }
+          acc[pools[i]!.toString()] = v.data!;
+          return acc;
+        },
+        {} as Record<string, Pool>,
+      );
+    },
   });
 };
 
@@ -33,13 +204,16 @@ export const useAllPools = () => {
   const program = useProgram();
   const client = useQueryClient();
   return useQuery<Record<string, Pool>>({
-    queryKey: ["pool"],
+    queryKey: ["pools"],
     enabled: !!program,
     queryFn: async () => {
       const data = await program.account.pool.all();
       const pools = data.reduce(
         (acc, v) => {
-          acc[v.publicKey.toString()] = v.account;
+          acc[v.publicKey.toString()] = {
+            address: v.publicKey,
+            ...v.account,
+          };
           return acc;
         },
         {} as Record<string, Pool>,
@@ -54,12 +228,30 @@ export const useAllPools = () => {
   });
 };
 
+export const useCustody = (custody: PublicKey | undefined) => {
+  const { connection } = useConnection();
+  const program = useProgram();
+
+  return useQuery({
+    queryKey: ["custody", custody?.toString()],
+    enabled: !!program && !!custody,
+    queryFn: () =>
+      connectionBatcher(connection)
+        .fetch(custody!)
+        .then((info) => {
+          const coder = program.account.custody.coder;
+          return parseCustody({
+            publicKey: custody!,
+            account: coder.accounts.decode("custody", info!.data!),
+          });
+        }) as Promise<Custody>,
+  });
+};
 // Inspired by https://github.com/TanStack/query/discussions/6305
 export const useCustodies = (custodies: PublicKey[]) => {
   const { connection } = useConnection();
   const program = useProgram();
 
-  // TODO:- Add a combine here for better ergonomics
   return useQueries({
     queries: custodies.map((custody) => ({
       queryKey: ["custody", custody.toString()],
@@ -69,9 +261,24 @@ export const useCustodies = (custodies: PublicKey[]) => {
           .fetch(custody)
           .then((info) => {
             const coder = program.account.custody.coder;
-            return coder.accounts.decode("custody", info!.data!);
+            return parseCustody({
+              publicKey: custody!,
+              account: coder.accounts.decode("custody", info!.data!),
+            });
           }) as Promise<Custody>,
     })),
+    combine: (results) => {
+      return results.reduce(
+        (acc, v, i) => {
+          if (v.data === undefined) {
+            return acc;
+          }
+          acc[custodies[i]!.toString()] = v.data!;
+          return acc;
+        },
+        {} as Record<string, Custody>,
+      );
+    },
   });
 };
 
@@ -91,7 +298,10 @@ export const usePoolCustodies = (poolKey: PublicKey | undefined) => {
           .fetch(custody)
           .then((info) => {
             const coder = program.account.custody.coder;
-            return coder.accounts.decode("custody", info!.data!);
+            return parseCustody({
+              publicKey: custody!,
+              account: coder.accounts.decode("custody", info!.data!),
+            });
           }) as Promise<Custody>,
     })),
     combine: (results) => {
@@ -109,25 +319,42 @@ export const usePoolCustodies = (poolKey: PublicKey | undefined) => {
   });
 };
 
+export const usePosition = (position: PublicKey | undefined) => {
+  const { connection } = useConnection();
+  const program = useProgram();
+
+  return useQuery({
+    queryKey: ["position", position?.toString()],
+    enabled: !!program && position !== undefined,
+    queryFn: () =>
+      connectionBatcher(connection)
+        .fetch(position!)
+        .then((info) => {
+          const coder = program.account.position.coder;
+          return parsePosition({
+            publicKey: position!,
+            account: coder.accounts.decode("position", info?.data!),
+          });
+        }) as Promise<Position>,
+  });
+};
+
 export const useAllPositions = () => {
   const program = useProgram();
   const client = useQueryClient();
-  return useQuery<Record<string, Position>>({
-    queryKey: ["position"],
+  return useQuery<Position[]>({
+    queryKey: ["positions"],
     enabled: !!program,
     queryFn: async () => {
       const data = await program.account.position.all();
-      const positions = data.reduce(
-        (acc, v) => {
-          acc[v.publicKey.toString()] = v.account;
-          return acc;
-        },
-        {} as Record<string, Position>,
-      );
+      const positions = data.map(parsePosition);
 
       // Update individual cache
-      Object.entries(positions).forEach(([key, position]) => {
-        client.setQueryData(["position", key], position);
+      positions.forEach((position) => {
+        client.setQueryData(
+          ["position", position.address.toString()],
+          position,
+        );
       });
       return positions;
     },
@@ -141,14 +368,112 @@ export const useAllUserPositions = (user: PublicKey | null) => {
     data:
       data === undefined || user === null
         ? undefined
-        : Object.entries(data).reduce(
-            (acc, [key, position]) => {
-              if (position.owner.toString() === user.toString()) {
-                acc[key] = position;
-              }
-              return acc;
-            },
-            {} as Record<string, Position>,
+        : data.filter(
+            (position) => position.owner.toString() === user.toString(),
           ),
   };
+};
+
+export const usePositionLiquidationPrice = (
+  position: Position | undefined,
+  addCollateral = BigInt(0),
+  removeCollateral = BigInt(0),
+) => {
+  const program = useProgram();
+  const { data: custody } = useCustody(position?.custody);
+
+  return useQuery({
+    queryKey: [
+      "getLiquidationPrice",
+      position?.address.toString(),
+      addCollateral?.toString(),
+      removeCollateral?.toString(),
+    ],
+    enabled:
+      program !== undefined &&
+      position?.address !== undefined &&
+      position?.address !== null &&
+      custody !== undefined,
+
+    queryFn: () =>
+      getLiquidationPrice(program, {
+        position: position!,
+        custody: custody!,
+        addCollateral,
+        removeCollateral,
+      }),
+  });
+};
+
+export const usePositionPnl = (position: Position | undefined) => {
+  const program = useProgram();
+  const { data: custody } = useCustody(position?.custody);
+
+  return useQuery({
+    queryKey: ["getPnl", position?.address.toString()],
+    enabled: !!program && !!position && !!custody,
+    queryFn: () => getPnl(program, { position: position!, custody: custody! }),
+  });
+};
+
+export const useGetAddLiquidityAmountAndFee = ({
+  pool,
+  amountIn,
+}: {
+  pool: Pick<Pool, "address" | "custodies"> | undefined;
+  amountIn: bigint;
+}) => {
+  const program = useProgram();
+  const { data: custody } = useCustody(pool?.custodies[0]);
+
+  return useQuery({
+    refetchInterval: 5 * 1000,
+    queryKey: [
+      "getAddLiquidityAmountAndFee",
+      pool?.address.toString(),
+      amountIn.toString(),
+    ],
+    enabled:
+      !!program &&
+      pool !== undefined &&
+      custody !== undefined &&
+      amountIn > BigInt(0),
+    queryFn: () =>
+      getAddLiquidityAmountAndFee(program, {
+        pool: pool!,
+        custody: custody!,
+        amountIn,
+      }),
+  });
+};
+
+export const useGetRemoveLiquidityAmountAndFee = ({
+  pool,
+  lpAmountIn,
+}: {
+  pool: Pick<Pool, "address" | "custodies"> | undefined;
+  lpAmountIn: bigint;
+}) => {
+  const program = useProgram();
+  const { data: custody } = useCustody(pool?.custodies[0]);
+
+  return useQuery({
+    refetchInterval: 5 * 1000,
+    queryKey: [
+      "getRemoveLiquidityAmountAndFee",
+      pool?.address.toString(),
+      lpAmountIn.toString(),
+    ],
+    enabled:
+      !!program &&
+      pool !== undefined &&
+      custody !== undefined &&
+      lpAmountIn > BigInt(0),
+    queryFn: () =>
+      getRemoveLiquidityAmountAndFee(program, {
+        pool: pool!,
+        custody: custody!,
+        lpAmountIn,
+      }),
+  });
 };

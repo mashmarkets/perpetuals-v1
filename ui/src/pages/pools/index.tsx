@@ -3,11 +3,11 @@
 import { PublicKey } from "@metaplex-foundation/js";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/router";
-import { findPerpetualsAddressSync } from "src/actions/perpetuals";
 import { twMerge } from "tailwind-merge";
 
+import { findPerpetualsAddressSync } from "@/actions/perpetuals";
 import { NoPositions } from "@/components/Positions/NoPositions";
-import { useAllPools, useCustodies, usePool } from "@/hooks/perpetuals";
+import { useAllPools, usePool, usePoolCustodies } from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
 import { getTokenIcon, tokens } from "@/lib/Token";
 import { formatNumberCommas } from "@/utils/formatters";
@@ -15,10 +15,8 @@ import { formatNumberCommas } from "@/utils/formatters";
 function PoolRow({ poolKey }: { poolKey: string }) {
   const { publicKey } = useWallet();
   const router = useRouter();
-  const pool = usePool(new PublicKey(poolKey));
-  const custodies = useCustodies(
-    pool.data?.custodies.map((x) => new PublicKey(x))!,
-  );
+  const { data: pool } = usePool(new PublicKey(poolKey));
+  const custodies = usePoolCustodies(new PublicKey(poolKey));
 
   const lpMint = findPerpetualsAddressSync(
     "lp_token_mint",
@@ -26,62 +24,61 @@ function PoolRow({ poolKey }: { poolKey: string }) {
   );
   const mint = useMint(lpMint);
   const lp = useBalance(lpMint, publicKey === null ? undefined : publicKey);
-  const tokenIcon = getTokenIcon(custodies?.[0]?.data?.mint);
+  const tokenIcon = getTokenIcon(Object.values(custodies)?.[0]?.mint);
 
   const userShare = Number(lp?.data) / Number(mint.data?.supply);
-  const tradeVolume = custodies.reduce((acc: number, c) => {
+  const tradeVolume = Object.values(custodies).reduce((acc: number, c) => {
     return (
       acc +
-      Object.values(c.data?.volumeStats ?? {}).reduce(
+      Object.values(c.volumeStats ?? {}).reduce(
         (acc, val) => Number(acc) + Number(val),
         0,
       )
     );
   }, 0);
-  const collectedFees = custodies.reduce((acc: number, c) => {
+  const collectedFees = Object.values(custodies).reduce((acc: number, c) => {
     return (
       acc +
-      Object.values(c.data?.collectedFees ?? {}).reduce(
+      Object.values(c.collectedFees ?? {}).reduce(
         (acc, val) => Number(acc) + Number(val),
         0,
       )
     );
   }, 0);
 
-  const oiLong = custodies.reduce((acc: number, c) => {
-    return acc + Number(c.data?.tradeStats.oiLongUsd);
+  const oiLong = Object.values(custodies).reduce((acc: number, c) => {
+    return acc + Number(c.tradeStats.oiLongUsd);
   }, 0);
-
+  if (pool === undefined) {
+    return <></>;
+  }
   return (
     <tr
       className="cursor-pointer border-b border-zinc-700 text-xs hover:bg-zinc-800"
-      key={pool.data?.name}
+      key={pool?.name}
       onClick={() => router.push(`/pools/${poolKey.toString()}`)}
     >
       <td className="px-2 py-4">
         <div className="flex flex-row items-center space-x-1">
           <div className="h-6 w-6">{tokenIcon}</div>
           <div>
-            <p className="text-xs font-medium">{pool.data?.name}</p>
+            <p className="text-xs font-medium">{pool?.name}</p>
             <div className="flex flex-row truncate text-xs font-medium text-zinc-500">
-              {custodies
-                .filter((x) => x.data !== undefined)
-                .map((x) => tokens[x.data!.mint.toString()]!.symbol)
+              {Object.values(custodies)
+                .map((x) => tokens[x.mint.toString()]!.symbol)
                 .join(", ")}
             </div>
           </div>
         </div>
       </td>
-      <td>${formatNumberCommas(pool.data?.aumUsd.toNumber() / 10 ** 6)}</td>
+      <td>${formatNumberCommas(pool?.aumUsd.toNumber() / 10 ** 6)}</td>
       <td>${formatNumberCommas(tradeVolume / 10 ** 6)}</td>
       <td>${formatNumberCommas(collectedFees / 10 ** 6)}</td>
       <td>${formatNumberCommas(oiLong / 10 ** 6)}</td>
       <td>
         {userShare
           ? "$" +
-            formatNumberCommas(
-              (userShare * pool.data?.aumUsd.toNumber()) / 10 ** 6,
-            )
+            formatNumberCommas((userShare * pool?.aumUsd.toNumber()) / 10 ** 6)
           : "-"}
       </td>
       <td>{userShare ? formatNumberCommas(userShare * 100) + "%" : "-"}</td>

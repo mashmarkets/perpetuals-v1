@@ -10,7 +10,6 @@ import {
   TOKEN_LIST,
   TokenE,
 } from "@/lib/Token";
-import { useGlobalStore } from "@/stores/store";
 
 function formatNumber(num: number) {
   const formatter = Intl.NumberFormat("en", {

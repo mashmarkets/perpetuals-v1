@@ -5,11 +5,12 @@ import { BN } from "bn.js";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "react-toastify";
-import { addCustody as addCustodyFn } from "src/actions/perpetuals";
 
+import { addCustody as addCustodyFn } from "@/actions/perpetuals";
 import AddCustodyForm, { AddCustodyParams } from "@/components/FormListAsset";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
 import { useProgram } from "@/hooks/useProgram";
+import { safePublicKey } from "@/utils/utils";
 
 const Accordion = ({ title, children }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -74,27 +75,19 @@ export function stringify(v: any): any {
   return v;
 }
 
-const getPublicKey = (key: unknown): PublicKey | undefined => {
-  try {
-    return new PublicKey(key as string);
-  } catch {
-    return undefined;
-  }
-};
-
 const ManagePoolPage = () => {
   const router = useRouter();
   const program = useProgram();
   const queryClient = useQueryClient();
-  const { poolAddress } = router.query;
-  const { data: pool, isLoading } = usePool(getPublicKey(poolAddress));
-  const custodies = usePoolCustodies(getPublicKey(poolAddress));
+  const poolAddress = safePublicKey(router.query.poolAddress);
+  const { data: pool, isLoading } = usePool(poolAddress);
+  const custodies = usePoolCustodies(poolAddress);
 
   const addCustody = useMutation({
     onSuccess: (sig) => {
       console.log("Custody created with: ", sig);
       queryClient.invalidateQueries({
-        queryKey: ["pool", poolAddress!],
+        queryKey: ["pool", poolAddress?.toString()],
       });
       toast.success("Custody created successfully");
     },

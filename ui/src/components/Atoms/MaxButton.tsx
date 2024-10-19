@@ -11,11 +11,13 @@ export function MaxButton(props: Props) {
         className={twMerge(
           "h-min",
           "w-min",
-          "bg-purple-500",
-          "rounded",
+          "font-medium",
+          "border-2",
+          "rounded-lg",
+          "text-blue-400",
+          "border-blue-400",
           "py-1",
           "px-2",
-          "text-white",
         )}
         onClick={() => props.onChangeAmount(props.maxBalance)}
       >

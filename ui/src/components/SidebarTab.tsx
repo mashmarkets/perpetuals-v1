@@ -12,8 +12,8 @@ export function SidebarTab(props: Props) {
     <button
       className={twMerge(
         "fill-gray-400",
-        "font-medium",
-        "text-gray-400",
+        "font-bold",
+        "text-gray-200",
         "text-sm",
         "bg-black",
         "flex",
@@ -24,10 +24,9 @@ export function SidebarTab(props: Props) {
         "space-x-2.5",
         "transition-colors",
         !props.selected && "hover:bg-white/20",
-        props.selected && "bg-white",
+        props.selected && "bg-emerald-400",
         props.selected && "font-bold",
-        props.selected && "fill-rose-400",
-        props.selected && "text-rose-400",
+        props.selected && "text-black",
         props.className,
       )}
       onClick={props.onClick}

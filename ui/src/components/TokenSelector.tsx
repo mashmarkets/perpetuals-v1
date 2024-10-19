@@ -6,7 +6,6 @@ import { MaxButton } from "@/components/Atoms/MaxButton";
 import { TokenSelectorList } from "@/components/TokenSelectorList";
 import { usePrice } from "@/hooks/price";
 import { getTokenIcon, getTokenPublicKey, TokenE } from "@/lib/Token";
-import { useGlobalStore } from "@/stores/store";
 
 function formatNumber(num: number) {
   const formatter = Intl.NumberFormat("en", {
@@ -18,7 +17,7 @@ function formatNumber(num: number) {
 
 interface Props {
   className?: string;
-  amount: number;
+  amount?: number;
   token: TokenE;
   onChangeAmount?(amount: number): void;
   onSelectToken?(token: TokenE): void;
@@ -75,7 +74,7 @@ export function TokenSelector(props: Props) {
               className: "h-6 rounded-full w-6",
             })}
             <div className="ml-1 mr-2 text-xl text-white">{props.token}</div>
-            {props.tokenList.length > 1 && (
+            {(props.tokenList ?? []).length > 1 && (
               <ChevronRightIcon className="fill-gray-500 transition-colors group-hover:fill-white" />
             )}
           </button>
@@ -85,7 +84,7 @@ export function TokenSelector(props: Props) {
           />
         </div>
         <div>
-          {props.pendingRateConversion ? (
+          {props.pendingRateConversion || props.amount === undefined ? (
             <div className="text-right text-xs text-zinc-500">Loading...</div>
           ) : (
             <input
@@ -114,14 +113,14 @@ export function TokenSelector(props: Props) {
               }}
             />
           )}
-          {!!price?.currentPrice && (
+          {!!price?.currentPrice && props.amount !== undefined && (
             <div className="mt-0.5 text-right text-xs text-zinc-500">
               {formatNumber(props.amount * price.currentPrice)}
             </div>
           )}
         </div>
       </div>
-      {selectorOpen && props.tokenList.length > 1 && (
+      {selectorOpen && (props.tokenList ?? []).length > 1 && (
         <TokenSelectorList
           onClose={() => setSelectorOpen(false)}
           onSelectToken={props.onSelectToken}

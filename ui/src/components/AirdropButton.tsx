@@ -2,19 +2,14 @@ import { BN } from "@coral-xyz/anchor";
 import { useConnection, useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey, Transaction } from "@solana/web3.js";
 import { useQueryClient } from "@tanstack/react-query";
-import { createMintToInstruction } from "src/actions/faucet";
 
+import { createMintToInstruction } from "@/actions/faucet";
 import { usePrice } from "@/hooks/price";
-import { CustodyAccount } from "@/lib/CustodyAccount";
-import { getTokenLabel, tokens } from "@/lib/Token";
+import { getTokenSymbol, tokens } from "@/lib/Token";
 import { sendSignedTransactionAndNotify } from "@/utils/TransactionHandlers";
 
 import { SolidButton } from "./SolidButton";
 
-interface Props {
-  className?: string;
-  custody: CustodyAccount;
-}
 function roundToOneSignificantFigure(num) {
   if (num === 0) return 0; // Handle the case for 0 separately
 
@@ -28,8 +23,13 @@ function roundToOneSignificantFigure(num) {
   return Math.ceil(num / factor) * factor;
 }
 
-export default function AirdropButton(props: Props) {
-  let mint = props.custody.mint;
+export default function AirdropButton({
+  mint,
+  className,
+}: {
+  className?: string;
+  mint: PublicKey;
+}) {
   const client = useQueryClient();
   const { publicKey, signTransaction } = useWallet();
   const { connection } = useConnection();
@@ -101,9 +101,7 @@ export default function AirdropButton(props: Props) {
       className="my-6 w-full bg-slate-500 hover:bg-slate-200"
       onClick={handleAirdrop}
     >
-      Airdrop {'"'}
-      {getTokenLabel(props.custody.mint)}
-      {'"'}
+      Airdrop {getTokenSymbol(mint)}
     </SolidButton>
   );
 }

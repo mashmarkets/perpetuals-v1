@@ -35,19 +35,19 @@ export async function automaticSendTransaction(
 
 export const wrapTransactionWithNotification = async (
   connection: Connection,
-  p: Promise<{
-    signature: string;
-    blockhash: string;
-    lastValidBlockHeight: number;
-  }>,
+  p: Promise<
+    | {
+        signature: string;
+        blockhash: string;
+        lastValidBlockHeight: number;
+      }
+    | string
+  >,
 ) => {
-  const { signature, blockhash, lastValidBlockHeight } = await p;
+  const tx = await p;
+  const signature = typeof tx === "string" ? tx : tx.signature;
   await toast.promise(
-    connection.confirmTransaction({
-      signature,
-      blockhash,
-      lastValidBlockHeight,
-    }),
+    connection.confirmTransaction(tx as any),
     {
       pending: {
         render() {
