@@ -1,14 +1,11 @@
 "use client";
 
-import { PublicKey } from "@metaplex-foundation/js";
 import { useWallet } from "@solana/wallet-adapter-react";
+import { PublicKey } from "@solana/web3.js";
 import { useRouter } from "next/router";
 import { twMerge } from "tailwind-merge";
 
-import {
-  findPerpetualsAddressSync,
-  getAssetsUnderManagement,
-} from "@/actions/perpetuals";
+import { findPerpetualsAddressSync } from "@/actions/perpetuals";
 import { NoPositions } from "@/components/Positions/NoPositions";
 import {
   useAllPools,

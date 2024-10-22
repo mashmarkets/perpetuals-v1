@@ -59,7 +59,7 @@ export function CollateralModal({
     BigInt(Math.round(amounts.withdrawAmount * 10 ** 6)),
   );
 
-  let payToken = custody ? asToken(custody.mint) : undefined;
+  const payToken = custody ? asToken(custody.mint) : undefined;
 
   const payTokenBalance = Number(collateralBalance) / 10 ** decimals;
   const changeCollateralUsd =

@@ -20,7 +20,7 @@ const safePublicKey = (key: unknown): PublicKey | undefined => {
   }
 };
 
-const TradingViewWidget = dynamic<any>(
+const TradingViewWidget = dynamic(
   () =>
     import("react-ts-tradingview-widgets").then((x) => x.AdvancedRealTimeChart),
   {
@@ -40,7 +40,7 @@ export default function Page() {
       <>
         <div className="mx-auto max-w-xl pt-16 text-center">
           <p className="text-2xl text-white">
-            This pool doesn't exist. Do you want to create?
+            This pool does not exist. Do you want to create?
           </p>
           <Link href="/list" as={`/list`}>
             <div className="pt-4 text-center text-lg text-slate-400">
@@ -71,7 +71,7 @@ export default function Page() {
           <TradingViewWidget
             autosize
             symbol={getTradingViewSymbol(mint)}
-            theme="Dark"
+            theme="dark"
           />
           <div className="items-center text-center">
             <a

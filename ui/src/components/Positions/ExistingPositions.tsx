@@ -57,7 +57,7 @@ export function ExistingPositions() {
     <>
       {Object.entries(groupedPositions).map(([pool, positions]) => {
         if (positions.length === 0) {
-          return <p>No Positions</p>;
+          return <p key={pool}>No Positions</p>;
         }
         const allTokens = positions
           .map((position) => {

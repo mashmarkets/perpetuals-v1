@@ -1,4 +1,9 @@
-import { Connection, SendTransactionError } from "@solana/web3.js";
+import {
+  Connection,
+  SendTransactionError,
+  TransactionConfirmationStrategy,
+  TransactionSignature,
+} from "@solana/web3.js";
 import { toast } from "react-toastify";
 
 export const TRX_URL = (txid: string) =>
@@ -13,14 +18,7 @@ export async function sleep(ms: number) {
 
 export const wrapTransactionWithNotification = async (
   connection: Connection,
-  p: Promise<
-    | {
-        signature: string;
-        blockhash: string;
-        lastValidBlockHeight: number;
-      }
-    | string
-  >,
+  p: Promise<TransactionConfirmationStrategy | TransactionSignature>,
   messages: {
     pending?: string;
     success?: string;
@@ -53,6 +51,7 @@ export const wrapTransactionWithNotification = async (
   await toast.promise(
     p.then((tx) => {
       signature = typeof tx === "string" ? tx : tx.signature;
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Can't get with to work with the union type
       return connection.confirmTransaction(tx as any);
     }),
     {

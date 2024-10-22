@@ -24,13 +24,7 @@ function roundToOneSignificantFigure(num: number): number {
   return Math.ceil(num / factor) * factor;
 }
 
-export default function AirdropButton({
-  mint,
-  className,
-}: {
-  className?: string;
-  mint: PublicKey;
-}) {
+export default function AirdropButton({ mint }: { mint: PublicKey }) {
   const queryClient = useQueryClient();
   const provider = useAnchorProvider();
   const { data: price } = usePrice(mint);
@@ -50,7 +44,11 @@ export default function AirdropButton({
   const airdropMutation = useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["balance", provider.publicKey?.toString(), mint?.toString()],
+        queryKey: [
+          "balance",
+          provider?.publicKey?.toString(),
+          mint?.toString(),
+        ],
       });
     },
     mutationFn: async () => {

@@ -68,14 +68,14 @@ const ManagePoolPage = () => {
     );
   }
 
-  const renderDetails = (obj: any, depth = 0) => {
+  const renderDetails = (obj: Record<string, unknown>, depth = 0) => {
     return Object.entries(obj).map(([key, value]) => {
       let renderedValue;
 
       if (typeof value === "object" && value !== null) {
         renderedValue = (
           <div style={{ marginLeft: `${depth * 10}px` }}>
-            {renderDetails(value, depth + 1)}
+            {renderDetails(value as Record<string, unknown>, depth + 1)}
           </div>
         );
       } else {
@@ -107,7 +107,7 @@ const ManagePoolPage = () => {
 
       <div className="text-white">
         <Accordion title="Pool Details">
-          {renderDetails(stringify(pool))}
+          {renderDetails(stringify(pool) as Record<string, unknown>)}
         </Accordion>
       </div>
 
@@ -115,7 +115,7 @@ const ManagePoolPage = () => {
         {Object.values(custodies).map((custody, index) => (
           <div key={index} className="mb-4">
             <Accordion title={`Custody - ${pool.custodies[index]?.toString()}`}>
-              {renderDetails(stringify(custody))}
+              {renderDetails(stringify(custody) as Record<string, unknown>)}
             </Accordion>
           </div>
         ))}

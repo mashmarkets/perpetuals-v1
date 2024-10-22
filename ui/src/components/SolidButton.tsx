@@ -12,7 +12,7 @@ export const SolidButton = forwardRef<HTMLButtonElement, Props>(
     const { ...rest } = props;
     const [loading, setLoading] = useState(false);
 
-    const handleClick = async (e: any) => {
+    const handleClick = async (e: React.MouseEvent<HTMLButtonElement>) => {
       setLoading(true);
       try {
         await rest.onClick?.(e);

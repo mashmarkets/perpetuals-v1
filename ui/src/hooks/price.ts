@@ -1,19 +1,11 @@
-import { IdlAccounts, utils } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 import { useQueries, useQuery } from "@tanstack/react-query";
-import {
-  create,
-  indexedResolver,
-  keyResolver,
-  windowScheduler,
-} from "@yornaath/batshit";
-import { memoize } from "lodash-es";
+import { create, indexedResolver, windowScheduler } from "@yornaath/batshit";
 
 import { getCoingeckoId } from "@/lib/Token";
 import { queryClient } from "@/pages/_app";
-import { Perpetuals } from "@/target/types/perpetuals";
 
-import { PerpetualsProgram, useProgram } from "./useProgram";
+import { useProgram } from "./useProgram";
 
 export interface PriceStat {
   change24hr: number;

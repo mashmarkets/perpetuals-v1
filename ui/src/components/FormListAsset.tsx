@@ -30,6 +30,7 @@ const addCustodySchema = z.object({
   tokenOracle: z.string().transform(transformToPublicKey),
   oracleType: z
     .enum(["pyth", "custom"])
+    // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- This is anchor enum
     .transform((x) => ({ [x]: {} }) as { pyth: {} } | { custom: {} }),
   maxPriceError: z.string().transform(transformToBN(4 - 2)),
   maxPriceAgeSec: z.string().transform((x) => parseInt(x)),
@@ -84,7 +85,7 @@ const AddCustodyForm = ({
 }: {
   poolName: string;
   custodies: { mint: PublicKey }[];
-  onSubmit: (x: any) => void;
+  onSubmit: (x: AddCustodyParams) => void;
 }) => {
   const pools = useAllPools();
   const defaultValues: AddCustodyState = {
@@ -140,17 +141,19 @@ const AddCustodyForm = ({
     watch,
     setValue,
     formState: { isValid },
-  } = useForm({
-    defaultValues,
-    mode: "onChange",
-    resolver: zodResolver(addCustodySchema),
-  });
+  } =
+    // Different input outputs due to zod transform https://github.com/react-hook-form/documentation/issues/1078
+    useForm<AddCustodyState, unknown, AddCustodyParams>({
+      defaultValues,
+      mode: "onChange",
+      resolver: zodResolver(addCustodySchema),
+    });
 
   const oracleType = watch("oracleType");
   const list = getTokensKeyedBy("address");
   return (
     <div>
-      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+      <form onSubmit={() => handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <select
             id="tokenSelect"
@@ -438,7 +441,7 @@ const AddCustodyForm = ({
 
         {/* Permissions */}
         <h2 className="mt-4 text-xl font-semibold text-white">Permissions</h2>
-        {Object.entries(defaultValues.permissions).map(([key, value]) => {
+        {Object.keys(defaultValues.permissions).map((key) => {
           if (["allowPnlWithdrawal", "allowSizeChange"].includes(key)) {
             return null;
           }
@@ -462,7 +465,7 @@ const AddCustodyForm = ({
 
         {/* Fees */}
         <h2 className="mt-4 text-xl font-semibold text-white">Fees</h2>
-        {Object.entries(defaultValues.fees).map(([key, value]) => {
+        {Object.keys(defaultValues.fees).map((key) => {
           if (["addLiquidity", "protocolShare"].includes(key)) {
             return null;
           }
@@ -489,7 +492,7 @@ const AddCustodyForm = ({
 
         {/* Borrow Rate */}
         <h2 className="mt-4 text-xl font-semibold text-white">Borrow Rate</h2>
-        {Object.entries(defaultValues.borrowRate).map(([key, value]) => (
+        {Object.keys(defaultValues.borrowRate).map((key) => (
           <div key={key}>
             <label htmlFor={key} className="mb-1 block text-white">
               {key

@@ -29,7 +29,6 @@ const tokenList: Token[] = universe.map((x) => ({
       : getFaucetMint(new PublicKey(x.address)).toString(),
 }));
 
-const getTokenList = () => tokenList;
 export const getTokensKeyedBy = memoize(
   (k: keyof Omit<Token, "extensions">) => {
     return tokenList.reduce(
@@ -86,8 +85,6 @@ export enum TokenE {
 }
 export const TOKEN_LIST = Object.values(TokenE);
 
-const TOKEN_ADDRESSES = tokenList.map((x) => new PublicKey(x.address));
-
 export function asToken(tokenStr: string | PublicKey): TokenE {
   if (tokenStr instanceof PublicKey) {
     if (tokens[tokenStr.toString()] === undefined) {
@@ -142,6 +139,7 @@ export function getTokenIcon(token: PublicKey | undefined) {
   const alt = tokens[token.toString()]!.name;
 
   return (
+    // eslint-disable-next-line @next/next/no-img-element -- Don't want to be reliant on vercel deployment for now
     <img src={src} alt={alt} width={20} height={20} className="rounded-full" />
   );
 }

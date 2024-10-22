@@ -65,7 +65,7 @@ export default function LiquidityCard({
     publicKey === null ? undefined : publicKey,
   );
 
-  let liqBalance =
+  const liqBalance =
     lp?.data === undefined || lpMint === undefined
       ? 0
       : Number(lp.data) / 10 ** lpMint.decimals;
@@ -269,7 +269,6 @@ export default function LiquidityCard({
               }
             />
           ) : (
-            // @ts-ignore
             <TokenSelector
               className="mt-2"
               amount={

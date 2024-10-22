@@ -13,7 +13,7 @@ export const safePublicKey = (key: unknown): PublicKey | undefined => {
   }
 };
 
-export function stringify(v: any): any {
+export function stringify(v: unknown): unknown {
   if (v instanceof PublicKey || v instanceof BN) {
     return v.toString();
   }
@@ -28,21 +28,26 @@ export function stringify(v: any): any {
   // Check if it is an anchor enum
   if (typeof v === "object" && v !== null) {
     const keys = Object.keys(v);
-    if (keys.length === 1 && Object.keys(v[keys[0]!]).length === 0) {
+    if (
+      keys.length === 1 &&
+      typeof (v as Record<string, unknown>)[keys[0]] === "object" &&
+      Object.keys((v as Record<string, unknown>)[keys[0]] as object).length ===
+        0
+    ) {
       return keys[0];
     }
   }
 
   // If it's an object, recursively process its keys
   if (typeof v === "object" && v !== null) {
-    const result: { [key: string]: any } = {};
+    const result: { [key: string]: unknown } = {};
     const singleValueKeys: string[] = [];
     const complexKeys: string[] = [];
 
     Object.keys(v)
       .sort()
       .forEach((key) => {
-        const value = stringify(v[key]);
+        const value = stringify((v as Record<string, unknown>)[key]);
         if (typeof value === "object" || Array.isArray(value)) {
           complexKeys.push(key);
         } else {
@@ -51,7 +56,7 @@ export function stringify(v: any): any {
         result[key] = value;
       });
 
-    const sortedResult: { [key: string]: any } = {};
+    const sortedResult: { [key: string]: unknown } = {};
     [...singleValueKeys, ...complexKeys].forEach((key) => {
       sortedResult[key] = result[key];
     });

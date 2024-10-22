@@ -57,6 +57,9 @@ const useEntryEstimate = (params: Omit<OpenPositionParams, "price">) => {
       !debounced.collateral.eq(new BN(0)) &&
       !debounced.size.eq(new BN(0)),
     queryFn: async () => {
+      if (program === undefined) {
+        return;
+      }
       return await getEntryPriceAndFee(program, debounced);
     },
   });
@@ -145,7 +148,7 @@ export function TradePosition({
       );
     },
     mutationFn: async () => {
-      if (price === undefined) {
+      if (program === undefined || price === undefined) {
         return;
       }
 
@@ -198,7 +201,7 @@ export function TradePosition({
           setPayAmount(e);
           setLastChanged(Input.Pay);
         }}
-        onSelectToken={(token) => {
+        onSelectToken={() => {
           // setPayToken(token);
           // setPositionToken(token);
         }}
@@ -214,7 +217,7 @@ export function TradePosition({
           setPositionAmount(e);
           setLastChanged(Input.Position);
         }}
-        onSelectToken={(token) => {
+        onSelectToken={() => {
           // setPayToken(token);
           // setPositionToken(token);
         }}

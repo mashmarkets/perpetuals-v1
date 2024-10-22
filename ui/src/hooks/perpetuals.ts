@@ -176,7 +176,7 @@ export const usePool = (pool: PublicKey | undefined) => {
           if (info === null) {
             return null;
           }
-          const coder = program.account.pool.coder;
+          const coder = program!.account.pool.coder;
           return {
             address: pool!,
             ...coder.accounts.decode("pool", info.data!),
@@ -196,7 +196,7 @@ export const usePools = (pools: PublicKey[]) => {
         connectionBatcher(connection)
           .fetch(pool)
           .then((info) => {
-            const coder = program.account.pool.coder;
+            const coder = program!.account.pool.coder;
             return {
               address: pool,
               ...coder.accounts.decode("pool", info!.data!),
@@ -226,7 +226,7 @@ const useAllPoolsAddress = () => {
     enabled: !!program,
     refetchInterval: 5 * ONE_MINUTE,
     queryFn: async () => {
-      const data = await program.account.pool.all();
+      const data = await program!.account.pool.all();
       const pools = data.reduce(
         (acc, v) => {
           acc[v.publicKey.toString()] = {
@@ -264,7 +264,7 @@ export const useCustody = (custody: PublicKey | undefined) => {
       connectionBatcher(connection)
         .fetch(custody!)
         .then((info) => {
-          const coder = program.account.custody.coder;
+          const coder = program!.account.custody.coder;
           return parseCustody({
             publicKey: custody!,
             account: coder.accounts.decode("custody", info!.data!),
@@ -285,7 +285,7 @@ export const useCustodies = (custodies: PublicKey[]) => {
         connectionBatcher(connection)
           .fetch(custody)
           .then((info) => {
-            const coder = program.account.custody.coder;
+            const coder = program!.account.custody.coder;
             return parseCustody({
               publicKey: custody!,
               account: coder.accounts.decode("custody", info!.data!),
@@ -322,7 +322,7 @@ export const usePoolCustodies = (poolKey: PublicKey | undefined) => {
         connectionBatcher(connection)
           .fetch(custody)
           .then((info) => {
-            const coder = program.account.custody.coder;
+            const coder = program!.account.custody.coder;
             return parseCustody({
               publicKey: custody!,
               account: coder.accounts.decode("custody", info!.data!),
@@ -355,10 +355,13 @@ export const usePosition = (position: PublicKey | undefined) => {
       connectionBatcher(connection)
         .fetch(position!)
         .then((info) => {
-          const coder = program.account.position.coder;
+          if (info === null) {
+            return null;
+          }
+          const coder = program!.account.position.coder;
           return parsePosition({
             publicKey: position!,
-            account: coder.accounts.decode("position", info?.data!),
+            account: coder.accounts.decode("position", info?.data),
           });
         }) as Promise<Position>,
   });
@@ -376,7 +379,10 @@ export const usePositions = (positions: PublicKey[]) => {
         connectionBatcher(connection)
           .fetch(position)
           .then((info) => {
-            const coder = program.account.position.coder;
+            if (info === null) {
+              return null;
+            }
+            const coder = program!.account.position.coder;
             return parsePosition({
               publicKey: position!,
               account: coder.accounts.decode("position", info!.data!),
@@ -406,7 +412,7 @@ export const useAllUserPositions = (user: PublicKey | null) => {
     enabled: !!program && user !== null && user !== undefined,
     refetchInterval: 2 * ONE_MINUTE,
     queryFn: async () => {
-      const data = await program.account.position.all();
+      const data = await program!.account.position.all();
       const positions = data.map(parsePosition);
 
       // Update individual cache
@@ -435,7 +441,8 @@ export const useAllUserPositions = (user: PublicKey | null) => {
         client.setQueryData(["positions", key], positions);
       });
 
-      return groupedPositions[user?.toString()!] ?? [];
+      const userKey = user?.toString();
+      return userKey ? (groupedPositions[userKey] ?? []) : [];
     },
   });
 };
@@ -462,7 +469,7 @@ export const usePositionLiquidationPrice = (
       custody !== undefined,
 
     queryFn: () =>
-      getLiquidationPrice(program, {
+      getLiquidationPrice(program!, {
         position: position!,
         custody: custody!,
         addCollateral,
@@ -478,7 +485,7 @@ export const usePositionPnl = (position: Position | undefined) => {
   return useQuery({
     queryKey: ["getPnl", position?.address.toString()],
     enabled: !!program && !!position && !!custody,
-    queryFn: () => getPnl(program, { position: position!, custody: custody! }),
+    queryFn: () => getPnl(program!, { position: position!, custody: custody! }),
   });
 };
 
@@ -505,7 +512,7 @@ export const useGetAddLiquidityAmountAndFee = ({
       custody !== undefined &&
       amountIn > BigInt(0),
     queryFn: () =>
-      getAddLiquidityAmountAndFee(program, {
+      getAddLiquidityAmountAndFee(program!, {
         pool: pool!,
         custody: custody!,
         amountIn,
@@ -536,7 +543,7 @@ export const useGetRemoveLiquidityAmountAndFee = ({
       custody !== undefined &&
       lpAmountIn > BigInt(0),
     queryFn: () =>
-      getRemoveLiquidityAmountAndFee(program, {
+      getRemoveLiquidityAmountAndFee(program!, {
         pool: pool!,
         custody: custody!,
         lpAmountIn,
@@ -561,7 +568,7 @@ export const useGetAssetsUnderManagement = (pool: Pool | undefined | null) => {
     enabled: !!program && !!pool && custody !== undefined,
     initialData: pool ? BigInt(pool?.aumUsd.toString()) : undefined,
     queryFn: () =>
-      getAssetsUnderManagement(program, {
+      getAssetsUnderManagement(program!, {
         pool: pool!,
         custody: custody!,
       }),
@@ -578,10 +585,10 @@ export const useMultipleGetAssetsUnderManagement = (pools: Pool[]) => {
         pool.address.toString(),
         pool?.aumUsd.toString(),
       ],
-      enabled: !!pool,
+      enabled: !!pool && !!program,
       initialData: pool ? BigInt(pool.aumUsd.toString()) : undefined,
       queryFn: () =>
-        getAssetsUnderManagement(program, {
+        getAssetsUnderManagement(program!, {
           pool: pool!,
           custody: custodies[pool!.custodies[0].toString()]!,
         }),
