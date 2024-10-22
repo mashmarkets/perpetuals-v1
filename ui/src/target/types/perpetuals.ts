@@ -729,17 +729,7 @@ export type Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -807,17 +797,7 @@ export type Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -880,17 +860,7 @@ export type Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -953,17 +923,7 @@ export type Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -1031,17 +991,7 @@ export type Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -1186,16 +1136,6 @@ export type Perpetuals = {
           "name": "custodyOracleAccount",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -1235,16 +1175,6 @@ export type Perpetuals = {
         },
         {
           "name": "custodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
           "isMut": false,
           "isSigner": false
         }
@@ -1288,16 +1218,6 @@ export type Perpetuals = {
           "name": "custodyOracleAccount",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -1339,16 +1259,6 @@ export type Perpetuals = {
           "name": "custodyOracleAccount",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -1386,16 +1296,6 @@ export type Perpetuals = {
         },
         {
           "name": "custodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
           "isMut": false,
           "isSigner": false
         }
@@ -1798,10 +1698,6 @@ export type Perpetuals = {
           },
           {
             "name": "custody",
-            "type": "publicKey"
-          },
-          {
-            "name": "collateralCustody",
             "type": "publicKey"
           },
           {
@@ -2949,86 +2845,81 @@ export type Perpetuals = {
     },
     {
       "code": 6012,
-      "name": "InvalidCollateralCustody",
-      "msg": "Invalid collateral custody"
-    },
-    {
-      "code": 6013,
       "name": "InvalidPositionState",
       "msg": "Invalid position state"
     },
     {
-      "code": 6014,
+      "code": 6013,
       "name": "InvalidPerpetualsConfig",
       "msg": "Invalid perpetuals config"
     },
     {
-      "code": 6015,
+      "code": 6014,
       "name": "InvalidPoolConfig",
       "msg": "Invalid pool config"
     },
     {
-      "code": 6016,
+      "code": 6015,
       "name": "InvalidCustodyConfig",
       "msg": "Invalid custody config"
     },
     {
-      "code": 6017,
+      "code": 6016,
       "name": "InsufficientAmountReturned",
       "msg": "Insufficient token amount returned"
     },
     {
-      "code": 6018,
+      "code": 6017,
       "name": "MaxPriceSlippage",
       "msg": "Price slippage limit exceeded"
     },
     {
-      "code": 6019,
+      "code": 6018,
       "name": "MaxLeverage",
       "msg": "Position leverage limit exceeded"
     },
     {
-      "code": 6020,
+      "code": 6019,
       "name": "CustodyAmountLimit",
       "msg": "Custody amount limit exceeded"
     },
     {
-      "code": 6021,
+      "code": 6020,
       "name": "PositionAmountLimit",
       "msg": "Position amount limit exceeded"
     },
     {
-      "code": 6022,
+      "code": 6021,
       "name": "UnsupportedToken",
       "msg": "Token is not supported"
     },
     {
-      "code": 6023,
+      "code": 6022,
       "name": "InstructionNotAllowed",
       "msg": "Instruction is not allowed at this time"
     },
     {
-      "code": 6024,
+      "code": 6023,
       "name": "MaxUtilization",
       "msg": "Token utilization limit exceeded"
     },
     {
-      "code": 6025,
+      "code": 6024,
       "name": "PermissionlessOracleMissingSignature",
       "msg": "Permissionless oracle update must be preceded by Ed25519 signature verification instruction"
     },
     {
-      "code": 6026,
+      "code": 6025,
       "name": "PermissionlessOracleMalformedEd25519Data",
       "msg": "Ed25519 signature verification data does not match expected format"
     },
     {
-      "code": 6027,
+      "code": 6026,
       "name": "PermissionlessOracleSignerMismatch",
       "msg": "Ed25519 signature was not signed by the oracle authority"
     },
     {
-      "code": 6028,
+      "code": 6027,
       "name": "PermissionlessOracleMessageMismatch",
       "msg": "Signed message does not match instruction params"
     }
@@ -3766,17 +3657,7 @@ export const IDL: Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -3844,17 +3725,7 @@ export const IDL: Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -3917,17 +3788,7 @@ export const IDL: Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -3990,17 +3851,7 @@ export const IDL: Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -4068,17 +3919,7 @@ export const IDL: Perpetuals = {
           "isSigner": false
         },
         {
-          "name": "collateralCustody",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyTokenAccount",
+          "name": "custodyTokenAccount",
           "isMut": true,
           "isSigner": false
         },
@@ -4223,16 +4064,6 @@ export const IDL: Perpetuals = {
           "name": "custodyOracleAccount",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -4272,16 +4103,6 @@ export const IDL: Perpetuals = {
         },
         {
           "name": "custodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
           "isMut": false,
           "isSigner": false
         }
@@ -4325,16 +4146,6 @@ export const IDL: Perpetuals = {
           "name": "custodyOracleAccount",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -4376,16 +4187,6 @@ export const IDL: Perpetuals = {
           "name": "custodyOracleAccount",
           "isMut": false,
           "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
         }
       ],
       "args": [
@@ -4423,16 +4224,6 @@ export const IDL: Perpetuals = {
         },
         {
           "name": "custodyOracleAccount",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustody",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "collateralCustodyOracleAccount",
           "isMut": false,
           "isSigner": false
         }
@@ -4835,10 +4626,6 @@ export const IDL: Perpetuals = {
           },
           {
             "name": "custody",
-            "type": "publicKey"
-          },
-          {
-            "name": "collateralCustody",
             "type": "publicKey"
           },
           {
@@ -5986,86 +5773,81 @@ export const IDL: Perpetuals = {
     },
     {
       "code": 6012,
-      "name": "InvalidCollateralCustody",
-      "msg": "Invalid collateral custody"
-    },
-    {
-      "code": 6013,
       "name": "InvalidPositionState",
       "msg": "Invalid position state"
     },
     {
-      "code": 6014,
+      "code": 6013,
       "name": "InvalidPerpetualsConfig",
       "msg": "Invalid perpetuals config"
     },
     {
-      "code": 6015,
+      "code": 6014,
       "name": "InvalidPoolConfig",
       "msg": "Invalid pool config"
     },
     {
-      "code": 6016,
+      "code": 6015,
       "name": "InvalidCustodyConfig",
       "msg": "Invalid custody config"
     },
     {
-      "code": 6017,
+      "code": 6016,
       "name": "InsufficientAmountReturned",
       "msg": "Insufficient token amount returned"
     },
     {
-      "code": 6018,
+      "code": 6017,
       "name": "MaxPriceSlippage",
       "msg": "Price slippage limit exceeded"
     },
     {
-      "code": 6019,
+      "code": 6018,
       "name": "MaxLeverage",
       "msg": "Position leverage limit exceeded"
     },
     {
-      "code": 6020,
+      "code": 6019,
       "name": "CustodyAmountLimit",
       "msg": "Custody amount limit exceeded"
     },
     {
-      "code": 6021,
+      "code": 6020,
       "name": "PositionAmountLimit",
       "msg": "Position amount limit exceeded"
     },
     {
-      "code": 6022,
+      "code": 6021,
       "name": "UnsupportedToken",
       "msg": "Token is not supported"
     },
     {
-      "code": 6023,
+      "code": 6022,
       "name": "InstructionNotAllowed",
       "msg": "Instruction is not allowed at this time"
     },
     {
-      "code": 6024,
+      "code": 6023,
       "name": "MaxUtilization",
       "msg": "Token utilization limit exceeded"
     },
     {
-      "code": 6025,
+      "code": 6024,
       "name": "PermissionlessOracleMissingSignature",
       "msg": "Permissionless oracle update must be preceded by Ed25519 signature verification instruction"
     },
     {
-      "code": 6026,
+      "code": 6025,
       "name": "PermissionlessOracleMalformedEd25519Data",
       "msg": "Ed25519 signature verification data does not match expected format"
     },
     {
-      "code": 6027,
+      "code": 6026,
       "name": "PermissionlessOracleSignerMismatch",
       "msg": "Ed25519 signature was not signed by the oracle authority"
     },
     {
-      "code": 6028,
+      "code": 6027,
       "name": "PermissionlessOracleMessageMismatch",
       "msg": "Signed message does not match instruction params"
     }

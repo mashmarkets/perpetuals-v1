@@ -25,7 +25,7 @@ pub struct RemoveCollateral<'info> {
 
     #[account(
         mut,
-        constraint = receiving_account.mint == collateral_custody.mint,
+        constraint = receiving_account.mint == custody.mint,
         has_one = owner
     )]
     pub receiving_account: Box<Account<'info, TokenAccount>>,
@@ -45,8 +45,7 @@ pub struct RemoveCollateral<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,
@@ -54,11 +53,13 @@ pub struct RemoveCollateral<'info> {
     #[account(
         mut,
         has_one = owner,
-        seeds = [b"position",
-                 owner.key().as_ref(),
-                 pool.key().as_ref(),
-                 custody.key().as_ref(),
-                 &[Side::Long as u8]],
+        seeds = [
+            b"position",
+            owner.key().as_ref(),
+            pool.key().as_ref(),
+            custody.key().as_ref(),
+            &[Side::Long as u8]
+        ],
         bump = position.bump
     )]
     pub position: Box<Account<'info, Position>>,
@@ -77,24 +78,14 @@ pub struct RemoveCollateral<'info> {
 
     #[account(
         mut,
-        constraint = position.collateral_custody == collateral_custody.key()
+        seeds = [
+            b"custody_token_account",
+            pool.key().as_ref(),
+            custody.mint.as_ref()
+        ],
+        bump = custody.token_account_bump
     )]
-    pub collateral_custody: Box<Account<'info, Custody>>,
-
-    /// CHECK: oracle account for the collateral token
-    #[account(
-        constraint = collateral_custody_oracle_account.key() == collateral_custody.oracle.oracle_account
-    )]
-    pub collateral_custody_oracle_account: AccountInfo<'info>,
-
-    #[account(
-        mut,
-        seeds = [b"custody_token_account",
-                 pool.key().as_ref(),
-                 collateral_custody.mint.as_ref()],
-        bump = collateral_custody.token_account_bump
-    )]
-    pub collateral_custody_token_account: Box<Account<'info, TokenAccount>>,
+    pub custody_token_account: Box<Account<'info, TokenAccount>>,
 
     token_program: Program<'info, Token>,
 }
@@ -112,7 +103,6 @@ pub fn remove_collateral(
     msg!("Check permissions");
     let perpetuals = ctx.accounts.perpetuals.as_mut();
     let custody = ctx.accounts.custody.as_mut();
-    let collateral_custody = ctx.accounts.collateral_custody.as_mut();
     require!(
         perpetuals.permissions.allow_collateral_withdrawal
             && custody.permissions.allow_collateral_withdrawal,
@@ -144,33 +134,15 @@ pub fn remove_collateral(
         custody.pricing.use_ema,
     )?;
 
-    let collateral_token_price = OraclePrice::new_from_oracle(
-        &ctx.accounts
-            .collateral_custody_oracle_account
-            .to_account_info(),
-        &collateral_custody.oracle,
-        curtime,
-        false,
-    )?;
-
-    let collateral_token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts
-            .collateral_custody_oracle_account
-            .to_account_info(),
-        &collateral_custody.oracle,
-        curtime,
-        collateral_custody.pricing.use_ema,
-    )?;
-
-    let max_collateral_price = if collateral_token_price > collateral_token_ema_price {
-        collateral_token_price
+    let max_collateral_price = if token_price > token_ema_price {
+        token_price
     } else {
-        collateral_token_ema_price
+        token_ema_price
     };
 
     // compute amount to transfer
-    let collateral = max_collateral_price
-        .get_token_amount(params.collateral_usd, collateral_custody.decimals)?;
+    let collateral =
+        max_collateral_price.get_token_amount(params.collateral_usd, custody.decimals)?;
     if collateral > position.collateral_amount {
         return Err(ProgramError::InsufficientFunds.into());
     }
@@ -190,9 +162,6 @@ pub fn remove_collateral(
             &token_price,
             &token_ema_price,
             custody,
-            &collateral_token_price,
-            &collateral_token_ema_price,
-            collateral_custody,
             curtime,
             true
         )?,
@@ -202,9 +171,7 @@ pub fn remove_collateral(
     // transfer tokens
     msg!("Transfer tokens");
     perpetuals.transfer_tokens(
-        ctx.accounts
-            .collateral_custody_token_account
-            .to_account_info(),
+        ctx.accounts.custody_token_account.to_account_info(),
         ctx.accounts.receiving_account.to_account_info(),
         ctx.accounts.transfer_authority.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
@@ -213,11 +180,7 @@ pub fn remove_collateral(
 
     // update custody stats
     msg!("Update custody stats");
-    collateral_custody.assets.collateral =
-        math::checked_sub(collateral_custody.assets.collateral, collateral)?;
-
-    // if custody and collateral_custody accounts are the same, ensure that data is in sync
-    *custody = collateral_custody.clone();
+    custody.assets.collateral = math::checked_sub(custody.assets.collateral, collateral)?;
 
     Ok(())
 }

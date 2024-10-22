@@ -26,16 +26,11 @@ async function processLiquidations(
   let undercollateralized = 0;
   let liquidated = 0;
   for (const position of positions) {
-    const collateralMint = (
-      await client.program.account.custody.fetch(position.custody)
-    ).mint;
-
     // check position state
     const state = await client.getLiquidationState(
       position.owner,
       poolName,
-      tokenMint,
-      collateralMint
+      tokenMint
     );
 
     if (state === 1) {
@@ -56,7 +51,6 @@ async function processLiquidations(
           position.owner,
           poolName,
           tokenMint,
-          collateralMint,
           userTokenAccount,
           rewardReceivingAccount
         );

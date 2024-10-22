@@ -45,8 +45,7 @@ pub struct AddCustody<'info> {
         realloc = Pool::LEN + (pool.custodies.len() + 1) * std::mem::size_of::<Pubkey>(),
         realloc::payer = admin,
         realloc::zero = false,
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,
@@ -56,8 +55,9 @@ pub struct AddCustody<'info> {
         payer = admin,
         space = Custody::LEN,
         seeds = [b"custody",
-                 pool.key().as_ref(),
-                 custody_token_mint.key().as_ref()],
+            pool.key().as_ref(),
+            custody_token_mint.key().as_ref()
+        ],
         bump
     )]
     pub custody: Box<Account<'info, Custody>>,
@@ -67,9 +67,11 @@ pub struct AddCustody<'info> {
         payer = admin,
         token::mint = custody_token_mint,
         token::authority = transfer_authority,
-        seeds = [b"custody_token_account",
-                 pool.key().as_ref(),
-                 custody_token_mint.key().as_ref()],
+        seeds = [
+            b"custody_token_account",
+            pool.key().as_ref(),
+            custody_token_mint.key().as_ref()
+        ],
         bump
     )]
     pub custody_token_account: Box<Account<'info, TokenAccount>>,

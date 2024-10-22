@@ -13,7 +13,7 @@ import {
 
 function formatNumber(num: number) {
   const formatter = Intl.NumberFormat("en", {
-    maximumFractionDigits: 2,
+    maximumFractionDigits: 6,
     minimumFractionDigits: 2,
   });
   return formatter.format(num);
@@ -33,11 +33,11 @@ export function TokenSelectorList(props: Props) {
 
   return (
     <div
-      className="fixed bottom-0 left-0 right-0 top-0 z-20 overflow-auto bg-black/40"
+      className="fixed bottom-0 left-0 right-0 top-0 z-20 overflow-y-scroll bg-black/40"
       onClick={props.onClose}
     >
       <div
-        className="absolute bottom-0 left-0 top-0 w-[424px] bg-zinc-900 p-4"
+        className="bottom-0 left-0 top-0 w-[424px] bg-zinc-900 p-4"
         onClick={(e) => e.stopPropagation()}
       >
         <header className="flex items-center justify-between">

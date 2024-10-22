@@ -19,7 +19,7 @@ import {
 import { usePrice } from "@/hooks/price";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
 import { stringify } from "@/pages/pools/manage/[poolAddress]";
-import { formatNumberCommas } from "@/utils/formatters";
+import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 
 const getPositionLeverage = (
@@ -33,7 +33,8 @@ const getPositionLeverage = (
   const size = Number(position.sizeUsd);
   const collateral = Number(position.collateralUsd);
   const slippage = Number(custody.pricing.tradeSpreadShort) / 10 ** 4;
-  const fees = Number(custody.fees.liquidation) / 10 ** 4;
+  const fees = Number(custody.fees.closePosition) / 10 ** 4;
+  // TODO:- This is wrong - slippage acts on mark price
   const margin = collateral - slippage * size - fees * collateral;
 
   return size / margin;
@@ -124,6 +125,13 @@ export default function PositionBasicInfo({
         </div>
       </PositionColumn>
       <PositionColumn num={4}>
+        <div className="text-sm text-white">
+          {position
+            ? "$" + formatPrice(Number(position.sizeUsd) / 10 ** 6)
+            : "-"}
+        </div>
+      </PositionColumn>
+      <PositionColumn num={5}>
         <div className="flex items-center">
           <div className="text-sm text-white">
             $
@@ -146,17 +154,16 @@ export default function PositionBasicInfo({
           </CollateralModal>
         </div>
       </PositionColumn>
-      <PositionColumn num={5}>
+      <PositionColumn num={6}>
         <div className="text-sm text-white">
           $
           {position
             ? formatNumberCommas(Number(position.price) / 10 ** 6)
             : "-"}
-        </div>
-      </PositionColumn>
-      <PositionColumn num={6}>
-        <div className="text-sm text-white">
-          ${price ? formatNumberCommas(price.currentPrice) : "-"}
+          {" / "}
+          <span className="text-slate-400">
+            ${price ? formatNumberCommas(price.currentPrice) : "-"}
+          </span>
         </div>
       </PositionColumn>
       <PositionColumn num={7}>

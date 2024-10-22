@@ -303,7 +303,7 @@ export default function LiquidityCard({
         <SolidButton
           className="mt-4 w-full"
           onClick={() => changeLiquidityMutation.mutate()}
-          disabled={!publicKey || !tokenAmount}
+          disabled={!publicKey || (tokenAmount === 0 && liqAmount === 0)}
         >
           {tab == Tab.Add ? "Add" : "Remove"} Liquidity
         </SolidButton>
@@ -312,9 +312,9 @@ export default function LiquidityCard({
             Please connect wallet to add liquidity
           </p>
         )}
-        {!tokenAmount && (
+        {tokenAmount === 0 && liqAmount === 0 && (
           <p className="mt-2 text-center text-xs text-orange-500">
-            Please enter a valid amount of tokens to{" "}
+            Please enter a valid amount of to{" "}
             {tab === Tab.Add ? "add" : "remove"} liquidity
           </p>
         )}

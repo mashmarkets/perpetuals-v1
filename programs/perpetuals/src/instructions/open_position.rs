@@ -25,7 +25,7 @@ pub struct OpenPosition<'info> {
 
     #[account(
         mut,
-        constraint = funding_account.mint == collateral_custody.mint,
+        constraint = funding_account.mint == custody.mint,
         has_one = owner
     )]
     pub funding_account: Box<Account<'info, TokenAccount>>,
@@ -45,8 +45,7 @@ pub struct OpenPosition<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,
@@ -55,20 +54,24 @@ pub struct OpenPosition<'info> {
         init,
         payer = owner,
         space = Position::LEN,
-        seeds = [b"position",
-                 owner.key().as_ref(),
-                 pool.key().as_ref(),
-                 custody.key().as_ref(),
-                 &[Side::Long as u8]],
+        seeds = [
+            b"position",
+            owner.key().as_ref(),
+            pool.key().as_ref(),
+            custody.key().as_ref(),
+            &[Side::Long as u8]
+        ],
         bump
     )]
     pub position: Box<Account<'info, Position>>,
 
     #[account(
         mut,
-        seeds = [b"custody",
-                 pool.key().as_ref(),
-                 custody.mint.as_ref()],
+        seeds = [
+            b"custody",
+            pool.key().as_ref(),
+            custody.mint.as_ref()
+        ],
         bump = custody.bump
     )]
     pub custody: Box<Account<'info, Custody>>,
@@ -81,27 +84,14 @@ pub struct OpenPosition<'info> {
 
     #[account(
         mut,
-        seeds = [b"custody",
-                 pool.key().as_ref(),
-                 collateral_custody.mint.as_ref()],
-        bump = collateral_custody.bump
+        seeds = [
+            b"custody_token_account",
+            pool.key().as_ref(),
+            custody.mint.as_ref()
+        ],
+        bump = custody.token_account_bump
     )]
-    pub collateral_custody: Box<Account<'info, Custody>>,
-
-    /// CHECK: oracle account for the collateral token
-    #[account(
-        constraint = collateral_custody_oracle_account.key() == collateral_custody.oracle.oracle_account
-    )]
-    pub collateral_custody_oracle_account: AccountInfo<'info>,
-
-    #[account(
-        mut,
-        seeds = [b"custody_token_account",
-                 pool.key().as_ref(),
-                 collateral_custody.mint.as_ref()],
-        bump = collateral_custody.token_account_bump
-    )]
-    pub collateral_custody_token_account: Box<Account<'info, TokenAccount>>,
+    pub custody_token_account: Box<Account<'info, TokenAccount>>,
 
     system_program: Program<'info, System>,
     token_program: Program<'info, Token>,
@@ -119,7 +109,6 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
     msg!("Check permissions");
     let perpetuals = ctx.accounts.perpetuals.as_mut();
     let custody = ctx.accounts.custody.as_mut();
-    let collateral_custody = ctx.accounts.collateral_custody.as_mut();
     require!(
         perpetuals.permissions.allow_open_position && custody.permissions.allow_open_position,
         PerpetualsError::InstructionNotAllowed
@@ -130,7 +119,6 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
     if params.price == 0 || params.collateral == 0 || params.size == 0 {
         return Err(ProgramError::InvalidArgument.into());
     }
-    require_keys_eq!(custody.key(), collateral_custody.key());
 
     let position = ctx.accounts.position.as_mut();
     let pool = ctx.accounts.pool.as_mut();
@@ -152,25 +140,7 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
         custody.pricing.use_ema,
     )?;
 
-    let collateral_token_price = OraclePrice::new_from_oracle(
-        &ctx.accounts
-            .collateral_custody_oracle_account
-            .to_account_info(),
-        &collateral_custody.oracle,
-        curtime,
-        false,
-    )?;
-
-    let collateral_token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts
-            .collateral_custody_oracle_account
-            .to_account_info(),
-        &collateral_custody.oracle,
-        curtime,
-        collateral_custody.pricing.use_ema,
-    )?;
-
-    let min_collateral_price = collateral_token_price.get_min_price(&collateral_token_ema_price)?;
+    let min_collateral_price = token_price.get_min_price(&token_ema_price)?;
 
     let position_price = pool.get_entry_price(&token_price, &token_ema_price, custody)?;
     msg!("Entry price: {}", position_price);
@@ -187,11 +157,12 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
         exponent: -(Perpetuals::PRICE_DECIMALS as i32),
     };
     let size_usd = position_oracle_price.get_asset_amount_usd(params.size, custody.decimals)?;
-    let collateral_usd = min_collateral_price
-        .get_asset_amount_usd(params.collateral, collateral_custody.decimals)?;
+    let collateral_usd =
+        min_collateral_price.get_asset_amount_usd(params.collateral, custody.decimals)?;
 
     let locked_amount = custody.get_locked_amount(params.size)?;
 
+    // A better name would be "locked_amount_usd" (its the same)
     let borrow_size_usd = if custody.pricing.max_payoff_mult as u128 != Perpetuals::BPS_POWER {
         position_oracle_price.get_asset_amount_usd(locked_amount, custody.decimals)?
     } else {
@@ -203,7 +174,7 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
         custody.fees.open_position,
         params.size,
         locked_amount,
-        collateral_custody,
+        custody,
     )?;
     let fee_amount_usd = token_ema_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
     msg!("Collected fee: {}", fee_amount);
@@ -217,7 +188,6 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
     position.owner = ctx.accounts.owner.key();
     position.pool = pool.key();
     position.custody = custody.key();
-    position.collateral_custody = collateral_custody.key();
     position.open_time = perpetuals.get_time()?;
     position.update_time = 0;
     position.price = position_price;
@@ -226,7 +196,7 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
     position.collateral_usd = collateral_usd;
     position.unrealized_profit_usd = 0;
     position.unrealized_loss_usd = 0;
-    position.cumulative_interest_snapshot = collateral_custody.get_cumulative_interest(curtime)?;
+    position.cumulative_interest_snapshot = custody.get_cumulative_interest(curtime)?;
     position.locked_amount = locked_amount;
     position.collateral_amount = params.collateral;
     position.bump = *ctx
@@ -246,9 +216,6 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
             &token_price,
             &token_ema_price,
             custody,
-            &collateral_token_price,
-            &collateral_token_ema_price,
-            collateral_custody,
             curtime,
             true
         )?,
@@ -256,15 +223,13 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
     );
 
     // lock funds for potential profit payoff
-    collateral_custody.lock_funds(position.locked_amount)?;
+    custody.lock_funds(position.locked_amount)?;
 
     // transfer tokens
     msg!("Transfer tokens");
     perpetuals.transfer_tokens_from_user(
         ctx.accounts.funding_account.to_account_info(),
-        ctx.accounts
-            .collateral_custody_token_account
-            .to_account_info(),
+        ctx.accounts.custody_token_account.to_account_info(),
         ctx.accounts.owner.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
         transfer_amount,
@@ -272,30 +237,25 @@ pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) ->
 
     // update custody stats
     msg!("Update custody stats");
-    collateral_custody.collected_fees.open_position_usd = collateral_custody
+    custody.collected_fees.open_position_usd = custody
         .collected_fees
         .open_position_usd
         .wrapping_add(fee_amount_usd);
 
-    collateral_custody.assets.collateral =
-        math::checked_add(collateral_custody.assets.collateral, params.collateral)?;
+    custody.assets.collateral = math::checked_add(custody.assets.collateral, params.collateral)?;
 
     let protocol_fee = Pool::get_fee_amount(custody.fees.protocol_share, fee_amount)?;
-    collateral_custody.assets.protocol_fees =
-        math::checked_add(collateral_custody.assets.protocol_fees, protocol_fee)?;
+    custody.assets.protocol_fees = math::checked_add(custody.assets.protocol_fees, protocol_fee)?;
 
-    // if custody and collateral_custody accounts are the same, ensure that data is in sync
-    collateral_custody.volume_stats.open_position_usd = collateral_custody
+    custody.volume_stats.open_position_usd = custody
         .volume_stats
         .open_position_usd
         .wrapping_add(size_usd);
 
-    collateral_custody.trade_stats.oi_long_usd =
-        math::checked_add(collateral_custody.trade_stats.oi_long_usd, size_usd)?;
+    custody.trade_stats.oi_long_usd = math::checked_add(custody.trade_stats.oi_long_usd, size_usd)?;
 
-    collateral_custody.add_position(position, &token_ema_price, curtime, None)?;
-    collateral_custody.update_borrow_rate(curtime)?;
-    *custody = collateral_custody.clone();
+    custody.add_position(position, &token_ema_price, curtime)?;
+    custody.update_borrow_rate(curtime)?;
 
     Ok(())
 }

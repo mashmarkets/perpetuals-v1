@@ -910,9 +910,7 @@ export class TestClient {
           position: positionAccount,
           custody: custody.custody,
           custodyOracleAccount: custody.oracleAccount,
-          collateralCustody: custody.custody,
-          collateralCustodyOracleAccount: custody.oracleAccount,
-          collateralCustodyTokenAccount: custody.tokenAccount,
+          custodyTokenAccount: custody.tokenAccount,
           systemProgram: SystemProgram.programId,
           tokenProgram: spl.TOKEN_PROGRAM_ID,
         })
@@ -947,9 +945,7 @@ export class TestClient {
           position: positionAccount,
           custody: custody.custody,
           custodyOracleAccount: custody.oracleAccount,
-          collateralCustody: custody.custody,
-          collateralCustodyOracleAccount: custody.oracleAccount,
-          collateralCustodyTokenAccount: custody.tokenAccount,
+          custodyTokenAccount: custody.tokenAccount,
           tokenProgram: spl.TOKEN_PROGRAM_ID,
         })
         .signers([user.wallet])
@@ -983,9 +979,7 @@ export class TestClient {
           position: positionAccount,
           custody: custody.custody,
           custodyOracleAccount: custody.oracleAccount,
-          collateralCustody: custody.custody,
-          collateralCustodyOracleAccount: custody.oracleAccount,
-          collateralCustodyTokenAccount: custody.tokenAccount,
+          custodyTokenAccount: custody.tokenAccount,
           tokenProgram: spl.TOKEN_PROGRAM_ID,
         })
         .signers([user.wallet])
@@ -1019,9 +1013,7 @@ export class TestClient {
           position: positionAccount,
           custody: custody.custody,
           custodyOracleAccount: custody.oracleAccount,
-          collateralCustody: custody.custody,
-          collateralCustodyOracleAccount: custody.oracleAccount,
-          collateralCustodyTokenAccount: custody.tokenAccount,
+          custodyTokenAccount: custody.tokenAccount,
           tokenProgram: spl.TOKEN_PROGRAM_ID,
         })
         .signers([user.wallet])
@@ -1053,9 +1045,7 @@ export class TestClient {
           position: positionAccount,
           custody: custody.custody,
           custodyOracleAccount: custody.oracleAccount,
-          collateralCustody: custody.custody,
-          collateralCustodyOracleAccount: custody.oracleAccount,
-          collateralCustodyTokenAccount: custody.tokenAccount,
+          custodyTokenAccount: custody.tokenAccount,
           tokenProgram: spl.TOKEN_PROGRAM_ID,
         })
         .signers([user.wallet])
@@ -1077,8 +1067,6 @@ export class TestClient {
           pool: this.pool.publicKey,
           custody: custody.custody,
           custodyOracleAccount: custody.oracleAccount,
-          collateralCustody: custody.custody,
-          collateralCustodyOracleAccount: custody.oracleAccount,
         })
         .view();
     } catch (err) {
@@ -1125,8 +1113,6 @@ export class TestClient {
           position: positionAccount,
           custody: custody.custody,
           custodyOracleAccount: custody.oracleAccount,
-          collateralCustody: custody.custody,
-          collateralCustodyOracleAccount: custody.oracleAccount,
         })
         .view();
     } catch (err) {

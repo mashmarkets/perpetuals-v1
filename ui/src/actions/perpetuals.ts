@@ -322,9 +322,7 @@ export async function openPosition(
       position,
       custody,
       custodyOracleAccount: oracle,
-      collateralCustody: custody,
-      collateralCustodyOracleAccount: oracle,
-      collateralCustodyTokenAccount: findPerpetualsAddressSync(
+      custodyTokenAccount: findPerpetualsAddressSync(
         "custody_token_account",
         params.poolAddress,
         params.mint,
@@ -422,8 +420,6 @@ export const getEntryPriceAndFee = async (
       pool: params.poolAddress,
       custody,
       custodyOracleAccount: oracle,
-      collateralCustody: custody,
-      collateralCustodyOracleAccount: oracle,
     })
     .instruction();
 
@@ -472,8 +468,6 @@ export const getLiquidationPrice = async (
       position: position.address,
       custody: position.custody,
       custodyOracleAccount: custody.oracle.oracleAccount,
-      collateralCustody: position.collateralCustody,
-      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
     })
     .instruction();
 
@@ -595,8 +589,6 @@ export const getPnl = async (
       position: position.address,
       custody: position.custody,
       custodyOracleAccount: custody.oracle.oracleAccount,
-      collateralCustody: position.custody,
-      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
     })
     .instruction();
 
@@ -647,9 +639,7 @@ export async function closePosition(
       custody: custody.address,
       custodyOracleAccount: custody.oracle.oracleAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
-      collateralCustody: position.collateralCustody,
-      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
-      collateralCustodyTokenAccount: findPerpetualsAddressSync(
+      custodyTokenAccount: findPerpetualsAddressSync(
         "custody_token_account",
         position.pool,
         custody.mint,
@@ -697,9 +687,7 @@ export async function addCollateral(
       custody: custody.address,
       custodyOracleAccount: custody.oracle.oracleAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
-      collateralCustody: position.collateralCustody,
-      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
-      collateralCustodyTokenAccount: findPerpetualsAddressSync(
+      custodyTokenAccount: findPerpetualsAddressSync(
         "custody_token_account",
         position.pool,
         custody.mint,
@@ -749,9 +737,7 @@ export async function removeCollateral(
       custody: custody.address,
       custodyOracleAccount: custody.oracle.oracleAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
-      collateralCustody: position.collateralCustody,
-      collateralCustodyOracleAccount: custody.oracle.oracleAccount,
-      collateralCustodyTokenAccount: findPerpetualsAddressSync(
+      custodyTokenAccount: findPerpetualsAddressSync(
         "custody_token_account",
         position.pool,
         custody.mint,

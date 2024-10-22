@@ -54,9 +54,7 @@ pub async fn test_open_position(
             position: position_pda,
             custody: custody_pda,
             custody_oracle_account: custody_oracle_account_address,
-            collateral_custody: custody_pda,
-            collateral_custody_oracle_account: custody_oracle_account_address,
-            collateral_custody_token_account: custody_token_account_pda,
+            custody_token_account: custody_token_account_pda,
             system_program: anchor_lang::system_program::ID,
             token_program: anchor_spl::token::ID,
         }

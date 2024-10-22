@@ -62,9 +62,7 @@ pub async fn test_liquidate(
             position: *position_pda,
             custody: custody_pda,
             custody_oracle_account: custody_oracle_account_address,
-            collateral_custody: custody_pda,
-            collateral_custody_oracle_account: custody_oracle_account_address,
-            collateral_custody_token_account: custody_token_account_pda,
+            custody_token_account: custody_token_account_pda,
             token_program: anchor_spl::token::ID,
         }
         .to_account_metas(None),

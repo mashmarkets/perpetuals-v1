@@ -92,19 +92,19 @@ export function PositionAdditionalInfo({
   return (
     <div
       className={twMerge(
+        "w-full",
         "overflow-hidden",
         "grid",
-        "grid-cols-[12%,1fr,1fr,max-content]",
+        "grid-cols-[1fr,max-content]",
         "gap-x-8",
         "items-center",
-        "pr-4",
+        "px-4",
         className,
       )}
     >
-      <div />
       <div
         className={twMerge(
-          "bg-zinc-900",
+          // "bg-zinc-900",
           "gap-x-8",
           "grid-cols-[max-content,1fr,1fr,1fr]",
           "grid",

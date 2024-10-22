@@ -26,7 +26,6 @@ const parsePosition = (
     borrowSizeUsd: fromBN(p.borrowSizeUsd),
     bump: p.bump,
     collateralAmount: fromBN(p.collateralUsd),
-    collateralCustody: p.collateralCustody,
     collateralUsd: fromBN(p.collateralUsd),
     cumulativeInterestSnapshot: fromBN(p.cumulativeInterestSnapshot),
     custody: p.custody,

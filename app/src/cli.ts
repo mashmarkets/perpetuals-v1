@@ -209,15 +209,13 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .description("Compute price and fee to open a position")
     .argument("<string>", "Pool name")
     .argument("<pubkey>", "Token mint")
-    .argument("<pubkey>", "Collateral mint")
     .requiredOption("-c, --collateral <bigint>", "Collateral")
     .requiredOption("-s, --size <bigint>", "Size")
-    .action(async (poolName, tokenMint, collateralMint, options) => {
+    .action(async (poolName, tokenMint, options) => {
       client.prettyPrint(
         await client.getEntryPriceAndFee(
           poolName,
           new PublicKey(tokenMint),
-          new PublicKey(collateralMint),
           new BN(options.collateral),
           new BN(options.size)
         )
@@ -254,11 +252,6 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
           new PublicKey(wallet),
           poolName,
           new PublicKey(tokenMint),
-          await client.getCollateralCustodyMint(
-            new PublicKey(wallet),
-            poolName,
-            new PublicKey(tokenMint)
-          ),
           new BN(options.addCollateral),
           new BN(options.removeCollateral)
         )
@@ -276,12 +269,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getLiquidationState(
           new PublicKey(wallet),
           poolName,
-          new PublicKey(tokenMint),
-          await client.getCollateralCustodyMint(
-            new PublicKey(wallet),
-            poolName,
-            new PublicKey(tokenMint)
-          )
+          new PublicKey(tokenMint)
         )
       );
     });
@@ -335,12 +323,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getPnl(
           new PublicKey(wallet),
           poolName,
-          new PublicKey(tokenMint),
-          await client.getCollateralCustodyMint(
-            new PublicKey(wallet),
-            poolName,
-            new PublicKey(tokenMint)
-          )
+          new PublicKey(tokenMint)
         )
       );
     });
@@ -438,15 +421,13 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .description("Open a new perpetuals position")
     .argument("<string>", "Pool name")
     .argument("<pubkey>", "Token mint")
-    .argument("<pubkey>", "Collateral mint")
     .requiredOption("-p, --price <int>", "Entry price")
     .requiredOption("-c, --collateral <int>", "Collateral amount")
     .requiredOption("-s, --size <int>", "Position size")
-    .action(async (poolName, tokenMint, collateralMint, options) => {
+    .action(async (poolName, tokenMint, options) => {
       await client.openPosition(
         poolName,
         new PublicKey(tokenMint),
-        new PublicKey(collateralMint),
         new BN(options.price),
         new BN(options.collateral),
         new BN(options.size)
