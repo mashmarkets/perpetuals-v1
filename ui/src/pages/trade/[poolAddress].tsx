@@ -21,7 +21,8 @@ const safePublicKey = (key: unknown): PublicKey | undefined => {
 };
 
 const TradingViewWidget = dynamic<any>(
-  () => import("react-tradingview-widget"),
+  () =>
+    import("react-ts-tradingview-widgets").then((x) => x.AdvancedRealTimeChart),
   {
     ssr: false,
   },

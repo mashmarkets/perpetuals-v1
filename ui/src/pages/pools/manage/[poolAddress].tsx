@@ -1,7 +1,4 @@
-import { BN as AnchorBN } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { BN } from "bn.js";
 import { useRouter } from "next/router";
 import { useState } from "react";
 import { toast } from "react-toastify";
@@ -10,9 +7,15 @@ import { addCustody as addCustodyFn } from "@/actions/perpetuals";
 import AddCustodyForm, { AddCustodyParams } from "@/components/FormListAsset";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
 import { useProgram } from "@/hooks/useProgram";
-import { safePublicKey } from "@/utils/utils";
+import { safePublicKey, stringify } from "@/utils/utils";
 
-const Accordion = ({ title, children }) => {
+const Accordion = ({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -27,56 +30,6 @@ const Accordion = ({ title, children }) => {
     </div>
   );
 };
-
-export function stringify(v: any): any {
-  if (v instanceof PublicKey || v instanceof BN || v instanceof AnchorBN) {
-    return v.toString();
-  }
-  if (v instanceof Date) {
-    return v.toLocaleString();
-  }
-
-  if (Array.isArray(v)) {
-    return v.map((item) => stringify(item));
-  }
-
-  // Check if it is an anchor enum
-  if (typeof v === "object" && v !== null) {
-    const keys = Object.keys(v);
-    if (keys.length === 1 && Object.keys(v[keys[0]!]).length === 0) {
-      return keys[0];
-    }
-  }
-
-  // If it's an object, recursively process its keys
-  if (typeof v === "object" && v !== null) {
-    const result: { [key: string]: any } = {};
-    const singleValueKeys: string[] = [];
-    const complexKeys: string[] = [];
-
-    Object.keys(v)
-      .sort()
-      .forEach((key) => {
-        const value = stringify(v[key]);
-        if (typeof value === "object" || Array.isArray(value)) {
-          complexKeys.push(key);
-        } else {
-          singleValueKeys.push(key);
-        }
-        result[key] = value;
-      });
-
-    const sortedResult: { [key: string]: any } = {};
-    [...singleValueKeys, ...complexKeys].forEach((key) => {
-      sortedResult[key] = result[key];
-    });
-
-    return sortedResult;
-  }
-
-  // For primitive types, return the value as it is
-  return v;
-}
 
 const ManagePoolPage = () => {
   const router = useRouter();
@@ -142,9 +95,15 @@ const ManagePoolPage = () => {
     });
   };
 
+  if (!pool) {
+    return <p>Loading...</p>;
+  }
+
   return (
     <div className="container mx-auto mt-12 rounded-lg bg-zinc-900 p-6">
-      <h1 className="mb-4 text-2xl font-bold text-white">Manage {pool.name}</h1>
+      <h1 className="mb-4 text-2xl font-bold text-white">
+        Manage {pool?.name}
+      </h1>
 
       <div className="text-white">
         <Accordion title="Pool Details">

@@ -15,9 +15,9 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { useProgram } from "@/hooks/useProgram";
-import { stringify } from "@/pages/pools/manage/[poolAddress]";
 import { formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
+import { stringify } from "@/utils/utils";
 
 export function PositionAdditionalInfo({
   className,

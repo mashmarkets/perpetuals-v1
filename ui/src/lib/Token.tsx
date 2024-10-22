@@ -17,7 +17,7 @@ interface Token {
     oracle: string;
   };
 }
-export const tokenList: Token[] = universe.map((x) => ({
+const tokenList: Token[] = universe.map((x) => ({
   ...x,
   extensions: {
     ...x.extensions,
@@ -29,7 +29,7 @@ export const tokenList: Token[] = universe.map((x) => ({
       : getFaucetMint(new PublicKey(x.address)).toString(),
 }));
 
-export const getTokenList = () => tokenList;
+const getTokenList = () => tokenList;
 export const getTokensKeyedBy = memoize(
   (k: keyof Omit<Token, "extensions">) => {
     return tokenList.reduce(
@@ -86,7 +86,7 @@ export enum TokenE {
 }
 export const TOKEN_LIST = Object.values(TokenE);
 
-export const TOKEN_ADDRESSES = tokenList.map((x) => new PublicKey(x.address));
+const TOKEN_ADDRESSES = tokenList.map((x) => new PublicKey(x.address));
 
 export function asToken(tokenStr: string | PublicKey): TokenE {
   if (tokenStr instanceof PublicKey) {

@@ -5,14 +5,12 @@ import React from "react";
 
 import {
   findPerpetualsAddressSync,
-  listAsset as listAssetFn,
+  addPoolAndCustody as listAssetFn,
 } from "@/actions/perpetuals";
 import FormListList, { AddCustodyParams } from "@/components/FormListAsset";
 import { useProgram } from "@/hooks/useProgram";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
-import { dedupe } from "@/utils/utils";
-
-import { stringify } from "./pools/manage/[poolAddress]";
+import { dedupe, stringify } from "@/utils/utils";
 
 const CreatePool: React.FC = () => {
   const router = useRouter();

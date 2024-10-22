@@ -18,7 +18,6 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
-import { stringify } from "@/pages/pools/manage/[poolAddress]";
 import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 

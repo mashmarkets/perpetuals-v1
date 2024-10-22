@@ -1,8 +1,8 @@
+import { BN } from "@coral-xyz/anchor";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
-import { BN } from "bn.js";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -30,14 +30,10 @@ import {
   getTokenInfo,
   getTokenPublicKey,
   tokenAddressToToken,
-  TokenE,
 } from "@/lib/Token";
 import { Side } from "@/lib/types";
-import { stringify } from "@/pages/pools/manage/[poolAddress]";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
-import { dedupe } from "@/utils/utils";
-
-import { PoolSelector } from "../PoolSelector";
+import { dedupe, stringify } from "@/utils/utils";
 
 enum Input {
   Pay = "pay",
@@ -141,7 +137,7 @@ export function TradePosition({
           dedupe([
             ...(p ?? []),
             findPerpetualsPositionAddressSync(
-              publicKey,
+              publicKey!,
               poolAddress,
               custody.address,
             ),

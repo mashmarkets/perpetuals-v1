@@ -5,6 +5,7 @@ import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
   getAddLiquidityAmountAndFee,
+  getAssetsUnderManagement,
   getLiquidationPrice,
   getPnl,
   getRemoveLiquidityAmountAndFee,
@@ -217,7 +218,7 @@ export const usePools = (pools: PublicKey[]) => {
   });
 };
 
-export const usePoolList = () => {
+const useAllPoolsAddress = () => {
   const program = useProgram();
   const client = useQueryClient();
   return useQuery<PublicKey[]>({
@@ -245,8 +246,10 @@ export const usePoolList = () => {
     },
   });
 };
+
 export const useAllPools = () => {
-  const list = usePoolList();
+  // Do it this way, so we can optimistically add pools to the query cache to fetch it
+  const list = useAllPoolsAddress();
   return usePools(list.data ?? []);
 };
 
@@ -538,5 +541,59 @@ export const useGetRemoveLiquidityAmountAndFee = ({
         custody: custody!,
         lpAmountIn,
       }),
+  });
+};
+
+queryClient.setQueryDefaults(["getGetAssetsUnderManagement"], {
+  refetchInterval: 30 * 1000,
+  staleTime: 5 * ONE_MINUTE,
+});
+export const useGetAssetsUnderManagement = (pool: Pool | undefined | null) => {
+  const program = useProgram();
+  const { data: custody } = useCustody(pool?.custodies[0]);
+
+  return useQuery({
+    queryKey: [
+      "getGetAssetsUnderManagement",
+      pool?.address.toString(),
+      pool?.aumUsd.toString(), // Add aum so we force a refresh if account data changes
+    ],
+    enabled: !!program && !!pool && custody !== undefined,
+    initialData: pool ? BigInt(pool?.aumUsd.toString()) : undefined,
+    queryFn: () =>
+      getAssetsUnderManagement(program, {
+        pool: pool!,
+        custody: custody!,
+      }),
+  });
+};
+
+export const useMultipleGetAssetsUnderManagement = (pools: Pool[]) => {
+  const program = useProgram();
+  const custodies = useCustodies((pools ?? []).flatMap((x) => x.custodies));
+  return useQueries({
+    queries: pools.map((pool) => ({
+      queryKey: [
+        "getGetAssetsUnderManagement",
+        pool.address.toString(),
+        pool?.aumUsd.toString(),
+      ],
+      enabled: !!pool,
+      initialData: pool ? BigInt(pool.aumUsd.toString()) : undefined,
+      queryFn: () =>
+        getAssetsUnderManagement(program, {
+          pool: pool!,
+          custody: custodies[pool!.custodies[0].toString()]!,
+        }),
+    })),
+    combine: (results) => {
+      return results.reduce(
+        (acc, v, i) => {
+          acc[pools[i]!.address.toString()] = v.data!;
+          return acc;
+        },
+        {} as Record<string, bigint>,
+      );
+    },
   });
 };

@@ -5,9 +5,18 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useRouter } from "next/router";
 import { twMerge } from "tailwind-merge";
 
-import { findPerpetualsAddressSync } from "@/actions/perpetuals";
+import {
+  findPerpetualsAddressSync,
+  getAssetsUnderManagement,
+} from "@/actions/perpetuals";
 import { NoPositions } from "@/components/Positions/NoPositions";
-import { useAllPools, usePool, usePoolCustodies } from "@/hooks/perpetuals";
+import {
+  useAllPools,
+  useGetAssetsUnderManagement,
+  useMultipleGetAssetsUnderManagement,
+  usePool,
+  usePoolCustodies,
+} from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
 import { getTokenIcon, tokens } from "@/lib/Token";
 import { formatNumberCommas } from "@/utils/formatters";
@@ -17,6 +26,7 @@ function PoolRow({ poolAddress }: { poolAddress: PublicKey }) {
   const router = useRouter();
   const { data: pool } = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);
+  const { data: aum } = useGetAssetsUnderManagement(pool);
 
   const lpMint = findPerpetualsAddressSync("lp_token_mint", poolAddress);
   const mint = useMint(lpMint);
@@ -68,14 +78,13 @@ function PoolRow({ poolAddress }: { poolAddress: PublicKey }) {
           </div>
         </div>
       </td>
-      <td>${formatNumberCommas(pool?.aumUsd.toNumber() / 10 ** 6)}</td>
+      <td>${formatNumberCommas(Number(aum) / 10 ** 6)}</td>
       <td>${formatNumberCommas(tradeVolume / 10 ** 6)}</td>
       <td>${formatNumberCommas(collectedFees / 10 ** 6)}</td>
       <td>${formatNumberCommas(oiLong / 10 ** 6)}</td>
       <td>
         {userShare
-          ? "$" +
-            formatNumberCommas((userShare * pool?.aumUsd.toNumber()) / 10 ** 6)
+          ? "$" + formatNumberCommas((userShare * Number(aum)) / 10 ** 6)
           : "-"}
       </td>
       <td>{userShare ? formatNumberCommas(userShare * 100) + "%" : "-"}</td>
@@ -84,12 +93,10 @@ function PoolRow({ poolAddress }: { poolAddress: PublicKey }) {
 }
 export default function Pools() {
   const pools = useAllPools();
-  const tvl =
-    pools === undefined
-      ? undefined
-      : Object.values(pools).reduce((acc, pool) => {
-          return acc + BigInt(pool.aumUsd.toString());
-        }, BigInt(0));
+  const aums = useMultipleGetAssetsUnderManagement(Object.values(pools ?? {}));
+  const tvl = Object.values(aums ?? {}).reduce((acc, aum) => {
+    return acc + aum;
+  }, BigInt(0));
 
   return (
     <div className="px-16 py-6">

@@ -19,7 +19,9 @@ export function MaxButton(props: Props) {
           "py-1",
           "px-2",
         )}
-        onClick={() => props.onChangeAmount(props.maxBalance)}
+        onClick={() =>
+          props.maxBalance ? props.onChangeAmount?.(props.maxBalance) : {}
+        }
       >
         Max
       </button>

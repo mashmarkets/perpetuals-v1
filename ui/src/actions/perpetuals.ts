@@ -73,7 +73,7 @@ const perpetuals = findPerpetualsAddressSync("perpetuals");
 const transferAuthority = findPerpetualsAddressSync("transfer_authority");
 
 // Careful - this mutates instructions
-export const addWrappedSolInstructions = (
+const addWrappedSolInstructions = (
   instructions: TransactionInstruction[],
   publicKey: PublicKey,
   lamports: bigint = BigInt(0),
@@ -146,29 +146,54 @@ export const sendInstructions = async (
   };
 };
 
-export async function addPool(
+export async function addCollateral(
   program: Program<Perpetuals>,
-  { name }: { name: string },
+  {
+    position,
+    custody,
+    collateral,
+  }: { position: Position; custody: Custody; collateral: bigint },
 ) {
-  const pool = findPerpetualsAddressSync("pool", name);
-  const lpTokenMint = findPerpetualsAddressSync("lp_token_mint", pool);
+  if (position.custody.toString() != custody.address.toString()) {
+    throw new Error("Position and Custody do not match");
+  }
 
   const instruction = await program.methods
-    .addPool({ name })
+    .addCollateral({
+      collateral: new BN(collateral.toString()),
+    })
     .accounts({
-      admin: ADMIN_KEY.publicKey,
-      multisig,
-      transferAuthority: transferAuthority,
-      perpetuals: perpetuals,
-      pool,
-      lpTokenMint,
-      systemProgram: SystemProgram.programId,
+      owner: program.provider.publicKey,
+      fundingAccount: getAssociatedTokenAddressSync(
+        custody.mint,
+        program.provider.publicKey!,
+      ),
+      transferAuthority,
+      perpetuals,
+      pool: position.pool,
+      position: position.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
       tokenProgram: TOKEN_PROGRAM_ID,
-      rent: SYSVAR_RENT_PUBKEY,
+      custodyTokenAccount: findPerpetualsAddressSync(
+        "custody_token_account",
+        position.pool,
+        custody.mint,
+      ),
     })
     .instruction();
 
-  return sendInstructions(program.provider, [instruction], [ADMIN_KEY]);
+  const instructions = [instruction];
+
+  if (NATIVE_MINT.equals(custody.mint)) {
+    await addWrappedSolInstructions(
+      instructions,
+      program.provider.publicKey!,
+      BigInt(collateral.toString()),
+    );
+  }
+
+  return sendInstructions(program.provider, instructions);
 }
 
 export async function addCustody(
@@ -213,7 +238,53 @@ export async function addCustody(
   return sendInstructions(program.provider, [instruction], [ADMIN_KEY]);
 }
 
-export async function listAsset(
+export async function closePosition(
+  program: Program<Perpetuals>,
+  {
+    position,
+    custody,
+    price,
+  }: { position: Position; custody: Custody; price: bigint },
+) {
+  if (position.custody.toString() != custody.address.toString()) {
+    throw new Error("Position and Custody do not match");
+  }
+
+  const instruction = await program.methods
+    .closePosition({
+      price: new BN(price.toString()),
+    })
+    .accounts({
+      owner: program.provider.publicKey,
+      receivingAccount: getAssociatedTokenAddressSync(
+        custody.mint,
+        program.provider.publicKey!,
+      ),
+      transferAuthority,
+      perpetuals,
+      pool: position.pool,
+      position: position.address,
+      custody: custody.address,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      custodyTokenAccount: findPerpetualsAddressSync(
+        "custody_token_account",
+        position.pool,
+        custody.mint,
+      ),
+    })
+    .instruction();
+
+  const instructions = [instruction];
+
+  if (NATIVE_MINT.equals(custody.mint)) {
+    await addWrappedSolInstructions(instructions, program.provider.publicKey!);
+  }
+
+  return sendInstructions(program.provider, instructions);
+}
+
+export async function addPoolAndCustody(
   program: Program<Perpetuals>,
   params: AddCustodyParams,
 ) {
@@ -345,7 +416,7 @@ export async function openPosition(
   return sendInstructions(program.provider, instructions);
 }
 
-export async function getSimulationResult(
+async function getSimulationResult(
   program: Program<Perpetuals>,
   ix: TransactionInstruction,
 ) {
@@ -373,7 +444,7 @@ export async function getSimulationResult(
 }
 
 // This only works if the function returns struct
-export async function getParsedSimulationResult<T>(
+async function getParsedSimulationResult<T>(
   program: Program<Perpetuals>,
   ix: TransactionInstruction,
   name: string,
@@ -431,7 +502,7 @@ export const getEntryPriceAndFee = async (
 
   if (estimate === undefined) {
     return {
-      entryPrice: 0n,
+      entryPrice: BigInt(0),
       fee: BigInt(0),
       liquidationPrice: BigInt(0),
     };
@@ -609,104 +680,6 @@ export const getPnl = async (
     loss: BigInt(estimate.loss.toString()),
   };
 };
-
-export async function closePosition(
-  program: Program<Perpetuals>,
-  {
-    position,
-    custody,
-    price,
-  }: { position: Position; custody: Custody; price: bigint },
-) {
-  if (position.custody.toString() != custody.address.toString()) {
-    throw new Error("Position and Custody do not match");
-  }
-
-  const instruction = await program.methods
-    .closePosition({
-      price: new BN(price.toString()),
-    })
-    .accounts({
-      owner: program.provider.publicKey,
-      receivingAccount: getAssociatedTokenAddressSync(
-        custody.mint,
-        program.provider.publicKey!,
-      ),
-      transferAuthority,
-      perpetuals,
-      pool: position.pool,
-      position: position.address,
-      custody: custody.address,
-      custodyOracleAccount: custody.oracle.oracleAccount,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      custodyTokenAccount: findPerpetualsAddressSync(
-        "custody_token_account",
-        position.pool,
-        custody.mint,
-      ),
-    })
-    .instruction();
-
-  const instructions = [instruction];
-
-  if (NATIVE_MINT.equals(custody.mint)) {
-    await addWrappedSolInstructions(instructions, program.provider.publicKey!);
-  }
-
-  return sendInstructions(program.provider, instructions);
-}
-
-export type ClosePositionParams = Parameters<typeof closePosition>[1];
-
-export async function addCollateral(
-  program: Program<Perpetuals>,
-  {
-    position,
-    custody,
-    collateral,
-  }: { position: Position; custody: Custody; collateral: bigint },
-) {
-  if (position.custody.toString() != custody.address.toString()) {
-    throw new Error("Position and Custody do not match");
-  }
-
-  const instruction = await program.methods
-    .addCollateral({
-      collateral: new BN(collateral.toString()),
-    })
-    .accounts({
-      owner: program.provider.publicKey,
-      fundingAccount: getAssociatedTokenAddressSync(
-        custody.mint,
-        program.provider.publicKey!,
-      ),
-      transferAuthority,
-      perpetuals,
-      pool: position.pool,
-      position: position.address,
-      custody: custody.address,
-      custodyOracleAccount: custody.oracle.oracleAccount,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      custodyTokenAccount: findPerpetualsAddressSync(
-        "custody_token_account",
-        position.pool,
-        custody.mint,
-      ),
-    })
-    .instruction();
-
-  const instructions = [instruction];
-
-  if (NATIVE_MINT.equals(custody.mint)) {
-    await addWrappedSolInstructions(
-      instructions,
-      program.provider.publicKey!,
-      BigInt(collateral.toString()),
-    );
-  }
-
-  return sendInstructions(program.provider, instructions);
-}
 
 export async function removeCollateral(
   program: Program<Perpetuals>,
@@ -899,3 +872,30 @@ export async function removeLiquidity(
 
   return sendInstructions(program.provider, instructions);
 }
+
+export const getAssetsUnderManagement = async (
+  program: Program<Perpetuals>,
+  {
+    pool,
+    custody,
+  }: {
+    pool: Pool;
+    custody: Custody;
+  },
+) => {
+  const instruction = await program.methods
+    .getAssetsUnderManagement({})
+    .accounts({
+      perpetuals,
+      pool: pool.address,
+    })
+    .remainingAccounts(getRemainingAccountsFromCustodies([custody]))
+    .instruction();
+
+  const data = await getSimulationResult(program, instruction);
+  if (data === undefined) {
+    return undefined;
+  }
+
+  return BigInt(new BN(Buffer.from(data, "base64"), 10, "le").toString());
+};

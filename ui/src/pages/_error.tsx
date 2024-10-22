@@ -4,7 +4,7 @@ import dynamic from "next/dynamic";
 // The dynamic import probably isn't required but I'm sick of dealing with this issue.
 const NextError = dynamic(() => import("next/error"), { ssr: false });
 
-function Error({ statusCode }) {
+function Error({ statusCode }: { statusCode: number }) {
   return <NextError statusCode={statusCode} />;
 }
 

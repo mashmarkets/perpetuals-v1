@@ -27,8 +27,8 @@ import { useBalance, useMint } from "@/hooks/token";
 import { useProgram } from "@/hooks/useProgram";
 import { asToken, getTokenPublicKey } from "@/lib/Token";
 import { Tab } from "@/lib/types";
-import { stringify } from "@/pages/pools/manage/[poolAddress]";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
+import { stringify } from "@/utils/utils";
 
 export default function LiquidityCard({
   poolAddress,

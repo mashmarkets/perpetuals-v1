@@ -1,6 +1,6 @@
+import { BN } from "@coral-xyz/anchor";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { PublicKey } from "@solana/web3.js";
-import { BN } from "bn.js";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -23,7 +23,7 @@ const transformToPublicKey = (x: string, ctx: z.RefinementCtx) => {
   }
 };
 
-export const addCustodySchema = z.object({
+const addCustodySchema = z.object({
   poolName: z.string(),
   tokenMint: z.string().transform(transformToPublicKey),
   // These should be nested under oracle, but i realized too late and it was too much work...
@@ -447,7 +447,9 @@ const AddCustodyForm = ({
               <label className="flex items-center text-white">
                 <input
                   type="checkbox"
-                  {...register(`permissions.${key}`)}
+                  {...register(
+                    `permissions.${key as keyof typeof defaultValues.permissions}`,
+                  )}
                   className="mr-2"
                 />
                 {key
@@ -475,7 +477,7 @@ const AddCustodyForm = ({
               <input
                 id={key}
                 type="number"
-                {...register(`fees.${key}`)}
+                {...register(`fees.${key as keyof typeof defaultValues.fees}`)}
                 className="w-full rounded border p-2"
                 required
                 step="0.01"
@@ -498,7 +500,9 @@ const AddCustodyForm = ({
             <input
               id={key}
               type="number"
-              {...register(`borrowRate.${key}`)}
+              {...register(
+                `borrowRate.${key as keyof typeof defaultValues.borrowRate}`,
+              )}
               className="w-full rounded border p-2"
               required
               step="0.0000001"

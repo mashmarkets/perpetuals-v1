@@ -11,7 +11,7 @@ import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
 import { SolidButton } from "./SolidButton";
 
-function roundToOneSignificantFigure(num) {
+function roundToOneSignificantFigure(num: number): number {
   if (num === 0) return 0; // Handle the case for 0 separately
 
   // Determine the factor by which to multiply to shift the decimal point to the right

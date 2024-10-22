@@ -3,7 +3,12 @@ import { PublicKey } from "@solana/web3.js";
 import { twMerge } from "tailwind-merge";
 
 import { findPerpetualsAddressSync } from "@/actions/perpetuals";
-import { Custody, usePool, usePoolCustodies } from "@/hooks/perpetuals";
+import {
+  Custody,
+  useGetAssetsUnderManagement,
+  usePool,
+  usePoolCustodies,
+} from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
 import { formatNumberCommas } from "@/utils/formatters";
 
@@ -46,13 +51,13 @@ export default function PoolGeneralStats({
   const { publicKey } = useWallet();
   const custodies = usePoolCustodies(poolAddress);
   const { data: pool } = usePool(poolAddress);
+  const { data: aum } = useGetAssetsUnderManagement(pool);
 
   const lpMint = findPerpetualsAddressSync("lp_token_mint", poolAddress);
   const { data: mint } = useMint(lpMint);
   const { data: lp } = useBalance(lpMint, publicKey);
 
   const userShare = !!lp && !!mint ? Number(lp) / Number(mint.supply) : 0;
-  const aum = !!pool ? pool?.aumUsd.toNumber() / 10 ** 6 : 0;
 
   return (
     <div
@@ -67,7 +72,7 @@ export default function PoolGeneralStats({
       {[
         {
           label: "Liquidity",
-          value: `$${formatNumberCommas(aum)}`,
+          value: `$${formatNumberCommas(Number(aum) / 10 ** 6)}`,
         },
         {
           label: "Volume",
@@ -88,7 +93,7 @@ export default function PoolGeneralStats({
         },
         {
           label: "Your Liquidity",
-          value: `$${formatNumberCommas(aum * userShare)}`,
+          value: `$${formatNumberCommas((Number(aum) / 10 ** 6) * userShare)}`,
         },
         {
           label: "Your Share",
