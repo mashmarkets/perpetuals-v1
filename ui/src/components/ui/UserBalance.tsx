@@ -1,12 +1,12 @@
+import { Address } from "@solana/addresses";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 
 import { useBalance } from "@/hooks/token";
-import { tokens } from "@/lib/Token";
+import { tokensByMint } from "@/lib/Token";
 
-export function UserBalance({ mint }: { mint: PublicKey }) {
+export function UserBalance({ mint }: { mint: Address }) {
   const { publicKey } = useWallet();
-  const { decimals, symbol } = tokens[mint.toString()]!;
+  const { decimals, symbol } = tokensByMint[mint.toString()]!;
 
   const { data: balance } = useBalance(
     mint,

@@ -1,12 +1,12 @@
 import CloseIcon from "@carbon/icons-react/lib/Close";
+import { Address } from "@solana/addresses";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { twMerge } from "tailwind-merge";
 
 import { closePosition } from "@/actions/perpetuals";
 import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
-import { SolidButton } from "@/components/SolidButton";
+import { SolidButton } from "@/components/ui/SolidButton";
 import {
   useCustody,
   usePosition,
@@ -17,14 +17,13 @@ import { usePrice } from "@/hooks/price";
 import { useProgram } from "@/hooks/useProgram";
 import { formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
-import { stringify } from "@/utils/utils";
 
 export function PositionAdditionalInfo({
   className,
   positionAddress,
 }: {
   className?: string;
-  positionAddress: PublicKey;
+  positionAddress: Address;
 }) {
   const queryClient = useQueryClient();
 
@@ -43,19 +42,17 @@ export function PositionAdditionalInfo({
     onSuccess: () => {
       // Collateral Balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), mint?.toString()],
+        queryKey: ["balance", publicKey?.toString(), mint],
       });
       // Pool
       queryClient.invalidateQueries({
-        queryKey: ["pool", position?.pool?.toString()],
+        queryKey: ["pool", position?.pool],
       });
       // Remove position
       queryClient.setQueryData(
         ["positions", publicKey?.toString()],
-        (p: PublicKey[] | undefined) =>
-          (p ?? []).filter(
-            (x) => x.toString() !== position?.address.toString(),
-          ),
+        (p: Address[] | undefined) =>
+          (p ?? []).filter((x) => x !== position?.address),
       );
     },
     mutationFn: async () => {
@@ -74,7 +71,7 @@ export function PositionAdditionalInfo({
         price: BigInt(Math.round(price.currentPrice * 10 ** 6 * 0.95)), // Slippage
       };
 
-      console.log("Closing position with params", stringify(params));
+      console.log("Closing position with params", params);
       return await wrapTransactionWithNotification(
         program.provider.connection,
         closePosition(program, params),

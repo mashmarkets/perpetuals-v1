@@ -1,5 +1,5 @@
+import { Address } from "@solana/addresses";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { twMerge } from "tailwind-merge";
 
 import { findPerpetualsAddressSync } from "@/actions/perpetuals";
@@ -45,7 +45,7 @@ export default function PoolGeneralStats({
   className,
   poolAddress,
 }: {
-  poolAddress: PublicKey;
+  poolAddress: Address;
   className?: string;
 }) {
   const { publicKey } = useWallet();

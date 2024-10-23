@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { create, indexedResolver, windowScheduler } from "@yornaath/batshit";
 
@@ -16,7 +16,7 @@ export interface PriceStat {
 
 const coingeckoBatcher = create({
   name: "coingecko",
-  fetcher: async (mints: PublicKey[]) => {
+  fetcher: async (mints: Address[]) => {
     const ids = mints.map(getCoingeckoId).join(",");
     return fetch(
       `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=USD&include_24hr_vol=true&include_24hr_change=true`,
@@ -52,7 +52,7 @@ const ONE_MINUTE = 60 * 1000;
 queryClient.setQueryDefaults(["price"], {
   refetchInterval: ONE_MINUTE, // 1 MINUTE
 });
-export const usePrice = (mint: PublicKey | undefined) => {
+export const usePrice = (mint: Address | undefined) => {
   const program = useProgram();
 
   return useQuery<PriceStat>({
@@ -63,7 +63,7 @@ export const usePrice = (mint: PublicKey | undefined) => {
   });
 };
 
-export const usePrices = (mints: PublicKey[]) => {
+export const usePrices = (mints: Address[]) => {
   return useQueries({
     queries: mints.map((mint) => ({
       queryKey: ["price", mint.toString()],

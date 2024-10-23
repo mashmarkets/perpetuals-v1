@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -9,7 +9,7 @@ export default function PoolPositionRow({
   className,
   positionAddress,
 }: {
-  positionAddress: PublicKey;
+  positionAddress: Address;
   className?: string;
 }) {
   const [expanded, setExpanded] = useState(false);

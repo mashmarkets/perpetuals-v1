@@ -1,24 +1,16 @@
 "use client";
 
-import { PublicKey } from "@solana/web3.js";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
 import { ChartCurrency } from "@/components/Chart/ChartCurrency";
 import { DailyStats } from "@/components/Chart/DailyStats";
-import { Positions } from "@/components/Positions";
+import { ExistingPositions } from "@/components/Positions/ExistingPositions";
 import { TradeSidebar } from "@/components/TradeSidebar";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
 import { getTokenInfo, getTradingViewSymbol } from "@/lib/Token";
-
-const safePublicKey = (key: unknown): PublicKey | undefined => {
-  try {
-    return new PublicKey(key!);
-  } catch {
-    return undefined;
-  }
-};
+import { safeAddress } from "@/utils/utils";
 
 const TradingViewWidget = dynamic(
   () =>
@@ -30,9 +22,10 @@ const TradingViewWidget = dynamic(
 
 export default function Page() {
   const router = useRouter();
-  const { poolAddress } = router.query;
-  const pool = usePool(safePublicKey(poolAddress));
-  const custodies = usePoolCustodies(safePublicKey(poolAddress));
+  const poolAddress = safeAddress(router.query.poolAddress);
+
+  const pool = usePool(poolAddress);
+  const custodies = usePoolCustodies(poolAddress);
   const mint = Object.values(custodies)[0]?.mint;
 
   if (pool.isFetched && pool.data === null) {
@@ -85,10 +78,13 @@ export default function Page() {
             <span className="text-xs text-white"> by TradingView</span>
           </div>
         </div>
-        <Positions className="mt-12" />
+        <header className="mb-5 mt-20 flex items-center space-x-4">
+          <div className="font-medium text-white">My Positions</div>
+        </header>
+        <ExistingPositions />
       </div>
       <div className="max-w-lg">
-        <TradeSidebar mint={mint} poolAddress={new PublicKey(poolAddress)} />
+        <TradeSidebar mint={mint} poolAddress={poolAddress} />
       </div>
     </div>
   );

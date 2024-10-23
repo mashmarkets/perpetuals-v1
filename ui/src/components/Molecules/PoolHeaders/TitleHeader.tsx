@@ -1,8 +1,8 @@
 import NewTab from "@carbon/icons-react/lib/NewTab";
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { twMerge } from "tailwind-merge";
 
-import { PoolTokens } from "@/components/PoolTokens";
+import TokenIconArray from "@/components/ui/TokenIconArray";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
 import { getTokenSymbol } from "@/lib/Token";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
@@ -14,15 +14,16 @@ export function TitleHeader({
 }: {
   className?: string;
   iconClassName?: string;
-  poolAddress: PublicKey;
+  poolAddress: Address;
 }) {
   const { data: pool } = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);
 
+  console.log(pool);
   return (
     <div className={twMerge("flex", "flex-col", "space-x-1", className)}>
       <div className="flex flex-row items-center">
-        <PoolTokens
+        <TokenIconArray
           tokens={Object.values(custodies ?? {}).map((x) => x.mint)}
           className={iconClassName}
         />

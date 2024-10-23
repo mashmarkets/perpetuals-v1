@@ -1,19 +1,20 @@
 "use client";
 
+import { ChevronLeft } from "@carbon/icons-react";
+import { Address, isAddress } from "@solana/addresses";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
-import PoolBackButton from "@/components/Atoms/PoolBackButton";
 import { TitleHeader } from "@/components/Molecules/PoolHeaders/TitleHeader";
 import LiquidityCard from "@/components/PoolModal/LiquidityCard";
 import PoolGeneralStats from "@/components/PoolModal/PoolGeneralStats";
 import PoolTokenStats from "@/components/PoolModal/PoolTokenStats";
-import { safePublicKey } from "@/utils/utils";
+import { safeAddress } from "@/utils/utils";
 
 export default function SinglePool() {
   const router = useRouter();
 
-  const poolAddress = safePublicKey(router.query.poolAddress);
+  const poolAddress = safeAddress(router.query.poolAddress);
 
   if (poolAddress === undefined) {
     return <p className="2xl text-white">Invalid pool address</p>;
@@ -22,7 +23,14 @@ export default function SinglePool() {
   return (
     <div className="mx-auto mt-7 flex max-w-screen-2xl flex-col px-4 text-white lg:px-16">
       <div>
-        <PoolBackButton className="mb-6" />
+        <div
+          className="mb-6 flex cursor-pointer items-center space-x-1.5"
+          onClick={() => router.push("/pools")}
+        >
+          <ChevronLeft className="h-4 w-4 fill-zinc-500" />
+
+          <p className="text-sm font-medium text-zinc-500">Back To Pools</p>
+        </div>
         <div className="align-center mb-8 flex justify-start">
           <TitleHeader
             poolAddress={poolAddress!}

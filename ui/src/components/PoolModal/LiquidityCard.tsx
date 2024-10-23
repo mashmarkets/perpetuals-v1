@@ -1,7 +1,7 @@
 import Add from "@carbon/icons-react/lib/Add";
 import Subtract from "@carbon/icons-react/lib/Subtract";
+import { Address } from "@solana/addresses";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { useState } from "react";
@@ -14,9 +14,9 @@ import {
 } from "@/actions/perpetuals";
 import AirdropButton from "@/components/AirdropButton";
 import { LpSelector } from "@/components/PoolModal/LpSelector";
-import { SidebarTab } from "@/components/SidebarTab";
-import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
+import { SidebarTab } from "@/components/ui/SidebarTab";
+import { SolidButton } from "@/components/ui/SolidButton";
 import {
   useGetAddLiquidityAmountAndFee,
   useGetRemoveLiquidityAmountAndFee,
@@ -25,17 +25,16 @@ import {
 } from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
 import { useProgram } from "@/hooks/useProgram";
-import { asToken, getTokenPublicKey } from "@/lib/Token";
-import { Tab } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
-import { stringify } from "@/utils/utils";
+
+import { Tab } from "../ui/SidebarTab";
 
 export default function LiquidityCard({
   poolAddress,
   className,
 }: {
   className?: string;
-  poolAddress: PublicKey;
+  poolAddress: Address;
 }) {
   const [tab, setTab] = useState(Tab.Add);
   const [tokenAmount, setTokenAmount] = useState(0);
@@ -48,17 +47,11 @@ export default function LiquidityCard({
   const custodies = usePoolCustodies(poolAddress);
 
   const custody = Object.values(custodies ?? {})[0];
-  const payToken = custody ? asToken(custody.mint) : undefined;
+  const payToken = custody ? custody.mint : undefined;
 
-  const { data: payTokenBalance } = useBalance(
-    getTokenPublicKey(payToken!),
-    publicKey,
-  );
+  const { data: payTokenBalance } = useBalance(payToken, publicKey);
 
-  const lpMintAddress = findPerpetualsAddressSync(
-    "lp_token_mint",
-    new PublicKey(poolAddress),
-  );
+  const lpMintAddress = findPerpetualsAddressSync("lp_token_mint", poolAddress);
   const { data: lpMint } = useMint(lpMintAddress);
   const lp = useBalance(
     lpMintAddress,
@@ -103,15 +96,15 @@ export default function LiquidityCard({
       });
       // LP Shares
       queryClient.invalidateQueries({
-        queryKey: ["mint", lpMintAddress?.toString()],
+        queryKey: ["mint", lpMintAddress],
       });
       // Pool
       queryClient.invalidateQueries({
-        queryKey: ["pool", poolAddress?.toString()],
+        queryKey: ["pool", poolAddress],
       });
       // Custody
       queryClient.invalidateQueries({
-        queryKey: ["custody", custody?.address.toString()],
+        queryKey: ["custody", custody?.address],
       });
     },
     mutationFn: async () => {
@@ -131,7 +124,7 @@ export default function LiquidityCard({
           mintLpAmountOut:
             (addLiquidityEstimate.amount * BigInt(95)) / BigInt(100),
         };
-        console.log("Adding liquidity with params", stringify(params));
+        console.log("Adding liquidity with params", params);
         return wrapTransactionWithNotification(
           program.provider.connection,
           addLiquidity(program, params),
@@ -150,7 +143,7 @@ export default function LiquidityCard({
           minAmountOut:
             (removeLiquidityEstimate.amount * BigInt(95)) / BigInt(100),
         };
-        console.log("Removing liquidity with params", stringify(params));
+        console.log("Removing liquidity with params", params);
         return await wrapTransactionWithNotification(
           program.provider.connection,
           removeLiquidity(program, params),

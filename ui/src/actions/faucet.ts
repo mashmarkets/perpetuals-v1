@@ -1,12 +1,13 @@
 import { BN } from "@coral-xyz/anchor";
+import { Address } from "@solana/addresses";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { PublicKey, TransactionInstruction } from "@solana/web3.js";
 
 const programId = new PublicKey("dropFMi3YzWh5FJysWwmSfnGhh2LuGdXHm1wzNuu71z");
 
-export const getFaucetMint = (seed: PublicKey) =>
+export const getFaucetMint = (seed: Address) =>
   PublicKey.findProgramAddressSync(
-    [Buffer.from("mint"), seed.toBuffer()],
+    [Buffer.from("mint"), new PublicKey(seed).toBuffer()],
     programId,
   )[0];
 
@@ -16,8 +17,8 @@ export function createMintToInstruction({
   amount,
 }: {
   payer: PublicKey;
-  seed: PublicKey;
-  amount: BN;
+  seed: Address;
+  amount: bigint;
 }) {
   const mint = getFaucetMint(seed);
   const ata = getAssociatedTokenAddressSync(mint, payer);
@@ -45,8 +46,8 @@ export function createMintToInstruction({
 
   const data = Buffer.concat([
     new Uint8Array([0xac, 0x89, 0xb7, 0x0e, 0xcf, 0x6e, 0xea, 0x38]),
-    seed.toBuffer(),
-    new BN(amount).toArrayLike(Buffer, "le", 8),
+    new PublicKey(seed).toBuffer(),
+    new BN(amount.toString()).toArrayLike(Buffer, "le", 8),
   ]);
 
   return new TransactionInstruction({ keys, programId, data });

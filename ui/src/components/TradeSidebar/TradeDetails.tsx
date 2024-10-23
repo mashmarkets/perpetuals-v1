@@ -1,7 +1,8 @@
+import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { getTokenIcon, getTokenPublicKey, TokenE } from "@/lib/Token";
+import { getTokenIcon, getTokenSymbol } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import {
   formatFees,
@@ -12,8 +13,8 @@ import {
 
 interface Props {
   className?: string;
-  collateralToken: TokenE;
-  positionToken: TokenE;
+  collateralToken: Address;
+  positionToken: Address;
   entryPrice: number;
   liquidationPrice: number;
   fees: number;
@@ -24,7 +25,7 @@ interface Props {
 }
 
 export function TradeDetails(props: Props) {
-  const icon = getTokenIcon(getTokenPublicKey(props.positionToken));
+  const icon = getTokenIcon(props.positionToken);
 
   return (
     <div className={props.className}>
@@ -34,7 +35,7 @@ export function TradeDetails(props: Props) {
           className: twMerge(icon.props.className, "h-4", "ml-1.5", "w-4"),
         })}
         <div className="ml-0.5 text-sm font-semibold text-white">
-          {props.positionToken}
+          {getTokenSymbol(props.positionToken)}
         </div>
       </header>
       <div className={twMerge("grid", "grid-cols-2", "gap-4")}>

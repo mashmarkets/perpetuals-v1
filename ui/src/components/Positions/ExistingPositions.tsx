@@ -1,9 +1,9 @@
 "use client";
 
+import { ChartCandlestick } from "@carbon/icons-react";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { twMerge } from "tailwind-merge";
 
-import { NoPositions } from "@/components/Positions/NoPositions";
 import PoolPositionRow from "@/components/Positions/PoolPositionRow";
 import {
   Position,
@@ -12,11 +12,10 @@ import {
   usePools,
   usePositions,
 } from "@/hooks/perpetuals";
-import { asToken } from "@/lib/Token";
 import { dedupe } from "@/utils/utils";
 
-import { LoadingSpinner } from "../Atoms/LoadingSpinner";
-import { PoolTokens } from "../PoolTokens";
+import { LoadingSpinner } from "../ui/LoadingSpinner";
+import TokenIconArray from "../ui/TokenIconArray";
 import { PositionColumn } from "./PositionColumn";
 
 const groupPositionsByPool = (positions: Position[]) => {
@@ -49,7 +48,12 @@ export function ExistingPositions() {
   }
 
   if (Object.values(positions ?? {}).length === 0) {
-    return <NoPositions emptyString="No Open Positions" />;
+    return (
+      <div className="flex flex-col items-center space-y-2 rounded-md bg-zinc-900 py-5">
+        <ChartCandlestick className="h-5 w-5 fill-zinc-500" />
+        <p className="text-sm font-normal text-zinc-500">No Open Positions</p>
+      </div>
+    );
   }
 
   const groupedPositions = groupPositionsByPool(Object.values(positions ?? {}));
@@ -59,14 +63,12 @@ export function ExistingPositions() {
         if (positions.length === 0) {
           return <p key={pool}>No Positions</p>;
         }
-        const allTokens = positions
+        const tokens = positions
           .map((position) => {
             const custody = custodies[position.custody.toString()];
-            return custody ? asToken(custody.mint) : undefined;
+            return custody ? custody.mint : undefined;
           })
           .filter((x) => x !== undefined);
-
-        const tokens = Array.from(new Set(allTokens));
 
         return (
           <div className="mb-4" key={pool}>
@@ -85,7 +87,7 @@ export function ExistingPositions() {
                 percentages. */}
               <PositionColumn num={1}>
                 <div className="flex max-w-fit items-center rounded-t bg-zinc-800 px-2 py-1.5">
-                  <PoolTokens tokens={tokens} />
+                  <TokenIconArray tokens={tokens} />
                   <div className="ml-1 text-sm font-medium text-white">
                     {pools[pool]?.name ?? ""}
                   </div>

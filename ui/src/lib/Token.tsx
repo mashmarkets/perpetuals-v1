@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { memoize } from "lodash-es";
 
 import { getFaucetMint } from "@/actions/faucet";
@@ -6,28 +6,32 @@ import { getFaucetMint } from "@/actions/faucet";
 import { universe } from "./universe";
 
 interface Token {
-  address: string;
+  address: Address;
   name: string;
   symbol: string;
   decimals: number;
   logoURI: string;
   extensions: {
     coingeckoId: string;
-    mainnet: string;
-    oracle: string;
+    mainnet: Address;
+    oracle: Address;
   };
 }
-const tokenList: Token[] = universe.map((x) => ({
-  ...x,
-  extensions: {
-    ...x.extensions,
-    mainnet: x.address,
-  },
-  address:
-    x.address === "So11111111111111111111111111111111111111112"
-      ? "So11111111111111111111111111111111111111112"
-      : getFaucetMint(new PublicKey(x.address)).toString(),
-}));
+
+// Remap mainnet address to testnet faucet address
+const tokenList: Token[] = universe.map(
+  (x) =>
+    ({
+      ...x,
+      extensions: {
+        ...x.extensions,
+        mainnet: x.address,
+      },
+      address: (x.address === "So11111111111111111111111111111111111111112"
+        ? "So11111111111111111111111111111111111111112"
+        : getFaucetMint(x.address as Address).toString()) as Address,
+    }) as Token,
+);
 
 export const getTokensKeyedBy = memoize(
   (k: keyof Omit<Token, "extensions">) => {
@@ -41,102 +45,43 @@ export const getTokensKeyedBy = memoize(
   },
 );
 
-export const tokens = getTokensKeyedBy("address");
-export const getTokenInfo = (mint: PublicKey) => tokens[mint.toString()]!;
+export const tokensByMint = getTokensKeyedBy("address");
 
-// This MUST match UPPER token symbol for now
-export enum TokenE {
-  BLZE = "BLZE",
-  Bonk = "Bonk",
-  bSOL = "bSOL",
-  BTC = "BTC",
-  ETH = "ETH",
-  FIDA = "FIDA",
-  GOFX = "GOFX",
-  HNT = "HNT",
-  INF = "INF",
-  IOT = "IOT",
-  JitoSOL = "JitoSOL",
-  JLP = "JLP",
-  JTO = "JTO",
-  JUP = "JUP",
-  KMNO = "KMNO",
-  LST = "LST",
-  MEW = "MEW",
-  MNDE = "MNDE",
-  MOBILE = "MOBILE",
-  mSOL = "mSOL",
-  NEON = "NEON",
-  ORCA = "ORCA",
-  PRCL = "PRCL",
-  PYTH = "PYTH",
-  RAY = "RAY",
-  RENDER = "RENDER",
-  SAMO = "SAMO",
-  SLND = "SLND",
-  SOL = "SOL",
-  TNSR = "TNSR",
-  USDC = "USDC",
-  USDT = "USDT",
-  W = "W",
-  WBTC = "WBTC",
-  WEN = "WEN",
-  WIF = "WIF",
-}
-export const TOKEN_LIST = Object.values(TokenE);
+export const getTokenInfo = (mint: Address) => tokensByMint[mint]!;
 
-export function asToken(tokenStr: string | PublicKey): TokenE {
-  if (tokenStr instanceof PublicKey) {
-    if (tokens[tokenStr.toString()] === undefined) {
-      return TokenE.SOL;
-    }
-    return tokens[tokenStr.toString()]!.symbol as TokenE;
-  }
-  if (tokenStr === undefined) {
-    return TokenE.SOL;
-  }
-  const token = TOKEN_LIST.find(
-    (x) => x.toString().toUpperCase() === tokenStr.toUpperCase(),
-  );
+export const TOKEN_LIST = Object.keys(tokensByMint) as Address[];
 
-  if (token === undefined) {
-    console.log("Cannot find token for: ", tokenStr);
-    throw new Error("Not a valid token string");
-  }
-  return token;
-}
-
-export function getTokenLabel(token: PublicKey | undefined) {
+export function getTokenLabel(mint: Address | undefined) {
   if (
-    token === undefined ||
-    !Object.prototype.hasOwnProperty.call(tokens, token.toString())
+    mint === undefined ||
+    !Object.prototype.hasOwnProperty.call(tokensByMint, mint.toString())
   ) {
     return "Unknown";
   }
 
-  return tokens[token.toString()]!.name;
+  return tokensByMint[mint]!.name;
 }
 
-export function getTokenSymbol(token: PublicKey | undefined) {
+export function getTokenSymbol(mint: Address | undefined) {
   if (
-    token === undefined ||
-    !Object.prototype.hasOwnProperty.call(tokens, token.toString())
+    mint === undefined ||
+    !Object.prototype.hasOwnProperty.call(tokensByMint, mint.toString())
   ) {
     return "???";
   }
 
-  return tokens[token.toString()]!.symbol;
+  return tokensByMint[mint]!.symbol;
 }
 
-export function getTokenIcon(token: PublicKey | undefined) {
+export function getTokenIcon(mint: Address | undefined) {
   if (
-    token === undefined ||
-    !Object.prototype.hasOwnProperty.call(tokens, token.toString())
+    mint === undefined ||
+    !Object.prototype.hasOwnProperty.call(tokensByMint, mint.toString())
   ) {
     return <></>;
   }
-  const src = tokens[token.toString()]!.logoURI;
-  const alt = tokens[token.toString()]!.name;
+  const src = tokensByMint[mint]!.logoURI;
+  const alt = tokensByMint[mint]!.name;
 
   return (
     // eslint-disable-next-line @next/next/no-img-element -- Don't want to be reliant on vercel deployment for now
@@ -144,38 +89,15 @@ export function getTokenIcon(token: PublicKey | undefined) {
   );
 }
 
-export function getCoingeckoId(token: PublicKey) {
-  if (!Object.prototype.hasOwnProperty.call(tokens, token.toString())) {
+export function getCoingeckoId(mint: Address) {
+  if (!Object.prototype.hasOwnProperty.call(tokensByMint, mint.toString())) {
     return undefined;
   }
 
-  return tokens[token.toString()]!.extensions.coingeckoId;
+  return tokensByMint[mint.toString()]!.extensions.coingeckoId;
 }
 
-export function getTradingViewSymbol(mint: PublicKey) {
+export function getTradingViewSymbol(mint: Address) {
   const { symbol } = getTokenInfo(mint);
   return `PYTH:${symbol}USD`;
-}
-
-// Trying to decprecated TokenE and just use PublicKey
-export function tokenAddressToToken(address: string): TokenE | null {
-  if (!Object.prototype.hasOwnProperty.call(tokens, address)) {
-    return null;
-  }
-  return tokens[address]!.symbol as TokenE;
-}
-
-// Trying to decprecated TokenE and just use PublicKey
-export function getTokenPublicKey(token: TokenE) {
-  if (token === undefined) {
-    return PublicKey.default;
-  }
-  const info = tokenList.find(
-    (x) => x.symbol.toUpperCase() === token.toUpperCase(),
-  );
-
-  if (info === undefined) {
-    console.log("Can't find address for: ", token);
-  }
-  return new PublicKey(info!.address);
 }

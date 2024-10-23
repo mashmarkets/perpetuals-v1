@@ -1,11 +1,12 @@
 import ChevronRightIcon from "@carbon/icons-react/lib/ChevronRight";
+import { Address } from "@solana/addresses";
 import { cloneElement, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { MaxButton } from "@/components/Atoms/MaxButton";
 import { TokenSelectorList } from "@/components/TokenSelectorList";
+import { MaxButton } from "@/components/ui/MaxButton";
 import { usePrice } from "@/hooks/price";
-import { getTokenIcon, getTokenPublicKey, TokenE } from "@/lib/Token";
+import { getTokenIcon, getTokenSymbol } from "@/lib/Token";
 
 function formatNumber(num: number) {
   const formatter = Intl.NumberFormat("en", {
@@ -18,16 +19,16 @@ function formatNumber(num: number) {
 interface Props {
   className?: string;
   amount?: number;
-  token: TokenE;
+  token: Address;
   onChangeAmount?(amount: number): void;
-  onSelectToken?(token: TokenE): void;
-  tokenList?: TokenE[];
+  onSelectToken?(token: Address): void;
+  tokenList?: Address[];
   maxBalance?: number;
   pendingRateConversion?: boolean;
 }
 
 export function TokenSelector(props: Props) {
-  const { data: price } = usePrice(getTokenPublicKey(props.token));
+  const { data: price } = usePrice(props.token);
   const [selectorOpen, setSelectorOpen] = useState(false);
 
   if (props.token === undefined) {
@@ -70,10 +71,12 @@ export function TokenSelector(props: Props) {
             className="group flex items-center"
             onClick={() => setSelectorOpen(true)}
           >
-            {cloneElement(getTokenIcon(getTokenPublicKey(props.token)), {
+            {cloneElement(getTokenIcon(props.token), {
               className: "h-6 rounded-full w-6",
             })}
-            <div className="ml-1 mr-2 text-xl text-white">{props.token}</div>
+            <div className="ml-1 mr-2 text-xl text-white">
+              {getTokenSymbol(props.token)}
+            </div>
             {(props.tokenList ?? []).length > 1 && (
               <ChevronRightIcon className="fill-gray-500 transition-colors group-hover:fill-white" />
             )}

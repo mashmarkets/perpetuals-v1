@@ -1,3 +1,4 @@
+import { address, Address } from "@solana/addresses";
 import {
   getAssociatedTokenAddressSync,
   NATIVE_MINT,
@@ -11,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { connectionBatcher } from "./accounts";
 
 const ONE_MINUTE = 60 * 1000;
-export const useMint = (mint: PublicKey | undefined) => {
+export const useMint = (mint: Address | undefined) => {
   const { connection } = useConnection();
   return useQuery({
     queryKey: ["mint", mint?.toString()],
@@ -21,28 +22,28 @@ export const useMint = (mint: PublicKey | undefined) => {
       connectionBatcher(connection)
         .fetch(mint!)
         .then((info) => {
-          return unpackMint(mint!, info);
+          return unpackMint(new PublicKey(mint!), info);
         }),
   });
 };
 
 export const useBalance = (
-  mint: PublicKey | undefined,
+  mint: Address | undefined,
   user: PublicKey | undefined | null, // null cause thats what useWallet returns
 ) => {
   const { connection } = useConnection();
   return useQuery({
-    queryKey: ["balance", user?.toString(), mint?.toString()],
+    queryKey: ["balance", user?.toString(), mint],
     enabled: mint !== undefined && user !== undefined && user !== null,
     queryFn: () => {
       if (mint?.toString() === NATIVE_MINT.toString()) {
         return connection.getBalance(user!).then((x) => BigInt(x.toString()));
       }
-      const ata = getAssociatedTokenAddressSync(mint!, user!);
+      const ata = getAssociatedTokenAddressSync(new PublicKey(mint!), user!);
       return connectionBatcher(connection)
-        .fetch(ata)
+        .fetch(address(ata.toString()))
         .then((info) => {
-          return unpackAccount(mint!, info).amount;
+          return unpackAccount(new PublicKey(mint!), info).amount;
         });
     },
   });

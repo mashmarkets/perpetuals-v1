@@ -2,8 +2,8 @@ import Add from "@carbon/icons-react/lib/Add";
 import ArrowRight from "@carbon/icons-react/lib/ArrowRight";
 import Subtract from "@carbon/icons-react/lib/Subtract";
 import * as Dialog from "@radix-ui/react-dialog";
+import { Address } from "@solana/addresses";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { useState } from "react";
@@ -11,9 +11,9 @@ import { twMerge } from "tailwind-merge";
 
 import { addCollateral, removeCollateral } from "@/actions/perpetuals";
 import { LpSelector } from "@/components/PoolModal/LpSelector";
-import { SidebarTab } from "@/components/SidebarTab";
-import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
+import { SidebarTab } from "@/components/ui/SidebarTab";
+import { SolidButton } from "@/components/ui/SolidButton";
 import {
   useCustody,
   usePosition,
@@ -22,17 +22,18 @@ import {
 import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
 import { useProgram } from "@/hooks/useProgram";
-import { asToken, getTokenInfo } from "@/lib/Token";
-import { Tab } from "@/lib/types";
+import { getTokenInfo } from "@/lib/Token";
 import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
+
+import { Tab } from "./ui/SidebarTab";
 
 export function CollateralModal({
   children,
   positionAddress,
 }: {
   children?: React.ReactNode;
-  positionAddress: PublicKey;
+  positionAddress: Address;
 }) {
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [depositAmount, setDepositAmount] = useState(0);
@@ -59,7 +60,7 @@ export function CollateralModal({
     BigInt(Math.round(amounts.withdrawAmount * 10 ** 6)),
   );
 
-  const payToken = custody ? asToken(custody.mint) : undefined;
+  const payToken = custody ? custody.mint : undefined;
 
   const payTokenBalance = Number(collateralBalance) / 10 ** decimals;
   const changeCollateralUsd =

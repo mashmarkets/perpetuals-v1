@@ -1,5 +1,5 @@
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { useRouter } from "next/router";
 import { cloneElement, useState } from "react";
 import { twMerge } from "tailwind-merge";
@@ -19,7 +19,7 @@ export function ChartCurrency({
   className,
 }: {
   className?: string;
-  mint: PublicKey;
+  mint: Address;
 }) {
   const tokenIcon = getTokenIcon(mint);
   const [selectorOpen, setSelectorOpen] = useState(false);

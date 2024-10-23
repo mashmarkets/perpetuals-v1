@@ -1,21 +1,19 @@
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { getTokenIcon, getTokenPublicKey, TokenE } from "@/lib/Token";
+import { getTokenIcon } from "@/lib/Token";
 
 interface Props {
   className?: string;
-  tokens: TokenE[] | PublicKey[];
+  tokens: Address[];
 }
 
-export function PoolTokens(props: Props) {
+function TokenIconArray(props: Props) {
   return (
     <div className="flex items-center -space-x-6">
       {props.tokens.slice(0, 3).map((token, i) => {
-        const tokenIcon = getTokenIcon(
-          token instanceof PublicKey ? token : getTokenPublicKey(token),
-        );
+        const tokenIcon = getTokenIcon(token);
 
         return cloneElement(tokenIcon, {
           className: twMerge(
@@ -34,3 +32,5 @@ export function PoolTokens(props: Props) {
     </div>
   );
 }
+
+export default TokenIconArray;

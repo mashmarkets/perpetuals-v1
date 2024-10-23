@@ -1,4 +1,5 @@
 import CloseIcon from "@carbon/icons-react/lib/Close";
+import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -6,9 +7,8 @@ import { usePrices } from "@/hooks/price";
 import {
   getTokenIcon,
   getTokenLabel,
-  getTokenPublicKey,
+  getTokenSymbol,
   TOKEN_LIST,
-  TokenE,
 } from "@/lib/Token";
 
 function formatNumber(num: number) {
@@ -22,14 +22,14 @@ function formatNumber(num: number) {
 interface Props {
   className?: string;
   onClose?(): void;
-  onSelectToken?(token: TokenE): void;
-  tokenList?: TokenE[];
+  onSelectToken?(token: Address): void;
+  tokenList?: Address[];
 }
 
 export function TokenSelectorList(props: Props) {
   const list = props.tokenList ? props.tokenList : TOKEN_LIST;
 
-  const prices = usePrices(list.map(getTokenPublicKey));
+  const prices = usePrices(list);
 
   return (
     <div
@@ -48,11 +48,12 @@ export function TokenSelectorList(props: Props) {
         </header>
         <div className="mt-6">
           {list.map((token) => {
-            const icon = getTokenIcon(getTokenPublicKey(token));
+            const icon = getTokenIcon(token);
 
+            const price = prices[token.toString()]?.currentPrice;
             return (
               <button
-                key={token}
+                key={token.toString()}
                 className={twMerge(
                   "bg-zinc-900",
                   "gap-x-3",
@@ -73,18 +74,16 @@ export function TokenSelectorList(props: Props) {
                   className: "h-10 w-10",
                 })}
                 <div className="text-left">
-                  <div className="font-semibold text-white">{token}</div>
+                  <div className="font-semibold text-white">
+                    {getTokenSymbol(token)}
+                  </div>
                   <div className="text-sm text-zinc-500">
-                    {getTokenLabel(getTokenPublicKey(token))}
+                    {getTokenLabel(token)}
                   </div>
                 </div>
-                {!!prices[getTokenPublicKey(token)!.toString()]
-                  ?.currentPrice && (
+                {price && (
                   <div className="text-sm text-white">
-                    $
-                    {formatNumber(
-                      prices[getTokenPublicKey(token)!.toString()].currentPrice,
-                    )}
+                    ${formatNumber(price)}
                   </div>
                 )}
               </button>

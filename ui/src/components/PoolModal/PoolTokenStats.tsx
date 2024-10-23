@@ -1,5 +1,5 @@
 import NewTab from "@carbon/icons-react/lib/NewTab";
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
@@ -13,7 +13,7 @@ import { dedupe } from "@/utils/utils";
 export default function PoolTokenStats({
   poolAddress,
 }: {
-  poolAddress: PublicKey;
+  poolAddress: Address;
 }) {
   const custodies = usePoolCustodies(poolAddress);
   const prices = usePrices(

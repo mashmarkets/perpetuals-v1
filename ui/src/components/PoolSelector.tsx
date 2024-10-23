@@ -1,19 +1,19 @@
 import CheckmarkIcon from "@carbon/icons-react/lib/Checkmark";
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
 import * as Dropdown from "@radix-ui/react-dropdown-menu";
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { PoolTokens } from "@/components/PoolTokens";
+import TokenIconArray from "@/components/ui/TokenIconArray";
 import { useAllPools, useCustodies } from "@/hooks/perpetuals";
 import { getTokenSymbol } from "@/lib/Token";
 import { dedupe } from "@/utils/utils";
 
 interface Props {
   className?: string;
-  poolAddress: PublicKey;
-  onSelectPool?(poolAddress: PublicKey): void;
+  poolAddress: Address;
+  onSelectPool?(poolAddress: Address): void;
 }
 
 export function PoolSelector(props: Props) {
@@ -26,9 +26,9 @@ export function PoolSelector(props: Props) {
   );
 
   const selectedPool = pools?.[poolAddress.toString()];
-  const getTokenList = (address: PublicKey) =>
+  const getTokenList = (address: Address) =>
     (pools?.[address.toString()]?.custodies ?? [])
-      .map((x) => custodies[x.toString()]?.mint)
+      .map((x) => custodies[x]?.mint)
       .filter((x) => x !== undefined);
 
   return (
@@ -49,7 +49,10 @@ export function PoolSelector(props: Props) {
           props.className,
         )}
       >
-        <PoolTokens tokens={getTokenList(poolAddress)} className="h-5 w-5" />
+        <TokenIconArray
+          tokens={getTokenList(poolAddress)}
+          className="h-5 w-5"
+        />
         <div className="truncate text-sm font-medium text-white">
           {selectedPool?.name}
         </div>
@@ -96,7 +99,7 @@ export function PoolSelector(props: Props) {
                 key={pool.address.toString()}
                 onClick={() => props.onSelectPool?.(pool.address)}
               >
-                <PoolTokens tokens={tokenList} className="h-5 w-5" />
+                <TokenIconArray tokens={tokenList} className="h-5 w-5" />
                 <div>
                   <div className="truncate text-sm font-medium text-white">
                     {pool.name}

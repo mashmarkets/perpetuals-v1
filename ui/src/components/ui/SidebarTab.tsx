@@ -35,3 +35,7 @@ export function SidebarTab(props: Props) {
     </button>
   );
 }
+export enum Tab {
+  Add,
+  Remove,
+}

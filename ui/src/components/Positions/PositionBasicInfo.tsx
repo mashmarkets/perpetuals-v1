@@ -2,11 +2,11 @@ import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
 import EditIcon from "@carbon/icons-react/lib/Edit";
 import GrowthIcon from "@carbon/icons-react/lib/Growth";
 import NewTab from "@carbon/icons-react/lib/NewTab";
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { CollateralModal } from "@/components/Positions/CollateralModal";
+import { CollateralModal } from "@/components/CollateralModal";
 import { PositionColumn } from "@/components/Positions/PositionColumn";
 import {
   Custody,
@@ -47,7 +47,7 @@ export default function PositionBasicInfo({
 }: {
   className?: string;
   expanded?: boolean;
-  positionAddress: PublicKey;
+  positionAddress: Address;
   onClickExpand?(): void;
 }) {
   const { data: position } = usePosition(positionAddress);

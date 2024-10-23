@@ -1,4 +1,5 @@
 import { BN, IdlAccounts, ProgramAccount } from "@coral-xyz/anchor";
+import { Address } from "@solana/addresses";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -18,22 +19,35 @@ import { useProgram } from "./useProgram";
 
 const fromBN = (v: BN) => BigInt(v.toString());
 
+const parsePool = (data: ProgramAccount<IdlAccounts<Perpetuals>["pool"]>) => {
+  const p = data.account;
+  return {
+    address: data.publicKey.toString() as Address,
+    aumUsd: fromBN(p.aumUsd),
+    bump: p.bump,
+    custodies: p.custodies.map((x) => x.toString() as Address),
+    inceptionTime: new Date(p.inceptionTime.toNumber() * 1000),
+    lpTokenBump: p.lpTokenBump,
+    name: p.name,
+  };
+};
+
 const parsePosition = (
   data: ProgramAccount<IdlAccounts<Perpetuals>["position"]>,
 ) => {
   const p = data.account;
   return {
-    address: data.publicKey,
+    address: data.publicKey.toString() as Address,
     borrowSizeUsd: fromBN(p.borrowSizeUsd),
     bump: p.bump,
     collateralAmount: fromBN(p.collateralUsd),
     collateralUsd: fromBN(p.collateralUsd),
     cumulativeInterestSnapshot: fromBN(p.cumulativeInterestSnapshot),
-    custody: p.custody,
+    custody: p.custody.toString() as Address,
     lockedAmount: fromBN(p.lockedAmount),
     openTime: new Date(p.openTime.toNumber() * 1000),
-    owner: p.owner,
-    pool: p.pool,
+    owner: p.owner.toString() as Address,
+    pool: p.pool.toString() as Address,
     price: fromBN(p.price),
     sizeUsd: fromBN(p.sizeUsd),
     unrealizedLossUsd: fromBN(p.unrealizedLossUsd),
@@ -47,13 +61,13 @@ const parseCustody = (
 ) => {
   const c = data.account;
   return {
-    address: data.publicKey,
+    address: data.publicKey.toString() as Address,
     bump: c.bump,
     decimals: c.decimals,
-    mint: c.mint,
-    pool: c.pool,
-    tokenAccount: c.tokenAccount,
-    tokenAccountBump: c.tokenAccountBump,
+    mint: c.mint.toString() as Address,
+    pool: c.pool.toString() as Address,
+    tokenAccount: c.tokenAccount.toString() as Address,
+    tokenAccountBump: c.tokenAccountBump.toString() as Address,
     assets: {
       collateral: fromBN(c.assets.collateral),
       locked: fromBN(c.assets.locked),
@@ -103,8 +117,8 @@ const parseCustody = (
     oracle: {
       maxPriceAgeSec: c.oracle.maxPriceAgeSec,
       maxPriceError: fromBN(c.oracle.maxPriceError),
-      oracleAccount: c.oracle.oracleAccount,
-      oracleAuthority: c.oracle.oracleAccount,
+      oracleAccount: c.oracle.oracleAccount.toString() as Address,
+      oracleAuthority: c.oracle.oracleAccount.toString() as Address,
       oracleType: c.oracle.oracleType, // TODO: - Convert to "ENUM"
     },
     permissions: {
@@ -147,7 +161,7 @@ const parseCustody = (
 // TODO:- Query Functions can't return undefined, so when account data is null, we cannot return undefined.
 // So everything needs to null checked (like usePool)
 
-export type Pool = IdlAccounts<Perpetuals>["pool"] & { address: PublicKey };
+export type Pool = ReturnType<typeof parsePool>;
 export type Custody = ReturnType<typeof parseCustody>;
 export type Position = ReturnType<typeof parsePosition>;
 
@@ -162,12 +176,12 @@ queryClient.setQueryDefaults(["position"], {
   refetchInterval: ONE_MINUTE, // 1 MINUTE
 });
 
-export const usePool = (pool: PublicKey | undefined) => {
+export const usePool = (pool: Address | undefined) => {
   const { connection } = useConnection();
   const program = useProgram();
 
   return useQuery<Pool | null>({
-    queryKey: ["pool", pool?.toString()],
+    queryKey: ["pool", pool],
     enabled: !!program && !!pool,
     queryFn: () =>
       connectionBatcher(connection)
@@ -177,30 +191,30 @@ export const usePool = (pool: PublicKey | undefined) => {
             return null;
           }
           const coder = program!.account.pool.coder;
-          return {
-            address: pool!,
-            ...coder.accounts.decode("pool", info.data!),
-          };
+          return parsePool({
+            publicKey: pool!,
+            account: coder.accounts.decode("pool", info!.data!),
+          });
         }) as Promise<Pool>,
   });
 };
 
-export const usePools = (pools: PublicKey[]) => {
+export const usePools = (pools: Address[]) => {
   const { connection } = useConnection();
   const program = useProgram();
   return useQueries({
     queries: pools.map((pool) => ({
-      queryKey: ["pool", pool.toString()],
+      queryKey: ["pool", pool],
       enabled: !!program,
       queryFn: () =>
         connectionBatcher(connection)
           .fetch(pool)
           .then((info) => {
             const coder = program!.account.pool.coder;
-            return {
-              address: pool,
-              ...coder.accounts.decode("pool", info!.data!),
-            };
+            return parsePool({
+              publicKey: pool!,
+              account: coder.accounts.decode("pool", info!.data!),
+            });
           }) as Promise<Pool>,
     })),
     combine: (results) => {
@@ -221,28 +235,19 @@ export const usePools = (pools: PublicKey[]) => {
 const useAllPoolsAddress = () => {
   const program = useProgram();
   const client = useQueryClient();
-  return useQuery<PublicKey[]>({
+  return useQuery<Address[]>({
     queryKey: ["pools"],
     enabled: !!program,
     refetchInterval: 5 * ONE_MINUTE,
     queryFn: async () => {
       const data = await program!.account.pool.all();
-      const pools = data.reduce(
-        (acc, v) => {
-          acc[v.publicKey.toString()] = {
-            address: v.publicKey,
-            ...v.account,
-          };
-          return acc;
-        },
-        {} as Record<string, Pool>,
-      );
+      const pools = data.map(parsePool);
 
       // Update individual pool cache
-      Object.entries(pools).forEach(([key, pool]) => {
-        client.setQueryData(["pool", key], pool);
+      pools.forEach((pool) => {
+        client.setQueryData(["pool", pool.address.toString()], pool);
       });
-      return Object.keys(pools).map((key) => new PublicKey(key));
+      return pools.map((p) => p.address);
     },
   });
 };
@@ -253,7 +258,7 @@ export const useAllPools = () => {
   return usePools(list.data ?? []);
 };
 
-export const useCustody = (custody: PublicKey | undefined) => {
+export const useCustody = (custody: Address | undefined) => {
   const { connection } = useConnection();
   const program = useProgram();
 
@@ -266,14 +271,14 @@ export const useCustody = (custody: PublicKey | undefined) => {
         .then((info) => {
           const coder = program!.account.custody.coder;
           return parseCustody({
-            publicKey: custody!,
+            publicKey: new PublicKey(custody!),
             account: coder.accounts.decode("custody", info!.data!),
           });
         }) as Promise<Custody>,
   });
 };
 // Inspired by https://github.com/TanStack/query/discussions/6305
-export const useCustodies = (custodies: PublicKey[]) => {
+export const useCustodies = (custodies: Address[]) => {
   const { connection } = useConnection();
   const program = useProgram();
 
@@ -287,7 +292,7 @@ export const useCustodies = (custodies: PublicKey[]) => {
           .then((info) => {
             const coder = program!.account.custody.coder;
             return parseCustody({
-              publicKey: custody!,
+              publicKey: new PublicKey(custody!),
               account: coder.accounts.decode("custody", info!.data!),
             });
           }) as Promise<Custody>,
@@ -307,7 +312,7 @@ export const useCustodies = (custodies: PublicKey[]) => {
   });
 };
 
-export const usePoolCustodies = (poolKey: PublicKey | undefined) => {
+export const usePoolCustodies = (poolKey: Address | undefined) => {
   const { connection } = useConnection();
   const program = useProgram();
   const pool = usePool(poolKey);
@@ -344,7 +349,7 @@ export const usePoolCustodies = (poolKey: PublicKey | undefined) => {
   });
 };
 
-export const usePosition = (position: PublicKey | undefined) => {
+export const usePosition = (position: Address | undefined) => {
   const { connection } = useConnection();
   const program = useProgram();
 
@@ -367,7 +372,7 @@ export const usePosition = (position: PublicKey | undefined) => {
   });
 };
 
-export const usePositions = (positions: PublicKey[]) => {
+export const usePositions = (positions: Address[]) => {
   const { connection } = useConnection();
   const program = useProgram();
 
@@ -407,7 +412,7 @@ export const usePositions = (positions: PublicKey[]) => {
 export const useAllUserPositions = (user: PublicKey | null) => {
   const program = useProgram();
   const client = useQueryClient();
-  return useQuery<PublicKey[]>({
+  return useQuery<Address[]>({
     queryKey: ["positions", user?.toString()],
     enabled: !!program && user !== null && user !== undefined,
     refetchInterval: 2 * ONE_MINUTE,
@@ -430,7 +435,7 @@ export const useAllUserPositions = (user: PublicKey | null) => {
           acc[key].push(position.address);
           return acc;
         },
-        {} as Record<string, PublicKey[]>,
+        {} as Record<string, Address[]>,
       );
 
       // Update positions cache

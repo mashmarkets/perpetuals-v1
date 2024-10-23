@@ -1,11 +1,11 @@
 import GrowthIcon from "@carbon/icons-react/lib/Growth";
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import React, { useState } from "react";
 import { toast } from "react-toastify";
 import { twMerge } from "tailwind-merge";
 
-import { SidebarTab } from "@/components/SidebarTab";
 import { TradePosition } from "@/components/TradeSidebar/TradePosition";
+import { SidebarTab } from "@/components/ui/SidebarTab";
 import { Side } from "@/lib/types";
 
 import AirdropButton from "../AirdropButton";
@@ -16,8 +16,8 @@ export function TradeSidebar({
   poolAddress,
 }: {
   className?: string;
-  mint: PublicKey;
-  poolAddress: PublicKey;
+  mint: Address;
+  poolAddress: Address;
 }) {
   const [side, setSide] = useState(Side.Long);
 

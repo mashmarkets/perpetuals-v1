@@ -5,6 +5,7 @@ import {
   Provider,
   utils,
 } from "@coral-xyz/anchor";
+import { Address, isAddress } from "@solana/addresses";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   createCloseAccountInstruction,
@@ -39,26 +40,32 @@ const ADMIN_KEY = Keypair.fromSecretKey(
   ]),
 );
 export const findPerpetualsAddressSync = (
-  ...seeds: Array<Buffer | string | PublicKey | Uint8Array>
+  ...seeds: Array<Buffer | string | PublicKey | Uint8Array | Address>
 ) => {
-  return PublicKey.findProgramAddressSync(
+  const publicKey = PublicKey.findProgramAddressSync(
     seeds.map((x) => {
-      if (typeof x === "string") {
-        return utils.bytes.utf8.encode(x);
+      if (typeof x === "string" && isAddress(x)) {
+        return new PublicKey(x).toBuffer();
       }
+
       if (x instanceof PublicKey) {
         return x.toBuffer();
+      }
+      if (typeof x === "string") {
+        return utils.bytes.utf8.encode(x);
       }
       return x;
     }),
     new PublicKey(IDL.metadata.address),
   )[0];
+
+  return publicKey.toString() as Address;
 };
 
 export const findPerpetualsPositionAddressSync = (
   user: PublicKey,
-  poolAddress: PublicKey,
-  custodyAddress: PublicKey,
+  poolAddress: Address,
+  custodyAddress: Address,
 ) =>
   findPerpetualsAddressSync(
     "position",
@@ -165,7 +172,7 @@ export async function addCollateral(
     .accounts({
       owner: program.provider.publicKey,
       fundingAccount: getAssociatedTokenAddressSync(
-        custody.mint,
+        new PublicKey(custody.mint),
         program.provider.publicKey!,
       ),
       transferAuthority,
@@ -185,7 +192,7 @@ export async function addCollateral(
 
   const instructions = [instruction];
 
-  if (NATIVE_MINT.equals(custody.mint)) {
+  if (NATIVE_MINT.toString() === custody.mint) {
     await addWrappedSolInstructions(
       instructions,
       program.provider.publicKey!,
@@ -196,25 +203,62 @@ export async function addCollateral(
   return sendInstructions(program.provider, instructions);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type -- This is anchor enum
+type OracleType = { pyth: {} } | { custom: {} };
 export async function addCustody(
   program: Program<Perpetuals>,
   params: AddCustodyParams,
 ) {
-  const pool = findPerpetualsAddressSync("pool", params.poolName);
+  const pool = new PublicKey(
+    findPerpetualsAddressSync("pool", params.poolName),
+  );
 
   const instruction = await program.methods
     .addCustody({
       oracle: {
-        oracleAccount: params.tokenOracle,
-        oracleType: params.oracleType,
-        oracleAuthority: params.oracleAuthority,
-        maxPriceAgeSec: params.maxPriceAgeSec,
-        maxPriceError: params.maxPriceError,
+        oracleType: { [params.oracle.oracleType]: {} } as OracleType,
+        oracleAccount: new PublicKey(params.oracle.oracleAccount),
+        oracleAuthority: new PublicKey(params.oracle.oracleAuthority as string),
+        maxPriceAgeSec: params.oracle.maxPriceAgeSec,
+        maxPriceError: new BN(params.oracle.maxPriceError.toString()),
       },
-      pricing: params.pricingConfig,
+      pricing: {
+        useEma: params.pricing.useEma,
+        useUnrealizedPnlInAum: params.pricing.useUnrealizedPnlInAum,
+        tradeSpreadLong: new BN(params.pricing.tradeSpreadLong.toString()),
+        tradeSpreadShort: new BN(params.pricing.tradeSpreadShort.toString()),
+        minInitialLeverage: new BN(
+          params.pricing.minInitialLeverage.toString(),
+        ),
+        maxInitialLeverage: new BN(
+          params.pricing.maxInitialLeverage.toString(),
+        ),
+        maxLeverage: new BN(params.pricing.maxLeverage.toString()),
+        maxPayoffMult: new BN(params.pricing.maxPayoffMult.toString()),
+        maxUtilization: new BN(params.pricing.maxUtilization.toString()),
+        maxPositionLockedUsd: new BN(
+          params.pricing.maxPositionLockedUsd.toString(),
+        ),
+        maxTotalLockedUsd: new BN(params.pricing.maxTotalLockedUsd.toString()),
+      },
       permissions: params.permissions,
-      fees: params.fees,
-      borrowRate: params.borrowRate,
+      fees: {
+        utilizationMult: new BN(params.fees.utilizationMult.toString()),
+        addLiquidity: new BN(params.fees.addLiquidity.toString()),
+        removeLiquidity: new BN(params.fees.removeLiquidity.toString()),
+        openPosition: new BN(params.fees.openPosition.toString()),
+        closePosition: new BN(params.fees.closePosition.toString()),
+        liquidation: new BN(params.fees.liquidation.toString()),
+        protocolShare: new BN(params.fees.protocolShare.toString()),
+      },
+      borrowRate: {
+        baseRate: new BN(params.borrowRate.baseRate.toString()),
+        slope1: new BN(params.borrowRate.slope1.toString()),
+        slope2: new BN(params.borrowRate.slope2.toString()),
+        optimalUtilization: new BN(
+          params.borrowRate.optimalUtilization.toString(),
+        ),
+      },
     })
     .accounts({
       admin: ADMIN_KEY.publicKey,
@@ -257,7 +301,7 @@ export async function closePosition(
     .accounts({
       owner: program.provider.publicKey,
       receivingAccount: getAssociatedTokenAddressSync(
-        custody.mint,
+        new PublicKey(custody.mint),
         program.provider.publicKey!,
       ),
       transferAuthority,
@@ -277,7 +321,7 @@ export async function closePosition(
 
   const instructions = [instruction];
 
-  if (NATIVE_MINT.equals(custody.mint)) {
+  if (NATIVE_MINT.toString() === custody.mint) {
     await addWrappedSolInstructions(instructions, program.provider.publicKey!);
   }
 
@@ -309,16 +353,49 @@ export async function addPoolAndCustody(
   const addCustodyIx = await program.methods
     .addCustody({
       oracle: {
-        oracleAccount: params.tokenOracle,
-        oracleType: params.oracleType,
-        oracleAuthority: params.oracleAuthority,
-        maxPriceAgeSec: params.maxPriceAgeSec,
-        maxPriceError: params.maxPriceError,
+        oracleType: { [params.oracle.oracleType]: {} } as OracleType,
+        oracleAccount: new PublicKey(params.oracle.oracleAccount),
+        oracleAuthority: new PublicKey(params.oracle.oracleAuthority as string),
+        maxPriceAgeSec: params.oracle.maxPriceAgeSec,
+        maxPriceError: new BN(params.oracle.maxPriceError.toString()),
       },
-      pricing: params.pricingConfig,
+      pricing: {
+        useEma: params.pricing.useEma,
+        useUnrealizedPnlInAum: params.pricing.useUnrealizedPnlInAum,
+        tradeSpreadLong: new BN(params.pricing.tradeSpreadLong.toString()),
+        tradeSpreadShort: new BN(params.pricing.tradeSpreadShort.toString()),
+        minInitialLeverage: new BN(
+          params.pricing.minInitialLeverage.toString(),
+        ),
+        maxInitialLeverage: new BN(
+          params.pricing.maxInitialLeverage.toString(),
+        ),
+        maxLeverage: new BN(params.pricing.maxLeverage.toString()),
+        maxPayoffMult: new BN(params.pricing.maxPayoffMult.toString()),
+        maxUtilization: new BN(params.pricing.maxUtilization.toString()),
+        maxPositionLockedUsd: new BN(
+          params.pricing.maxPositionLockedUsd.toString(),
+        ),
+        maxTotalLockedUsd: new BN(params.pricing.maxTotalLockedUsd.toString()),
+      },
       permissions: params.permissions,
-      fees: params.fees,
-      borrowRate: params.borrowRate,
+      fees: {
+        utilizationMult: new BN(params.fees.utilizationMult.toString()),
+        addLiquidity: new BN(params.fees.addLiquidity.toString()),
+        removeLiquidity: new BN(params.fees.removeLiquidity.toString()),
+        openPosition: new BN(params.fees.openPosition.toString()),
+        closePosition: new BN(params.fees.closePosition.toString()),
+        liquidation: new BN(params.fees.liquidation.toString()),
+        protocolShare: new BN(params.fees.protocolShare.toString()),
+      },
+      borrowRate: {
+        baseRate: new BN(params.borrowRate.baseRate.toString()),
+        slope1: new BN(params.borrowRate.slope1.toString()),
+        slope2: new BN(params.borrowRate.slope2.toString()),
+        optimalUtilization: new BN(
+          params.borrowRate.optimalUtilization.toString(),
+        ),
+      },
     })
     .accounts({
       admin: ADMIN_KEY.publicKey,
@@ -347,11 +424,11 @@ export async function addPoolAndCustody(
 }
 
 export interface OpenPositionParams {
-  collateral: BN;
-  mint: PublicKey;
-  poolAddress: PublicKey;
-  price: BN;
-  size: BN;
+  collateral: bigint;
+  mint: Address;
+  poolAddress: Address;
+  price: bigint;
+  size: bigint;
 }
 
 export async function openPosition(
@@ -377,14 +454,14 @@ export async function openPosition(
   );
   const instruction = await program.methods
     .openPosition({
-      price: params.price,
-      collateral: params.collateral,
-      size: params.size,
+      price: new BN(params.price.toString()),
+      collateral: new BN(params.collateral.toString()),
+      size: new BN(params.size.toString()),
     })
     .accounts({
       owner: program.provider.publicKey,
       fundingAccount: getAssociatedTokenAddressSync(
-        params.mint,
+        new PublicKey(params.mint),
         program.provider.publicKey!,
       ),
       transferAuthority,
@@ -405,7 +482,7 @@ export async function openPosition(
 
   const instructions = [instruction];
 
-  if (NATIVE_MINT.equals(params.mint)) {
+  if (NATIVE_MINT.toString() === params.mint) {
     await addWrappedSolInstructions(
       instructions,
       program.provider.publicKey!,
@@ -489,8 +566,8 @@ export const getEntryPriceAndFee = async (
   );
   const instruction = await program.methods
     .getEntryPriceAndFee({
-      collateral: params.collateral,
-      size: params.size,
+      collateral: new BN(params.collateral.toString()),
+      size: new BN(params.size.toString()),
     })
     .accounts({
       perpetuals,
@@ -623,14 +700,7 @@ export const getRemoveLiquidityAmountAndFee = async (
       custodyOracleAccount: custody.oracle.oracleAccount,
       lpTokenMint: findPerpetualsAddressSync("lp_token_mint", pool.address),
     })
-    .remainingAccounts([
-      { pubkey: custody.address, isSigner: false, isWritable: true },
-      {
-        pubkey: custody.oracle.oracleAccount,
-        isSigner: false,
-        isWritable: true,
-      },
-    ])
+    .remainingAccounts(getRemainingAccountsFromCustodies([custody]))
     .instruction();
 
   const estimate = await getParsedSimulationResult<{
@@ -706,7 +776,7 @@ export async function removeCollateral(
     .accounts({
       owner: program.provider.publicKey,
       receivingAccount: getAssociatedTokenAddressSync(
-        custody.mint,
+        new PublicKey(custody.mint),
         program.provider.publicKey!,
       ),
       transferAuthority,
@@ -726,7 +796,7 @@ export async function removeCollateral(
 
   const instructions = [instruction];
 
-  if (NATIVE_MINT.equals(custody.mint)) {
+  if (NATIVE_MINT.toString() === custody.mint) {
     await addWrappedSolInstructions(instructions, program.provider.publicKey!);
   }
 
@@ -741,9 +811,13 @@ const getRemainingAccountsFromCustodies = (
   >,
 ) => {
   return custodies.flatMap((custody) => [
-    { pubkey: custody.address, isSigner: false, isWritable: true },
     {
-      pubkey: custody.oracle.oracleAccount,
+      pubkey: new PublicKey(custody.address),
+      isSigner: false,
+      isWritable: true,
+    },
+    {
+      pubkey: new PublicKey(custody.oracle.oracleAccount),
       isSigner: false,
       isWritable: true,
     },
@@ -769,12 +843,12 @@ export async function addLiquidity(
   const lpTokenMint = findPerpetualsAddressSync("lp_token_mint", pool.address);
 
   const fundingAccount = getAssociatedTokenAddressSync(
-    custody.mint,
+    new PublicKey(custody.mint),
     program.provider.publicKey!,
   );
 
   const lpTokenAccount = getAssociatedTokenAddressSync(
-    lpTokenMint,
+    new PublicKey(lpTokenMint),
     program.provider.publicKey!,
   );
 
@@ -804,12 +878,12 @@ export async function addLiquidity(
       program.provider.publicKey!,
       lpTokenAccount,
       program.provider.publicKey!,
-      lpTokenMint,
+      new PublicKey(lpTokenMint),
     ),
     instruction,
   ];
 
-  if (NATIVE_MINT.equals(custody.mint)) {
+  if (NATIVE_MINT.toString() === custody.mint) {
     await addWrappedSolInstructions(
       instructions,
       program.provider.publicKey!,
@@ -840,12 +914,12 @@ export async function removeLiquidity(
   const lpTokenMint = findPerpetualsAddressSync("lp_token_mint", pool.address);
 
   const receivingAccount = getAssociatedTokenAddressSync(
-    custody.mint,
+    new PublicKey(custody.mint),
     program.provider.publicKey!,
   );
 
   const lpTokenAccount = getAssociatedTokenAddressSync(
-    lpTokenMint,
+    new PublicKey(lpTokenMint),
     program.provider.publicKey!,
   );
 
@@ -864,7 +938,7 @@ export async function removeLiquidity(
       custody: custody.address,
       custodyOracleAccount: custody.oracle.oracleAccount,
       custodyTokenAccount: custody.tokenAccount,
-      lpTokenMint,
+      lpTokenMint: lpTokenMint,
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .remainingAccounts(getRemainingAccountsFromCustodies([custody]))
@@ -872,7 +946,7 @@ export async function removeLiquidity(
 
   const instructions = [instruction];
 
-  if (NATIVE_MINT.equals(custody.mint)) {
+  if (NATIVE_MINT.toString() === custody.mint) {
     await addWrappedSolInstructions(instructions, program.provider.publicKey!);
   }
 

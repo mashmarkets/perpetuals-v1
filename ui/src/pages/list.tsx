@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/router";
 import React from "react";
@@ -10,7 +10,7 @@ import {
 import FormListList, { AddCustodyParams } from "@/components/FormListAsset";
 import { useProgram } from "@/hooks/useProgram";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
-import { dedupe, stringify } from "@/utils/utils";
+import { dedupe } from "@/utils/utils";
 
 const CreatePool: React.FC = () => {
   const router = useRouter();
@@ -21,7 +21,7 @@ const CreatePool: React.FC = () => {
     onSuccess: (sig, params: AddCustodyParams) => {
       const poolAddress = findPerpetualsAddressSync("pool", params.poolName);
 
-      queryClient.setQueryData(["pools"], (pools: PublicKey[] | undefined) => {
+      queryClient.setQueryData(["pools"], (pools: Address[] | undefined) => {
         return dedupe([...(pools ?? []), poolAddress]);
       });
 
@@ -31,7 +31,7 @@ const CreatePool: React.FC = () => {
       if (program === undefined) {
         return;
       }
-      console.log("Creating pool with params", stringify(params));
+      console.log("Creating pool with params", params);
       return await wrapTransactionWithNotification(
         program.provider.connection,
         listAssetFn(program, params),

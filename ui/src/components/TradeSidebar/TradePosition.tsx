@@ -1,6 +1,5 @@
-import { BN } from "@coral-xyz/anchor";
+import { Address } from "@solana/addresses";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useDebounce } from "@uidotdev/usehooks";
 import { useState } from "react";
@@ -12,12 +11,12 @@ import {
   openPosition,
   OpenPositionParams,
 } from "@/actions/perpetuals";
-import { UserBalance } from "@/components/Atoms/UserBalance";
-import { LeverageSlider } from "@/components/LeverageSlider";
-import { LoadingDots } from "@/components/LoadingDots";
-import { SolidButton } from "@/components/SolidButton";
 import { TokenSelector } from "@/components/TokenSelector";
 import { TradeDetails } from "@/components/TradeSidebar/TradeDetails";
+import { LeverageSlider } from "@/components/ui/LeverageSlider";
+import { LoadingDots } from "@/components/ui/LoadingDots";
+import { SolidButton } from "@/components/ui/SolidButton";
+import { UserBalance } from "@/components/ui/UserBalance";
 import {
   useAllUserPositions,
   usePoolCustodies,
@@ -26,14 +25,10 @@ import {
 import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
 import { useProgram } from "@/hooks/useProgram";
-import {
-  getTokenInfo,
-  getTokenPublicKey,
-  tokenAddressToToken,
-} from "@/lib/Token";
+import { getTokenInfo } from "@/lib/Token";
 import { Side } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
-import { dedupe, stringify } from "@/utils/utils";
+import { dedupe } from "@/utils/utils";
 
 enum Input {
   Pay = "pay",
@@ -54,8 +49,8 @@ const useEntryEstimate = (params: Omit<OpenPositionParams, "price">) => {
     refetchInterval: 5 * 1000,
     enabled:
       !!program &&
-      !debounced.collateral.eq(new BN(0)) &&
-      !debounced.size.eq(new BN(0)),
+      debounced.collateral !== BigInt(0) &&
+      debounced.size !== BigInt(0),
     queryFn: async () => {
       if (program === undefined) {
         return;
@@ -73,8 +68,8 @@ export function TradePosition({
 }: {
   className?: string;
   side: Side;
-  mint: PublicKey;
-  poolAddress: PublicKey;
+  mint: Address;
+  poolAddress: Address;
 }) {
   const program = useProgram();
   const { publicKey } = useWallet();
@@ -84,26 +79,23 @@ export function TradePosition({
 
   const custodies = usePoolCustodies(poolAddress);
   const custody = Object.values(custodies)[0];
-  const token = tokenAddressToToken(mint.toString())!;
 
-  const payToken = token;
-  const positionToken = token;
+  const payToken = mint;
+  const positionToken = mint;
   const [lastChanged, setLastChanged] = useState<Input>(Input.Pay);
-  // const [payToken, setPayToken] = useState<TokenE>(token);
-  // const [positionToken, setPositionToken] = useState<TokenE>(token);
   const [payAmount, setPayAmount] = useState(1);
   const [positionAmount, setPositionAmount] = useState(0);
 
-  const { data: price } = usePrice(getTokenPublicKey(positionToken));
-  const { data: balance } = useBalance(getTokenPublicKey(payToken), publicKey);
+  const { data: price } = usePrice(positionToken);
+  const { data: balance } = useBalance(payToken, publicKey);
   const { decimals } = getTokenInfo(mint);
 
   const params = {
-    collateral: new BN(Math.round(payAmount * 10 ** decimals)),
+    collateral: BigInt(Math.round(payAmount * 10 ** decimals)),
     mint,
     poolAddress,
-    price: new BN(Math.round((price?.currentPrice ?? 0) * 10 ** 6 * 1.05)),
-    size: new BN(Math.round(positionAmount * 10 ** decimals)),
+    price: BigInt(Math.round((price?.currentPrice ?? 0) * 10 ** 6 * 1.05)),
+    size: BigInt(Math.round(positionAmount * 10 ** decimals)),
   };
   const { data: estimate } = useEntryEstimate(params);
 
@@ -122,11 +114,7 @@ export function TradePosition({
     onSuccess: () => {
       // Collateral Balance
       queryClient.invalidateQueries({
-        queryKey: [
-          "balance",
-          publicKey?.toString(),
-          getTokenPublicKey(payToken),
-        ],
+        queryKey: ["balance", publicKey?.toString(), payToken.toString()],
       });
       // Pool
       queryClient.invalidateQueries({
@@ -136,7 +124,7 @@ export function TradePosition({
       // Add position, so its fetched
       queryClient.setQueryData(
         ["positions", publicKey?.toString()],
-        (p: PublicKey[] | undefined) =>
+        (p: Address[] | undefined) =>
           dedupe([
             ...(p ?? []),
             findPerpetualsPositionAddressSync(
@@ -152,7 +140,7 @@ export function TradePosition({
         return;
       }
 
-      console.log("Opening position: ", stringify(params));
+      console.log("Opening position: ", params);
 
       return wrapTransactionWithNotification(
         program.provider.connection,
@@ -191,7 +179,7 @@ export function TradePosition({
     <div className={className}>
       <div className="flex items-center justify-between text-sm">
         <div className="font-medium text-white">Your Collateral</div>
-        <UserBalance mint={getTokenPublicKey(payToken)} />
+        <UserBalance mint={payToken} />
       </div>
       <TokenSelector
         className="mt-2"
@@ -205,7 +193,7 @@ export function TradePosition({
           // setPayToken(token);
           // setPositionToken(token);
         }}
-        tokenList={[token]}
+        tokenList={[mint]}
         maxBalance={payTokenBalance ? payTokenBalance : 0}
       />
       <div className="mt-4 text-sm font-medium text-white">Your {side}</div>
@@ -221,7 +209,7 @@ export function TradePosition({
           // setPayToken(token);
           // setPositionToken(token);
         }}
-        tokenList={[token]}
+        tokenList={[mint]}
       />
       {/* <div className="mt-4 text-xs text-zinc-400">Pool</div> */}
       {/* <PoolSelector

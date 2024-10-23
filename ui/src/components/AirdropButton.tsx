@@ -1,15 +1,14 @@
-import { BN } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createMintToInstruction } from "@/actions/faucet";
 import { sendInstructions } from "@/actions/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { useAnchorProvider } from "@/hooks/useProgram";
-import { getTokenSymbol, tokens } from "@/lib/Token";
+import { getTokenSymbol, tokensByMint } from "@/lib/Token";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
-import { SolidButton } from "./SolidButton";
+import { SolidButton } from "./ui/SolidButton";
 
 function roundToOneSignificantFigure(num: number): number {
   if (num === 0) return 0; // Handle the case for 0 separately
@@ -24,7 +23,7 @@ function roundToOneSignificantFigure(num: number): number {
   return Math.ceil(num / factor) * factor;
 }
 
-export default function AirdropButton({ mint }: { mint: PublicKey }) {
+export default function AirdropButton({ mint }: { mint: Address }) {
   const queryClient = useQueryClient();
   const provider = useAnchorProvider();
   const { data: price } = usePrice(mint);
@@ -33,7 +32,7 @@ export default function AirdropButton({ mint }: { mint: PublicKey }) {
     symbol,
     decimals,
     extensions: { mainnet },
-  } = tokens[mint.toString()]!;
+  } = tokensByMint[mint.toString()]!;
 
   const amount = price
     ? roundToOneSignificantFigure(
@@ -61,8 +60,8 @@ export default function AirdropButton({ mint }: { mint: PublicKey }) {
           : sendInstructions(provider, [
               createMintToInstruction({
                 payer: provider.publicKey,
-                seed: new PublicKey(mainnet),
-                amount: new BN(amount),
+                seed: mainnet,
+                amount: BigInt(amount),
               }),
             ]);
 

@@ -7,7 +7,7 @@ import { addCustody as addCustodyFn } from "@/actions/perpetuals";
 import AddCustodyForm, { AddCustodyParams } from "@/components/FormListAsset";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
 import { useProgram } from "@/hooks/useProgram";
-import { safePublicKey, stringify } from "@/utils/utils";
+import { safeAddress } from "@/utils/utils";
 
 const Accordion = ({
   title,
@@ -35,7 +35,8 @@ const ManagePoolPage = () => {
   const router = useRouter();
   const program = useProgram();
   const queryClient = useQueryClient();
-  const poolAddress = safePublicKey(router.query.poolAddress);
+  const poolAddress = safeAddress(router.query.poolAddress);
+
   const { data: pool, isLoading } = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);
 
@@ -54,7 +55,7 @@ const ManagePoolPage = () => {
       if (program === undefined) {
         return;
       }
-      console.log("Creating custody with params", stringify(params));
+      console.log("Creating custody with params", params);
       return await addCustodyFn(program, params);
     },
   });
@@ -106,16 +107,14 @@ const ManagePoolPage = () => {
       </h1>
 
       <div className="text-white">
-        <Accordion title="Pool Details">
-          {renderDetails(stringify(pool) as Record<string, unknown>)}
-        </Accordion>
+        <Accordion title="Pool Details">{renderDetails(pool)}</Accordion>
       </div>
 
       <div className="text-white">
         {Object.values(custodies).map((custody, index) => (
           <div key={index} className="mb-4">
             <Accordion title={`Custody - ${pool.custodies[index]?.toString()}`}>
-              {renderDetails(stringify(custody) as Record<string, unknown>)}
+              {renderDetails(custody)}
             </Accordion>
           </div>
         ))}

@@ -1,6 +1,6 @@
 import { twMerge } from "tailwind-merge";
 
-import { MaxButton } from "@/components/Atoms/MaxButton";
+import { MaxButton } from "@/components/ui/MaxButton";
 
 export const LpSelector = ({
   className,

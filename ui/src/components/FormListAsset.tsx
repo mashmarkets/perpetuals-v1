@@ -1,23 +1,22 @@
-import { BN } from "@coral-xyz/anchor";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { PublicKey } from "@solana/web3.js";
+import { address, Address } from "@solana/addresses";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useAllPools } from "@/hooks/perpetuals";
-import { getTokensKeyedBy, getTokenSymbol } from "@/lib/Token";
+import { getTokenInfo, getTokensKeyedBy, getTokenSymbol } from "@/lib/Token";
 import { parseUnits } from "@/utils/viem";
 
-const transformToBN = (decimals: number) => (x: string) =>
-  new BN(parseUnits(x, decimals).toString());
+const transformToBigInt = (decimals: number) => (x: string) =>
+  parseUnits(x, decimals);
 
-const transformToPublicKey = (x: string, ctx: z.RefinementCtx) => {
+const transformToAddress = (x: string, ctx: z.RefinementCtx) => {
   try {
-    return new PublicKey(x);
+    return address(x);
   } catch {
     ctx.addIssue({
       code: z.ZodIssueCode.custom,
-      message: "Not a public key",
+      message: "Not a valid address",
     });
     return z.NEVER;
   }
@@ -25,28 +24,26 @@ const transformToPublicKey = (x: string, ctx: z.RefinementCtx) => {
 
 const addCustodySchema = z.object({
   poolName: z.string(),
-  tokenMint: z.string().transform(transformToPublicKey),
-  // These should be nested under oracle, but i realized too late and it was too much work...
-  tokenOracle: z.string().transform(transformToPublicKey),
-  oracleType: z
-    .enum(["pyth", "custom"])
-    // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- This is anchor enum
-    .transform((x) => ({ [x]: {} }) as { pyth: {} } | { custom: {} }),
-  maxPriceError: z.string().transform(transformToBN(4 - 2)),
-  maxPriceAgeSec: z.string().transform((x) => parseInt(x)),
-  oracleAuthority: z.string().transform((x) => new PublicKey(x)),
-  pricingConfig: z.object({
+  tokenMint: z.string().transform(transformToAddress),
+  oracle: z.object({
+    oracleType: z.enum(["pyth", "custom"]),
+    oracleAccount: z.string().transform(transformToAddress),
+    oracleAuthority: z.string().transform(transformToAddress),
+    maxPriceAgeSec: z.string().transform((x) => parseInt(x)),
+    maxPriceError: z.string().transform(transformToBigInt(4 - 2)),
+  }),
+  pricing: z.object({
     useEma: z.boolean(),
     useUnrealizedPnlInAum: z.boolean(),
-    tradeSpreadLong: z.string().transform(transformToBN(4 - 2)),
-    tradeSpreadShort: z.string().transform(transformToBN(4 - 2)),
-    minInitialLeverage: z.string().transform(transformToBN(4)),
-    maxInitialLeverage: z.string().transform(transformToBN(4)),
-    maxLeverage: z.string().transform(transformToBN(4)),
-    maxPayoffMult: z.string().transform(transformToBN(4 - 2)),
-    maxUtilization: z.string().transform(transformToBN(4 - 2)),
-    maxPositionLockedUsd: z.string().transform(transformToBN(6)),
-    maxTotalLockedUsd: z.string().transform(transformToBN(6)),
+    tradeSpreadLong: z.string().transform(transformToBigInt(4 - 2)),
+    tradeSpreadShort: z.string().transform(transformToBigInt(4 - 2)),
+    minInitialLeverage: z.string().transform(transformToBigInt(4)),
+    maxInitialLeverage: z.string().transform(transformToBigInt(4)),
+    maxLeverage: z.string().transform(transformToBigInt(4)),
+    maxPayoffMult: z.string().transform(transformToBigInt(4 - 2)),
+    maxUtilization: z.string().transform(transformToBigInt(4 - 2)),
+    maxPositionLockedUsd: z.string().transform(transformToBigInt(6)),
+    maxTotalLockedUsd: z.string().transform(transformToBigInt(6)),
   }),
   permissions: z.object({
     allowAddLiquidity: z.boolean(),
@@ -58,19 +55,19 @@ const addCustodySchema = z.object({
     allowSizeChange: z.boolean(),
   }),
   fees: z.object({
-    utilizationMult: z.string().transform(transformToBN(4 - 2)),
-    addLiquidity: z.string().transform(transformToBN(4 - 2)),
-    removeLiquidity: z.string().transform(transformToBN(4 - 2)),
-    openPosition: z.string().transform(transformToBN(4 - 2)),
-    closePosition: z.string().transform(transformToBN(4 - 2)),
-    liquidation: z.string().transform(transformToBN(4 - 2)),
-    protocolShare: z.string().transform(transformToBN(4 - 2)),
+    utilizationMult: z.string().transform(transformToBigInt(4 - 2)),
+    addLiquidity: z.string().transform(transformToBigInt(4 - 2)),
+    removeLiquidity: z.string().transform(transformToBigInt(4 - 2)),
+    openPosition: z.string().transform(transformToBigInt(4 - 2)),
+    closePosition: z.string().transform(transformToBigInt(4 - 2)),
+    liquidation: z.string().transform(transformToBigInt(4 - 2)),
+    protocolShare: z.string().transform(transformToBigInt(4 - 2)),
   }),
   borrowRate: z.object({
-    baseRate: z.string().transform(transformToBN(9 - 2)),
-    slope1: z.string().transform(transformToBN(9 - 2)),
-    slope2: z.string().transform(transformToBN(9 - 2)),
-    optimalUtilization: z.string().transform(transformToBN(9 - 2)),
+    baseRate: z.string().transform(transformToBigInt(9 - 2)),
+    slope1: z.string().transform(transformToBigInt(9 - 2)),
+    slope2: z.string().transform(transformToBigInt(9 - 2)),
+    optimalUtilization: z.string().transform(transformToBigInt(9 - 2)),
   }),
 });
 
@@ -84,19 +81,21 @@ const AddCustodyForm = ({
   onSubmit,
 }: {
   poolName: string;
-  custodies: { mint: PublicKey }[];
+  custodies: { mint: Address }[];
   onSubmit: (x: AddCustodyParams) => void;
 }) => {
   const pools = useAllPools();
   const defaultValues: AddCustodyState = {
     poolName: poolName,
     tokenMint: "",
-    tokenOracle: "",
-    oracleType: "pyth",
-    maxPriceError: "100.00" as string,
-    maxPriceAgeSec: "600",
-    oracleAuthority: PublicKey.default.toString(),
-    pricingConfig: {
+    oracle: {
+      oracleAccount: "",
+      oracleType: "pyth",
+      maxPriceError: "100.00" as string,
+      maxPriceAgeSec: "600",
+      oracleAuthority: "111111111111111111111111111111111",
+    },
+    pricing: {
       useEma: false,
       useUnrealizedPnlInAum: true,
       tradeSpreadLong: "0.10",
@@ -149,7 +148,7 @@ const AddCustodyForm = ({
       resolver: zodResolver(addCustodySchema),
     });
 
-  const oracleType = watch("oracleType");
+  const oracleType = watch("oracle.oracleType");
   const list = getTokensKeyedBy("address");
   return (
     <div>
@@ -160,12 +159,12 @@ const AddCustodyForm = ({
             value=""
             onChange={(e) => {
               e.preventDefault();
-              const token = list[e.target.value]!;
+              const token = getTokenInfo(e.target.value as Address);
               setValue("tokenMint", token.address, { shouldDirty: true });
-              setValue("tokenOracle", token.extensions.oracle, {
+              setValue("oracle.oracleAccount", token.extensions.oracle, {
                 shouldDirty: true,
               });
-              const symbol = getTokenSymbol(new PublicKey(token.address));
+              const symbol = getTokenSymbol(token.address);
               // If no current pool is using this symbol as name, use it as "canonical" name
               if (!Object.values(pools ?? {}).find((x) => x.name === symbol)) {
                 setValue("poolName", symbol, { shouldDirty: true });
@@ -219,7 +218,7 @@ const AddCustodyForm = ({
           <input
             id="tokenOracle"
             type="text"
-            {...register("tokenOracle")}
+            {...register("oracle.oracleAccount")}
             className="w-full rounded border p-2"
             required
           />
@@ -250,7 +249,7 @@ const AddCustodyForm = ({
           <input
             id="maxPriceError"
             type="number"
-            {...register("maxPriceError")}
+            {...register("oracle.maxPriceError")}
             className="w-full rounded border p-2"
             required
             step="0.01"
@@ -265,7 +264,7 @@ const AddCustodyForm = ({
             id="maxPriceAgeSec"
             type="number"
             min="0"
-            {...register("maxPriceAgeSec")}
+            {...register("oracle.maxPriceAgeSec")}
             className="w-full rounded border p-2"
             required
           />
@@ -278,7 +277,7 @@ const AddCustodyForm = ({
             <input
               id="oracleAuthority"
               type="text"
-              {...register("oracleAuthority")}
+              {...register("oracle.oracleAuthority")}
               className="w-full rounded border p-2"
               required
             />
@@ -293,7 +292,7 @@ const AddCustodyForm = ({
           <label className="flex items-center text-white">
             <input
               type="checkbox"
-              {...register("pricingConfig.useEma")}
+              {...register("pricing.useEma")}
               className="mr-2"
             />
             Use EMA
@@ -303,7 +302,7 @@ const AddCustodyForm = ({
           <label className="flex items-center text-white">
             <input
               type="checkbox"
-              {...register("pricingConfig.useUnrealizedPnlInAum")}
+              {...register("pricing.useUnrealizedPnlInAum")}
               className="mr-2"
             />
             Use Unrealized PnL in AUM
@@ -317,7 +316,7 @@ const AddCustodyForm = ({
             id="tradeSpreadLong"
             type="number"
             min="0"
-            {...register("pricingConfig.tradeSpreadLong")}
+            {...register("pricing.tradeSpreadLong")}
             className="w-full rounded border p-2"
             required
             step="0.01"
@@ -330,7 +329,7 @@ const AddCustodyForm = ({
           <input
             id="tradeSpreadShort"
             type="number"
-            {...register("pricingConfig.tradeSpreadShort")}
+            {...register("pricing.tradeSpreadShort")}
             className="w-full rounded border p-2"
             required
             step="0.01"
@@ -344,7 +343,7 @@ const AddCustodyForm = ({
           <input
             id="minInitialLeverage"
             type="number"
-            {...register("pricingConfig.minInitialLeverage")}
+            {...register("pricing.minInitialLeverage")}
             className="w-full rounded border p-2"
             required
             step="0.0001"
@@ -358,7 +357,7 @@ const AddCustodyForm = ({
           <input
             id="maxInitialLeverage"
             type="number"
-            {...register("pricingConfig.maxInitialLeverage")}
+            {...register("pricing.maxInitialLeverage")}
             className="w-full rounded border p-2"
             required
             step="0.0001"
@@ -372,7 +371,7 @@ const AddCustodyForm = ({
           <input
             id="maxLeverage"
             type="number"
-            {...register("pricingConfig.maxLeverage")}
+            {...register("pricing.maxLeverage")}
             className="w-full rounded border p-2"
             required
             step="0.0001"
@@ -386,7 +385,7 @@ const AddCustodyForm = ({
           <input
             id="maxPayoffMult"
             type="number"
-            {...register("pricingConfig.maxPayoffMult")}
+            {...register("pricing.maxPayoffMult")}
             className="w-full rounded border p-2"
             required
             step="0.01"
@@ -400,7 +399,7 @@ const AddCustodyForm = ({
           <input
             id="maxUtilization"
             type="number"
-            {...register("pricingConfig.maxUtilization")}
+            {...register("pricing.maxUtilization")}
             className="w-full rounded border p-2"
             required
             step="0.01"
@@ -417,7 +416,7 @@ const AddCustodyForm = ({
           <input
             id="maxPositionLockedUsd"
             type="number"
-            {...register("pricingConfig.maxPositionLockedUsd")}
+            {...register("pricing.maxPositionLockedUsd")}
             className="w-full rounded border p-2"
             required
             step="0.000001"
@@ -431,7 +430,7 @@ const AddCustodyForm = ({
           <input
             id="maxTotalLockedUsd"
             type="number"
-            {...register("pricingConfig.maxTotalLockedUsd")}
+            {...register("pricing.maxTotalLockedUsd")}
             className="w-full rounded border p-2"
             required
             step="0.000001"

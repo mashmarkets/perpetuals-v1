@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { Address } from "@solana/addresses";
 import { twMerge } from "tailwind-merge";
 
 import { usePrice } from "@/hooks/price";
@@ -9,7 +9,7 @@ export function DailyStats({
   mint,
 }: {
   className?: string;
-  mint: PublicKey;
+  mint: Address;
 }) {
   const { data: stats } = usePrice(mint);
 

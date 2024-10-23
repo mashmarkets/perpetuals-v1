@@ -1,12 +1,12 @@
 "use client";
 
+import { ChartCandlestick } from "@carbon/icons-react";
+import { Address } from "@solana/addresses";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { useRouter } from "next/router";
 import { twMerge } from "tailwind-merge";
 
 import { findPerpetualsAddressSync } from "@/actions/perpetuals";
-import { NoPositions } from "@/components/Positions/NoPositions";
 import {
   useAllPools,
   useGetAssetsUnderManagement,
@@ -15,10 +15,10 @@ import {
   usePoolCustodies,
 } from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
-import { getTokenIcon, tokens } from "@/lib/Token";
+import { getTokenIcon, tokensByMint } from "@/lib/Token";
 import { formatNumberCommas } from "@/utils/formatters";
 
-function PoolRow({ poolAddress }: { poolAddress: PublicKey }) {
+function PoolRow({ poolAddress }: { poolAddress: Address }) {
   const { publicKey } = useWallet();
   const router = useRouter();
   const { data: pool } = usePool(poolAddress);
@@ -69,7 +69,7 @@ function PoolRow({ poolAddress }: { poolAddress: PublicKey }) {
             <p className="text-xs font-medium">{pool?.name}</p>
             <div className="flex flex-row truncate text-xs font-medium text-zinc-500">
               {Object.values(custodies)
-                .map((x) => tokens[x.mint.toString()]!.symbol)
+                .map((x) => tokensByMint[x.mint.toString()]!.symbol)
                 .join(", ")}
             </div>
           </div>
@@ -108,7 +108,10 @@ export default function Pools() {
       </div>
 
       {Object.values(pools).length === 0 ? (
-        <NoPositions emptyString="No Open Pools" />
+        <div className="flex flex-col items-center space-y-2 rounded-md bg-zinc-900 py-5">
+          <ChartCandlestick className="h-5 w-5 fill-zinc-500" />
+          <p className="text-sm font-normal text-zinc-500">No Open Pools</p>
+        </div>
       ) : (
         <table className={twMerge("table-auto", "text-white", "w-full")}>
           <thead
@@ -131,11 +134,8 @@ export default function Pools() {
             </tr>
           </thead>
           <tbody>
-            {Object.keys(pools ?? {}).map((poolAddress) => (
-              <PoolRow
-                key={poolAddress.toString()}
-                poolAddress={new PublicKey(poolAddress)}
-              />
+            {Object.values(pools ?? {}).map((pool) => (
+              <PoolRow key={pool.address} poolAddress={pool.address} />
             ))}
           </tbody>
         </table>
