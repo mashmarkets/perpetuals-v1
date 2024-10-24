@@ -1,4 +1,5 @@
 import { Address } from "@solana/addresses";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 import { createMintToInstruction } from "@/actions/faucet";
@@ -56,7 +57,10 @@ export default function AirdropButton({ mint }: { mint: Address }) {
       }
       const promise =
         mint.toString() === "So11111111111111111111111111111111111111112"
-          ? provider.connection.requestAirdrop(provider.publicKey!, 5 * 10 ** 9)
+          ? provider.connection.requestAirdrop(
+              provider.publicKey!,
+              5 * LAMPORTS_PER_SOL,
+            )
           : sendInstructions(provider, [
               createMintToInstruction({
                 payer: provider.publicKey,

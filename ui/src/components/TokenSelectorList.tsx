@@ -10,14 +10,7 @@ import {
   getTokenSymbol,
   TOKEN_LIST,
 } from "@/lib/Token";
-
-function formatNumber(num: number) {
-  const formatter = Intl.NumberFormat("en", {
-    maximumFractionDigits: 6,
-    minimumFractionDigits: 2,
-  });
-  return formatter.format(num);
-}
+import { formatPrice } from "@/utils/formatters";
 
 interface Props {
   className?: string;
@@ -83,7 +76,7 @@ export function TokenSelectorList(props: Props) {
                 </div>
                 {price && (
                   <div className="text-sm text-white">
-                    ${formatNumber(price)}
+                    ${formatPrice(price)}
                   </div>
                 )}
               </button>

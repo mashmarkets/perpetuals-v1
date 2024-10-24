@@ -192,7 +192,7 @@ export const usePool = (pool: Address | undefined) => {
           }
           const coder = program!.account.pool.coder;
           return parsePool({
-            publicKey: pool!,
+            publicKey: new PublicKey(pool!),
             account: coder.accounts.decode("pool", info!.data!),
           });
         }) as Promise<Pool>,
@@ -212,7 +212,7 @@ export const usePools = (pools: Address[]) => {
           .then((info) => {
             const coder = program!.account.pool.coder;
             return parsePool({
-              publicKey: pool!,
+              publicKey: new PublicKey(pool!),
               account: coder.accounts.decode("pool", info!.data!),
             });
           }) as Promise<Pool>,
@@ -329,7 +329,7 @@ export const usePoolCustodies = (poolKey: Address | undefined) => {
           .then((info) => {
             const coder = program!.account.custody.coder;
             return parseCustody({
-              publicKey: custody!,
+              publicKey: new PublicKey(custody!),
               account: coder.accounts.decode("custody", info!.data!),
             });
           }) as Promise<Custody>,
@@ -365,7 +365,7 @@ export const usePosition = (position: Address | undefined) => {
           }
           const coder = program!.account.position.coder;
           return parsePosition({
-            publicKey: position!,
+            publicKey: new PublicKey(position!),
             account: coder.accounts.decode("position", info?.data),
           });
         }) as Promise<Position>,
@@ -389,7 +389,7 @@ export const usePositions = (positions: Address[]) => {
             }
             const coder = program!.account.position.coder;
             return parsePosition({
-              publicKey: position!,
+              publicKey: new PublicKey(position!),
               account: coder.accounts.decode("position", info!.data!),
             });
           }) as Promise<Position>,
@@ -452,11 +452,15 @@ export const useAllUserPositions = (user: PublicKey | null) => {
   });
 };
 
-export const usePositionLiquidationPrice = (
-  position: Position | undefined,
+export const usePositionLiquidationPrice = ({
+  position,
   addCollateral = BigInt(0),
   removeCollateral = BigInt(0),
-) => {
+}: {
+  position: Position | undefined;
+  addCollateral?: bigint;
+  removeCollateral?: bigint;
+}) => {
   const program = useProgram();
   const { data: custody } = useCustody(position?.custody);
 

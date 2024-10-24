@@ -8,6 +8,7 @@ use {
 };
 
 const USDC_DECIMALS: u8 = 6;
+const USD_DECIMALS: u8 = 9;
 
 pub async fn fixed_fees() {
     let test_setup = utils::TestSetup::new(
@@ -69,12 +70,12 @@ pub async fn fixed_fees() {
 
             assert_eq!(
                 pool_account.aum_usd,
-                utils::scale_f64(999.95, USDC_DECIMALS).into(),
+                utils::scale_f64(999.95, USD_DECIMALS).into(),
             );
 
             assert_eq!(
                 custody_account.collected_fees.add_liquidity_usd,
-                utils::scale(20, USDC_DECIMALS),
+                utils::scale(20, USD_DECIMALS),
             );
 
             assert_eq!(
@@ -111,12 +112,12 @@ pub async fn fixed_fees() {
 
             assert_eq!(
                 pool_account.aum_usd,
-                utils::scale_f64(900.967705, USDC_DECIMALS).into(),
+                utils::scale_f64(900.967705, USD_DECIMALS).into(),
             );
 
             assert_eq!(
                 custody_account.collected_fees.remove_liquidity_usd,
-                utils::scale_f64(3.061072, USDC_DECIMALS),
+                utils::scale_f64(3.061072, USD_DECIMALS),
             );
 
             assert_eq!(

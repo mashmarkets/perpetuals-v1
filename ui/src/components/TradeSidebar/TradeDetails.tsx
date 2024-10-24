@@ -4,12 +4,7 @@ import { twMerge } from "tailwind-merge";
 
 import { getTokenIcon, getTokenSymbol } from "@/lib/Token";
 import { Side } from "@/lib/types";
-import {
-  formatFees,
-  formatNumber,
-  formatNumberLessThan,
-  formatPrice,
-} from "@/utils/formatters";
+import { formatFees, formatPrice, formatUsd } from "@/utils/formatters";
 
 interface Props {
   className?: string;
@@ -26,6 +21,7 @@ interface Props {
 
 export function TradeDetails(props: Props) {
   const icon = getTokenIcon(props.positionToken);
+  const symbol = getTokenSymbol(props.positionToken);
 
   return (
     <div className={props.className}>
@@ -46,15 +42,15 @@ export function TradeDetails(props: Props) {
           },
           {
             label: "Entry Price",
-            value: `$${formatNumber(props.entryPrice)}`,
+            value: `${formatPrice(props.entryPrice)}`,
           },
           {
             label: "Liq. Price",
-            value: `$${formatNumber(props.liquidationPrice)}`,
+            value: `${formatPrice(props.liquidationPrice)}`,
           },
           {
             label: "Fees",
-            value: `${formatNumberLessThan(props.fees)}`,
+            value: `${props.fees} ${symbol}`,
           },
           {
             label: "Borrow Rate",
@@ -67,7 +63,7 @@ export function TradeDetails(props: Props) {
           },
           {
             label: "Available Liquidity",
-            value: `$${formatPrice(props.availableLiquidity)}`,
+            value: `${formatUsd(props.availableLiquidity)}`,
           },
         ].map(({ label, value }, i) => (
           <div

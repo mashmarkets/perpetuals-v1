@@ -1013,7 +1013,7 @@ mod test {
         // losing position (opening price higher than current price)
         position.price = scale(25_400, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
-            (0, scale_f64(2_559.055119, Perpetuals::USD_DECIMALS), 0),
+            (0, scale_f64(2_559.055118111, Perpetuals::USD_DECIMALS), 0),
             pool.get_pnl_usd(
                 &position,
                 &token_price,
@@ -1028,7 +1028,7 @@ mod test {
         // winning position (opening price lower than current price)
         position.price = scale(24_500, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
-            (scale_f64(1_020.408163, Perpetuals::USD_DECIMALS), 0, 0),
+            (scale_f64(1_020.408163265, Perpetuals::USD_DECIMALS), 0, 0),
             pool.get_pnl_usd(
                 &position,
                 &token_price,

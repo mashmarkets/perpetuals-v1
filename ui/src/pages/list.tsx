@@ -45,7 +45,7 @@ const CreatePool: React.FC = () => {
   });
 
   return (
-    <div className="container mx-auto mt-10 max-w-2xl">
+    <div className="container mx-auto mt-10 max-w-4xl">
       <h1 className="mb-6 text-3xl font-bold text-white">List a new asset</h1>
       <div className="container mx-auto rounded-lg bg-zinc-900 p-6">
         <FormListList

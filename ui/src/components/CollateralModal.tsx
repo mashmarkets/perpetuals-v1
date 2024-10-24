@@ -22,7 +22,7 @@ import {
 import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
 import { useProgram } from "@/hooks/useProgram";
-import { getTokenInfo } from "@/lib/Token";
+import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
@@ -49,24 +49,37 @@ export function CollateralModal({
   const { data: collateralBalance } = useBalance(custody?.mint, publicKey);
   const { data: price } = usePrice(custody?.mint);
 
-  const { data: currentLiquidationPrice } =
-    usePositionLiquidationPrice(position);
-
-  const { decimals } = custody ? getTokenInfo(custody.mint) : { decimals: 0 };
-  const amounts = useDebounce({ depositAmount, withdrawAmount }, 400);
-  const { data: newLiquidationPrice } = usePositionLiquidationPrice(
+  const { data: currentLiquidationPrice } = usePositionLiquidationPrice({
     position,
-    BigInt(Math.round(amounts.depositAmount * 10 ** decimals)),
-    BigInt(Math.round(amounts.withdrawAmount * 10 ** 6)),
-  );
+  });
+
+  const CUSTODY_POWER = custody ? 10 ** custody.decimals : 0;
+
+  const amounts = useDebounce({ depositAmount, withdrawAmount }, 400);
+  const { data: newLiquidationPrice } = usePositionLiquidationPrice({
+    position,
+    addCollateral: BigInt(Math.round(amounts.depositAmount * CUSTODY_POWER)),
+    // This is awkward, because the actual function takes USD, but the estimate takes in collateral amount
+    removeCollateral: price
+      ? BigInt(
+          Math.round(
+            (amounts.withdrawAmount * CUSTODY_POWER) / price.currentPrice,
+          ),
+        )
+      : BigInt(0),
+  });
 
   const payToken = custody ? custody.mint : undefined;
 
-  const payTokenBalance = Number(collateralBalance) / 10 ** decimals;
+  const payTokenBalance = Number(collateralBalance) / CUSTODY_POWER;
   const changeCollateralUsd =
     tab === Tab.Add
-      ? BigInt(Math.round((price?.currentPrice ?? 0) * depositAmount * 10 ** 6))
-      : BigInt(Math.round(-1 * withdrawAmount) * 10 ** 6);
+      ? BigInt(
+          Math.round(
+            (price?.currentPrice ?? 0) * depositAmount * CUSTODY_POWER,
+          ),
+        )
+      : BigInt(Math.round(-1 * withdrawAmount) * USD_POWER);
 
   const newCollateralUsd = position
     ? position.collateralUsd + changeCollateralUsd
@@ -106,12 +119,12 @@ export function CollateralModal({
           ? addCollateral(program, {
               position,
               custody,
-              collateral: BigInt(Math.round(depositAmount * 10 ** decimals)),
+              collateral: BigInt(Math.round(depositAmount * CUSTODY_POWER)),
             })
           : removeCollateral(program, {
               position,
               custody,
-              collateralUsd: BigInt(Math.round(withdrawAmount * 10 ** 6)),
+              collateralUsd: BigInt(Math.round(withdrawAmount * USD_POWER)),
             });
 
       return wrapTransactionWithNotification(
@@ -179,10 +192,9 @@ export function CollateralModal({
                         Max:{" "}
                         {collateralBalance &&
                           custody &&
-                          (
-                            Number(collateralBalance) /
-                            10 ** custody.decimals
-                          ).toFixed(3)}
+                          (Number(collateralBalance) / CUSTODY_POWER).toFixed(
+                            3,
+                          )}
                       </div>
                     )}
                   </>
@@ -194,7 +206,9 @@ export function CollateralModal({
                     {publicKey && position && (
                       <div>
                         Max:{" "}
-                        {(Number(position.collateralUsd) / 10 ** 6).toFixed(3)}
+                        {(Number(position.collateralUsd) / USD_POWER).toFixed(
+                          3,
+                        )}
                       </div>
                     )}
                   </>
@@ -214,7 +228,7 @@ export function CollateralModal({
                   className="mt-2"
                   amount={withdrawAmount}
                   onChangeAmount={setWithdrawAmount}
-                  maxBalance={Number(position?.collateralUsd ?? 0) / 10 ** 6}
+                  maxBalance={Number(position?.collateralUsd ?? 0) / USD_POWER}
                   label={"USD"}
                 />
               )}
@@ -225,9 +239,9 @@ export function CollateralModal({
                 {
                   label: "Collateral",
                   value: `$${formatNumberCommas(
-                    Number(position?.collateralUsd ?? 0) / 10 ** 6,
+                    Number(position?.collateralUsd ?? 0) / USD_POWER,
                   )}`,
-                  newValue: `$${formatNumberCommas(Number(newCollateralUsd) / 10 ** 6)}`,
+                  newValue: `$${formatNumberCommas(Number(newCollateralUsd) / USD_POWER)}`,
                 },
                 {
                   label: "Mark Price",
@@ -237,6 +251,7 @@ export function CollateralModal({
                 },
                 {
                   label: "Leverage",
+                  // TODO:- Should calculate leverage including exit fees
                   value:
                     position &&
                     `${(Number(position.sizeUsd) / Number(position.collateralUsd)).toFixed(2)}`,
@@ -246,12 +261,14 @@ export function CollateralModal({
                 },
                 {
                   label: "Size",
-                  value: `$${formatNumberCommas(Number(position?.sizeUsd ?? 0) / 10 ** 6)}`,
+                  value: `$${formatNumberCommas(Number(position?.sizeUsd ?? 0) / USD_POWER)}`,
                 },
                 {
                   label: "Liq Price",
-                  value: `$${formatPrice(Number(currentLiquidationPrice) / 10 ** 6)}`,
-                  newValue: `$${formatPrice(Number(newLiquidationPrice) / 10 ** 6)}`,
+                  value: `$${formatPrice(Number(currentLiquidationPrice) / PRICE_POWER)}`,
+                  newValue: newLiquidationPrice
+                    ? `$${formatPrice(Number(newLiquidationPrice) / PRICE_POWER)}`
+                    : undefined,
                 },
               ].map(({ label, value, newValue }, i) => (
                 <div

@@ -10,6 +10,7 @@ import {
   usePoolCustodies,
 } from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
+import { USD_POWER } from "@/lib/types";
 import { formatNumberCommas } from "@/utils/formatters";
 
 const getTradeVolume = (custodies: Custody[]) => {
@@ -72,28 +73,28 @@ export default function PoolGeneralStats({
       {[
         {
           label: "Liquidity",
-          value: `$${formatNumberCommas(Number(aum) / 10 ** 6)}`,
+          value: `$${formatNumberCommas(Number(aum) / USD_POWER)}`,
         },
         {
           label: "Volume",
-          value: `$${formatNumberCommas(getTradeVolume(Object.values(custodies)) / 10 ** 6)}`,
+          value: `$${formatNumberCommas(getTradeVolume(Object.values(custodies)) / USD_POWER)}`,
         },
         {
           label: "OI Long",
           value: (
             <>
-              {`$${formatNumberCommas(getOiLong(Object.values(custodies)) / 10 ** 6)} `}
+              {`$${formatNumberCommas(getOiLong(Object.values(custodies)) / USD_POWER)} `}
               <span className="text-zinc-500"> </span>
             </>
           ),
         },
         {
           label: "Fees",
-          value: `$${formatNumberCommas(getCollectedFees(Object.values(custodies)) / 10 ** 6)}`,
+          value: `$${formatNumberCommas(getCollectedFees(Object.values(custodies)) / USD_POWER)}`,
         },
         {
           label: "Your Liquidity",
-          value: `$${formatNumberCommas((Number(aum) / 10 ** 6) * userShare)}`,
+          value: `$${formatNumberCommas((Number(aum) / USD_POWER) * userShare)}`,
         },
         {
           label: "Your Share",

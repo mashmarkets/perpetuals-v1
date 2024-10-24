@@ -26,7 +26,7 @@ import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
 import { useProgram } from "@/hooks/useProgram";
 import { getTokenInfo } from "@/lib/Token";
-import { Side } from "@/lib/types";
+import { BPS_POWER, PRICE_POWER, RATE_POWER, Side } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
 
@@ -94,17 +94,18 @@ export function TradePosition({
     collateral: BigInt(Math.round(payAmount * 10 ** decimals)),
     mint,
     poolAddress,
-    price: BigInt(Math.round((price?.currentPrice ?? 0) * 10 ** 6 * 1.05)),
+    price: BigInt(Math.round((price?.currentPrice ?? 0) * PRICE_POWER * 1.05)),
     size: BigInt(Math.round(positionAmount * 10 ** decimals)),
   };
   const { data: estimate } = useEntryEstimate(params);
 
-  const priceSlippage =
-    (Number(
-      custody.pricing.tradeSpreadShort + custody.pricing.tradeSpreadLong,
-    ) +
-      1) /
-    10 ** 4;
+  const priceSlippage = custody
+    ? (Number(
+        custody.pricing.tradeSpreadShort + custody.pricing.tradeSpreadLong,
+      ) +
+        1) /
+      BPS_POWER
+    : 0;
 
   const payTokenBalance = balance
     ? Number(balance) / 10 ** decimals
@@ -288,11 +289,11 @@ export function TradePosition({
         )}
         collateralToken={payToken!}
         positionToken={positionToken!}
-        entryPrice={Number(estimate?.entryPrice ?? 0) / 10 ** 6}
-        liquidationPrice={Number(estimate?.liquidationPrice ?? 0) / 10 ** 6}
-        fees={Number(estimate?.fee ?? 0) / 10 ** 9}
+        entryPrice={Number(estimate?.entryPrice ?? 0) / PRICE_POWER}
+        liquidationPrice={Number(estimate?.liquidationPrice ?? 0) / PRICE_POWER}
+        fees={Number(estimate?.fee ?? 0) / 10 ** custody.decimals}
         availableLiquidity={availableLiquidity}
-        borrowRate={Number(custody.borrowRateState.currentRate) / 10 ** 9}
+        borrowRate={Number(custody.borrowRateState.currentRate) / RATE_POWER}
         side={side}
       />
     </div>

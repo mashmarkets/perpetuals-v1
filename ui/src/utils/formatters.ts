@@ -1,5 +1,7 @@
 import { BN } from "@coral-xyz/anchor";
 
+import { PRICE_DECIMALS } from "@/lib/types";
+
 export function formatNumberCommas(num: number | BN | null | undefined) {
   if (typeof num === "bigint") {
     return Number(num).toLocaleString(undefined, {
@@ -37,10 +39,23 @@ export function formatNumberLessThan(num: number) {
   }
 }
 
-export function formatPrice(num: number) {
+export function formatUsd(num: number) {
   const formatter = Intl.NumberFormat("en", {
     maximumFractionDigits: 2,
     minimumFractionDigits: 2,
+    roundingPriority: "lessPrecision",
+    trailingZeroDisplay: "auto",
+  });
+  return "$" + formatter.format(num);
+}
+export function formatPrice(num: number) {
+  const formatter = Intl.NumberFormat("en", {
+    maximumFractionDigits: PRICE_DECIMALS,
+    minimumFractionDigits: 2,
+    roundingPriority: "lessPrecision",
+    minimumSignificantDigits: 5,
+    maximumSignificantDigits: 5,
+    trailingZeroDisplay: "auto",
   });
   return formatter.format(num);
 }

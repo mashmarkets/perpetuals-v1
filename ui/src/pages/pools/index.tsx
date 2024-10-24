@@ -16,6 +16,7 @@ import {
 } from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
 import { getTokenIcon, tokensByMint } from "@/lib/Token";
+import { USD_POWER } from "@/lib/types";
 import { formatNumberCommas } from "@/utils/formatters";
 
 function PoolRow({ poolAddress }: { poolAddress: Address }) {
@@ -75,13 +76,13 @@ function PoolRow({ poolAddress }: { poolAddress: Address }) {
           </div>
         </div>
       </td>
-      <td>${formatNumberCommas(Number(aum) / 10 ** 6)}</td>
-      <td>${formatNumberCommas(tradeVolume / 10 ** 6)}</td>
-      <td>${formatNumberCommas(collectedFees / 10 ** 6)}</td>
-      <td>${formatNumberCommas(oiLong / 10 ** 6)}</td>
+      <td>${formatNumberCommas(Number(aum) / USD_POWER)}</td>
+      <td>${formatNumberCommas(tradeVolume / USD_POWER)}</td>
+      <td>${formatNumberCommas(collectedFees / USD_POWER)}</td>
+      <td>${formatNumberCommas(oiLong / USD_POWER)}</td>
       <td>
         {userShare
-          ? "$" + formatNumberCommas((userShare * Number(aum)) / 10 ** 6)
+          ? "$" + formatNumberCommas(userShare * (Number(aum) / USD_POWER))
           : "-"}
       </td>
       <td>{userShare ? formatNumberCommas(userShare * 100) + "%" : "-"}</td>
@@ -102,7 +103,7 @@ export default function Pools() {
         <div className="flex flex-row space-x-2 text-sm">
           <p className="text-zinc-500">TVL</p>
           <p className="text-white">
-            {tvl && "$" + formatNumberCommas(Number(tvl) / 10 ** 6)}
+            {tvl && "$" + formatNumberCommas(Number(tvl) / USD_POWER)}
           </p>
         </div>
       </div>

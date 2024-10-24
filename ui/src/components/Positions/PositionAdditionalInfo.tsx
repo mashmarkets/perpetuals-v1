@@ -15,7 +15,8 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { useProgram } from "@/hooks/useProgram";
-import { formatPrice } from "@/utils/formatters";
+import { PRICE_POWER, USD_POWER } from "@/lib/types";
+import { formatPrice, formatUsd } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
 export function PositionAdditionalInfo({
@@ -29,7 +30,7 @@ export function PositionAdditionalInfo({
 
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
-  const { data: liquidationPrice } = usePositionLiquidationPrice(position);
+  const { data: liquidationPrice } = usePositionLiquidationPrice({ position });
   const { data: pnl } = usePositionPnl(position);
 
   const mint = custody?.mint;
@@ -68,7 +69,7 @@ export function PositionAdditionalInfo({
       const params = {
         position,
         custody,
-        price: BigInt(Math.round(price.currentPrice * 10 ** 6 * 0.95)), // Slippage
+        price: BigInt(Math.round(price.currentPrice * PRICE_POWER * 0.95)), // Slippage
       };
 
       console.log("Closing position with params", params);
@@ -123,7 +124,7 @@ export function PositionAdditionalInfo({
           {position && pnl ? (
             <PositionValueDelta
               className="mt-0.5"
-              valueDelta={Number(pnl.profit - pnl.loss) / 10 ** 6}
+              valueDelta={Number(pnl.profit - pnl.loss) / USD_POWER}
               valueDeltaPercentage={
                 (Number(pnl.profit - pnl.loss) /
                   Number(position.collateralUsd)) *
@@ -138,9 +139,7 @@ export function PositionAdditionalInfo({
           <div className="text-xs text-zinc-500">Size</div>
           <div className="mt-1 flex items-center">
             <div className="text-sm text-white">
-              {position
-                ? "$" + formatPrice(Number(position.sizeUsd) / 10 ** 6)
-                : "-"}
+              {position ? formatUsd(Number(position.sizeUsd) / USD_POWER) : "-"}
             </div>
             {/* <CollateralModal position={props.position} pnl={props.pnl}>
               <button className="group ml-2">
@@ -161,9 +160,8 @@ export function PositionAdditionalInfo({
           <div className="text-xs text-zinc-500">Liq. Threshold</div>
           <div className="mt-1 text-sm text-white">
             {price && liquidationPrice
-              ? "$" +
-                formatPrice(
-                  price.currentPrice - Number(liquidationPrice) / 10 ** 6,
+              ? formatPrice(
+                  price.currentPrice - Number(liquidationPrice) / PRICE_POWER,
                 )
               : "-"}
             {/* // props.position.side === Side.Long // ? price.currentPrice -

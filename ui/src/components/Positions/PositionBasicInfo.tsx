@@ -18,7 +18,8 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
-import { formatNumberCommas, formatPrice } from "@/utils/formatters";
+import { BPS_POWER, PRICE_POWER, USD_POWER } from "@/lib/types";
+import { formatPrice, formatUsd } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 
 const getPositionLeverage = (
@@ -31,8 +32,8 @@ const getPositionLeverage = (
 
   const size = Number(position.sizeUsd);
   const collateral = Number(position.collateralUsd);
-  const slippage = Number(custody.pricing.tradeSpreadShort) / 10 ** 4;
-  const fees = Number(custody.fees.closePosition) / 10 ** 4;
+  const slippage = Number(custody.pricing.tradeSpreadShort) / BPS_POWER;
+  const fees = Number(custody.fees.closePosition) / BPS_POWER;
   // TODO:- This is wrong - slippage acts on mark price
   const margin = collateral - slippage * size - fees * collateral;
 
@@ -52,7 +53,7 @@ export default function PositionBasicInfo({
 }) {
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
-  const { data: liquidationPrice } = usePositionLiquidationPrice(position);
+  const { data: liquidationPrice } = usePositionLiquidationPrice({ position });
   const { data: pnl } = usePositionPnl(position);
 
   const mint = custody?.mint;
@@ -118,24 +119,19 @@ export default function PositionBasicInfo({
       </PositionColumn>
       <PositionColumn num={3}>
         <div className="text-sm text-white">
-          {netValue
-            ? "$" + formatNumberCommas(Number(netValue) / 10 ** 6)
-            : "-"}
+          {netValue ? formatUsd(Number(netValue) / USD_POWER) : "-"}
         </div>
       </PositionColumn>
       <PositionColumn num={4}>
         <div className="text-sm text-white">
-          {position
-            ? "$" + formatPrice(Number(position.sizeUsd) / 10 ** 6)
-            : "-"}
+          {position ? formatUsd(Number(position.sizeUsd) / USD_POWER) : "-"}
         </div>
       </PositionColumn>
       <PositionColumn num={5}>
         <div className="flex items-center">
           <div className="text-sm text-white">
-            $
             {position
-              ? formatNumberCommas(Number(position.collateralUsd) / 10 ** 6)
+              ? formatUsd(Number(position.collateralUsd) / USD_POWER)
               : "-"}
           </div>
           <CollateralModal positionAddress={positionAddress}>
@@ -155,22 +151,17 @@ export default function PositionBasicInfo({
       </PositionColumn>
       <PositionColumn num={6}>
         <div className="text-sm text-white">
-          $
-          {position
-            ? formatNumberCommas(Number(position.price) / 10 ** 6)
-            : "-"}
-          {" / "}
-          <span className="text-slate-400">
-            ${price ? formatNumberCommas(price.currentPrice) : "-"}
-          </span>
+          {position ? formatPrice(Number(position.price) / PRICE_POWER) : "-"}
+        </div>
+        <div className="text-sm text-slate-400">
+          {price ? formatPrice(price.currentPrice) : "-"}
         </div>
       </PositionColumn>
       <PositionColumn num={7}>
         <div className="flex items-center justify-between pr-2">
           <div className="text-sm text-white">
-            $
             {liquidationPrice
-              ? formatNumberCommas(Number(liquidationPrice) / 10 ** 6)
+              ? formatPrice(Number(liquidationPrice) / PRICE_POWER)
               : "-"}
           </div>
           {position && (

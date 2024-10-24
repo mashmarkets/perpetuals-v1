@@ -4,7 +4,7 @@ import {
   Batcher,
   create,
   indexedResolver,
-  windowScheduler,
+  windowedFiniteBatchScheduler,
 } from "@yornaath/batshit";
 import { memoize } from "lodash-es";
 
@@ -35,7 +35,10 @@ export const connectionBatcher = memoize(
         );
       },
       resolver: indexedResolver(),
-      scheduler: windowScheduler(10),
+      scheduler: windowedFiniteBatchScheduler({
+        windowMs: 10,
+        maxBatchSize: 100, // API limits to 100 accounts per request
+      }),
     }) as Batcher<
       Record<string, AccountInfo<Buffer> | null>,
       Address,

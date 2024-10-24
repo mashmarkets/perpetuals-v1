@@ -897,7 +897,7 @@ export class TestClient {
     try {
       await this.program.methods
         .openPosition({
-          price: new BN(price * 1000000),
+          price: new BN(price * 10 ** 9),
           collateral,
           size,
         })

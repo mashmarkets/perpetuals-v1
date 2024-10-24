@@ -1,7 +1,6 @@
 "use client";
 
 import { ChevronLeft } from "@carbon/icons-react";
-import { Address, isAddress } from "@solana/addresses";
 import Link from "next/link";
 import { useRouter } from "next/router";
 

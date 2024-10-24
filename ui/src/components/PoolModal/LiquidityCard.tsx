@@ -25,6 +25,8 @@ import {
 } from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
 import { useProgram } from "@/hooks/useProgram";
+import { getTokenSymbol } from "@/lib/Token";
+import { LP_POWER } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
 import { Tab } from "../ui/SidebarTab";
@@ -58,10 +60,7 @@ export default function LiquidityCard({
     publicKey === null ? undefined : publicKey,
   );
 
-  const liqBalance =
-    lp?.data === undefined || lpMint === undefined
-      ? 0
-      : Number(lp.data) / 10 ** lpMint.decimals;
+  const liqBalance = lp?.data === undefined ? 0 : Number(lp.data) / LP_POWER;
 
   const debounced = useDebounce({ tokenAmount, tab, liqAmount }, 400);
   const { data: addLiquidityEstimate } = useGetAddLiquidityAmountAndFee({
@@ -74,8 +73,8 @@ export default function LiquidityCard({
   const { data: removeLiquidityEstimate } = useGetRemoveLiquidityAmountAndFee({
     pool,
     lpAmountIn:
-      debounced.tab === Tab.Remove && lpMint?.decimals
-        ? BigInt(debounced.liqAmount * 10 ** lpMint.decimals)
+      debounced.tab === Tab.Remove
+        ? BigInt(debounced.liqAmount * LP_POWER)
         : BigInt(0),
   });
 
@@ -88,11 +87,11 @@ export default function LiquidityCard({
       }
       // LP Balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), lpMintAddress?.toString()],
+        queryKey: ["balance", publicKey?.toString(), lpMintAddress],
       });
       // Collateral balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), custody?.mint.toString()],
+        queryKey: ["balance", publicKey?.toString(), custody?.mint],
       });
       // LP Shares
       queryClient.invalidateQueries({
@@ -139,7 +138,7 @@ export default function LiquidityCard({
         const params = {
           pool,
           custody,
-          lpAmountIn: BigInt(Math.round(liqAmount * 10 ** lpMint.decimals)),
+          lpAmountIn: BigInt(Math.round(liqAmount * LP_POWER)),
           minAmountOut:
             (removeLiquidityEstimate.amount * BigInt(95)) / BigInt(100),
         };
@@ -256,8 +255,7 @@ export default function LiquidityCard({
                 tokenAmount === 0
                   ? 0
                   : lpMint && addLiquidityEstimate?.amount
-                    ? Number(addLiquidityEstimate.amount) /
-                      10 ** lpMint.decimals
+                    ? Number(addLiquidityEstimate.amount) / LP_POWER
                     : undefined
               }
             />
@@ -279,18 +277,24 @@ export default function LiquidityCard({
         </div>
 
         <div className="mt-2 flex flex-row justify-end space-x-2">
+          <p className="text-sm text-zinc-500">Fee</p>
           <p className="text-sm text-white">
             {tab == Tab.Add &&
               (addLiquidityEstimate?.fee !== undefined
-                ? "$" + (Number(addLiquidityEstimate.fee) / 10 ** 6).toFixed(4)
+                ? (
+                    Number(addLiquidityEstimate.fee) /
+                    10 ** custody.decimals
+                  ).toFixed(4)
                 : "-")}
             {tab == Tab.Remove &&
               (removeLiquidityEstimate?.fee !== undefined
-                ? "$" +
-                  (Number(removeLiquidityEstimate.fee) / 10 ** 6).toFixed(4)
+                ? (
+                    Number(removeLiquidityEstimate.fee) /
+                    10 ** custody.decimals
+                  ).toFixed(4)
                 : "-")}
           </p>
-          <p className="text-sm text-zinc-500">Fee</p>
+          <p className="text-sm text-white">{getTokenSymbol(custody?.mint)}</p>
         </div>
         <SolidButton
           className="mt-4 w-full"

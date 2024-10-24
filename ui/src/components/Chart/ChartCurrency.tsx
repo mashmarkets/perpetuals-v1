@@ -71,7 +71,9 @@ export function ChartCurrency({
           tokenList={TOKEN_LIST.filter((x) => !["USDC", "USDT"].includes(x))}
           onClose={() => setSelectorOpen(false)}
           onSelectToken={(token) => {
-            router.push(`/trade/${findPerpetualsAddressSync("pool", token)}`);
+            router.push(
+              `/trade/${findPerpetualsAddressSync("pool", getTokenSymbol(token))}`,
+            );
           }}
         />
       )}

@@ -112,7 +112,7 @@ export const universe = [
       "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh/logo.png",
     extensions: {
       coingeckoId: "wrapped-btc-wormhole",
-      oracle: "9gNX5vguzarZZPjTnE1hWze3s6UsZ7dsU3UnAmKPnMHG",
+      oracle: "4cSM2e6rvbGQUFiJbqytoVMi5GgghSMr8LwVrT9VPSPo",
     },
   },
   {
@@ -405,18 +405,6 @@ export const universe = [
     extensions: {
       coingeckoId: "goosefx",
       oracle: "2WS7DByXgzmsGD1QfDyvY2pwAmxjsPDrF2DijwpRBxr7",
-    },
-  },
-  {
-    address: "EtBc6gkCvsB9c6f5wSbwG8wPjRqXMB5euptK6bqG1R4X",
-    name: "batcat",
-    symbol: "BTC",
-    decimals: 6,
-    logoURI:
-      "https://bafybeicsjyohcl7dtqag6towz7xyyc2h2fjn7mkhjpbyo7mhinfwkidwjm.ipfs.nftstorage.link/",
-    extensions: {
-      coingeckoId: "batcat",
-      oracle: "4cSM2e6rvbGQUFiJbqytoVMi5GgghSMr8LwVrT9VPSPo",
     },
   },
 ] as const;

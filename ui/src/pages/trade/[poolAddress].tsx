@@ -9,7 +9,7 @@ import { DailyStats } from "@/components/Chart/DailyStats";
 import { ExistingPositions } from "@/components/Positions/ExistingPositions";
 import { TradeSidebar } from "@/components/TradeSidebar";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
-import { getTokenInfo, getTradingViewSymbol } from "@/lib/Token";
+import { getTradingViewSymbol } from "@/lib/Token";
 import { safeAddress } from "@/utils/utils";
 
 const TradingViewWidget = dynamic(
@@ -65,18 +65,8 @@ export default function Page() {
             autosize
             symbol={getTradingViewSymbol(mint)}
             theme="dark"
+            allow_symbol_change={false}
           />
-          <div className="items-center text-center">
-            <a
-              href={`https://www.tradingview.com/symbols/${getTradingViewSymbol(
-                mint,
-              )}/?exchange=COINBASE`}
-              className="text-xs text-white underline"
-            >
-              {getTokenInfo(mint).symbol} chart
-            </a>
-            <span className="text-xs text-white"> by TradingView</span>
-          </div>
         </div>
         <header className="mb-5 mt-20 flex items-center space-x-4">
           <div className="font-medium text-white">My Positions</div>

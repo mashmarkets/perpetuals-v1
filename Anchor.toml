@@ -2,7 +2,7 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-perpetuals = "8skhDgZ72wEy4EySH3rTXkgEDLYiAJ1gvAXMZT2LLaou"
+perpetuals = "GkZTLm2G9BFeZU6MRarJHt4CgTkRL9m2tZWvyhvBzMaF"
 
 [programs.localnet]
 perpetuals = "8skhDgZ72wEy4EySH3rTXkgEDLYiAJ1gvAXMZT2LLaou"
@@ -12,7 +12,7 @@ url = "https://api.apr.dev"
 
 [provider]
 cluster = "Localnet"
-wallet = "~/.config/solana/id.json"
+wallet = "/Users/user/.config/solana/id.json"
 
 [scripts]
 startup_wait = "100000"

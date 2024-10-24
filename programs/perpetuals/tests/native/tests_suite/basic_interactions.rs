@@ -5,6 +5,7 @@ use {
     solana_sdk::signer::Signer,
 };
 
+const PRICE_DECIMALS: u8 = 9;
 const USDC_DECIMALS: u8 = 6;
 const ETH_DECIMALS: u8 = 9;
 
@@ -92,7 +93,7 @@ pub async fn basic_interactions() {
             eth_mint,
             OpenPositionParams {
                 // max price paid (slippage implied)
-                price: utils::scale(1_550, USDC_DECIMALS),
+                price: utils::scale(1_550, PRICE_DECIMALS),
                 collateral: utils::scale_f64(0.1, ETH_DECIMALS),
                 size: utils::scale_f64(0.1, ETH_DECIMALS),
             },

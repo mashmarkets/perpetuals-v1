@@ -10,6 +10,7 @@ import BN from "bn.js";
 import { Program } from "@coral-xyz/anchor";
 import { Perpetuals } from "../../../../target/types/perpetuals";
 
+const USD_DECIMALS = 9;
 describe("perpetuals", () => {
   let tc: TestClient;
   let oracleConfig;
@@ -163,8 +164,8 @@ describe("perpetuals", () => {
       maxLeverage: new BN(1000000),
       maxPayoffMult: new BN(10000),
       maxUtilization: new BN(10000),
-      maxPositionLockedUsd: new BN(1000000000),
-      maxTotalLockedUsd: new BN(1000000000),
+      maxPositionLockedUsd: new BN(1000 * 10 ** USD_DECIMALS),
+      maxTotalLockedUsd: new BN(1000 * 10 ** USD_DECIMALS),
     };
     permissions = {
       allowAddLiquidity: true,
@@ -222,8 +223,8 @@ describe("perpetuals", () => {
         maxLeverage: "1000000",
         maxPayoffMult: "10000",
         maxUtilization: "10000",
-        maxPositionLockedUsd: "1000000000",
-        maxTotalLockedUsd: "1000000000",
+        maxPositionLockedUsd: "1000000000000",
+        maxTotalLockedUsd: "1000000000000",
       },
       permissions: {
         allowAddLiquidity: true,
@@ -536,10 +537,10 @@ describe("perpetuals", () => {
       custody: tc.custodies[0].custody.toBase58(),
       openTime: "111",
       updateTime: "0",
-      price: "124230000",
-      sizeUsd: "869610000",
-      borrowSizeUsd: "869610000",
-      collateralUsd: "123000000",
+      price: "124230000000",
+      sizeUsd: "869610000000",
+      borrowSizeUsd: "869610000000",
+      collateralUsd: "123000000000",
       unrealizedProfitUsd: "0",
       unrealizedLossUsd: "0",
       cumulativeInterestSnapshot: "0",
