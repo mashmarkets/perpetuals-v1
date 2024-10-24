@@ -1,5 +1,5 @@
 import { MethodsNamespace, IdlTypes, IdlAccounts } from "@coral-xyz/anchor";
-import { Perpetuals } from "../../target/types/perpetuals";
+import { Perpetuals } from "./target/types/perpetuals.js";
 
 export type Methods = MethodsNamespace<Perpetuals>;
 export type Accounts = IdlAccounts<Perpetuals>;

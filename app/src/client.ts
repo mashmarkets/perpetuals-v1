@@ -4,15 +4,16 @@ import {
   AnchorProvider,
   workspace,
   utils,
+  BN,
 } from "@coral-xyz/anchor";
-import { BN } from "bn.js";
-import { Perpetuals } from "../../target/types/perpetuals";
+import { Perpetuals } from "./target/types/perpetuals.js";
 import {
   PublicKey,
   SystemProgram,
   Keypair,
   SYSVAR_RENT_PUBKEY,
   AccountMeta,
+  TransactionInstruction,
 } from "@solana/web3.js";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -36,8 +37,7 @@ import {
   PriceAndFee,
   ProfitAndLoss,
   Custody,
-} from "./types";
-import { token } from "@coral-xyz/anchor/dist/cjs/utils";
+} from "./types.js";
 
 export class PerpetualsClient {
   provider: AnchorProvider;
@@ -266,6 +266,7 @@ export class PerpetualsClient {
   getPoolTokenPositions = async (poolName: string, tokenMint: PublicKey) => {
     const poolKey = this.getPoolKey(poolName);
     const custodyKey = this.getCustodyKey(poolName, tokenMint);
+    console.log(poolKey, custodyKey);
     const data = encode(
       Buffer.concat([poolKey.toBuffer(), custodyKey.toBuffer()])
     );
@@ -492,27 +493,6 @@ export class PerpetualsClient {
       });
   };
 
-  upgradeCustody = async (
-    poolName: string,
-    tokenMint: PublicKey
-  ): Promise<void> => {
-    await this.program.methods
-      .upgradeCustody({})
-      .accounts({
-        admin: this.admin.publicKey,
-        multisig: this.multisig.publicKey,
-        pool: this.getPoolKey(poolName),
-        custody: this.getCustodyKey(poolName, tokenMint),
-        systemProgram: SystemProgram.programId,
-      })
-      .signers([this.admin])
-      .rpc()
-      .catch((err) => {
-        console.error(err);
-        throw err;
-      });
-  };
-
   setCustomOraclePrice = async (
     poolName: string,
     tokenMint: PublicKey,
@@ -544,12 +524,14 @@ export class PerpetualsClient {
     poolName: string,
     tokenMint: PublicKey,
     amountIn: BN,
-    minLpAmountOut: BN
-  ): Promise<void> => {
+    minLpAmountOut: BN,
+    preInstructions: TransactionInstruction[] = []
+  ): Promise<string> => {
     const lpTokenMint = this.getPoolLpTokenKey(poolName);
 
-    await this.program.methods
+    return await this.program.methods
       .addLiquidity({ amountIn, minLpAmountOut })
+      .preInstructions(preInstructions)
       .accounts({
         owner: this.provider.wallet.publicKey,
         fundingAccount: await getAssociatedTokenAddress(

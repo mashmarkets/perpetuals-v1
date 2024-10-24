@@ -2,7 +2,7 @@
 
 import { BN } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { PerpetualsClient } from "./client";
+import { PerpetualsClient } from "./client.js";
 import { Command } from "commander";
 import {
   BorrowRateParams,
@@ -12,7 +12,7 @@ import {
   Permissions,
   PricingParams,
   SetCustomOraclePriceParams,
-} from "./types";
+} from "./types.js";
 
 let client: PerpetualsClient;
 
@@ -56,7 +56,10 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
       const oracleConfig: OracleParams = {
         maxPriceError: new BN(10_000),
         maxPriceAgeSec: 36000,
-        oracleType: { [options.oracletype || "custom"]: {} },
+        oracleType: { [options.oracletype || "custom"]: {} } as
+          | { pyth: {} }
+          | { custom: {} }
+          | { none: {} },
         oracleAccount: new PublicKey(tokenOracle),
         oracleAuthority: PublicKey.default,
       };
