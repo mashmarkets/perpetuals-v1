@@ -43,20 +43,20 @@ pub struct RemoveCustody<'info> {
     #[account(
         mut,
         realloc = Pool::LEN + (pool.custodies.len() - 1) * std::mem::size_of::<Pubkey>(),
-                              
         realloc::payer = admin,
         realloc::zero = false,
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,
 
     #[account(
         mut,
-        seeds = [b"custody",
-                 pool.key().as_ref(),
-                 custody.mint.as_ref()],
+        seeds = [
+            b"custody",
+            pool.key().as_ref(),
+            custody.mint.as_ref()
+        ],
         bump = custody.bump,
         close = transfer_authority
     )]
@@ -64,9 +64,11 @@ pub struct RemoveCustody<'info> {
 
     #[account(
         mut,
-        seeds = [b"custody_token_account",
-                 pool.key().as_ref(),
-                 custody.mint.as_ref()],
+        seeds = [
+            b"custody_token_account",
+            pool.key().as_ref(),
+            custody.mint.as_ref()
+        ],
         bump = custody.token_account_bump,
     )]
     pub custody_token_account: Box<Account<'info, TokenAccount>>,
@@ -76,14 +78,12 @@ pub struct RemoveCustody<'info> {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct RemoveCustodyParams {
-}
+pub struct RemoveCustodyParams {}
 
 pub fn remove_custody<'info>(
     ctx: Context<'_, '_, '_, 'info, RemoveCustody<'info>>,
     params: &RemoveCustodyParams,
 ) -> Result<u8> {
-
     // validate signatures
     let mut multisig = ctx.accounts.multisig.load_mut()?;
 

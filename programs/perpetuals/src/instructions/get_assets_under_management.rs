@@ -17,8 +17,7 @@ pub struct GetAssetsUnderManagement<'info> {
     pub perpetuals: Box<Account<'info, Perpetuals>>,
 
     #[account(
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,

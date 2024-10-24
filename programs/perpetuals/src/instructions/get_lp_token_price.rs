@@ -22,15 +22,13 @@ pub struct GetLpTokenPrice<'info> {
     pub perpetuals: Box<Account<'info, Perpetuals>>,
 
     #[account(
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,
 
     #[account(
-        seeds = [b"lp_token_mint",
-                 pool.key().as_ref()],
+        seeds = [b"lp_token_mint", pool.key().as_ref()],
         bump = pool.lp_token_bump
     )]
     pub lp_token_mint: Box<Account<'info, Mint>>,

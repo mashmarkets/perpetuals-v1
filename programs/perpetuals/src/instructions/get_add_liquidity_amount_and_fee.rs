@@ -24,16 +24,17 @@ pub struct GetAddLiquidityAmountAndFee<'info> {
     pub perpetuals: Box<Account<'info, Perpetuals>>,
 
     #[account(
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,
 
     #[account(
-        seeds = [b"custody",
-                 pool.key().as_ref(),
-                 custody.mint.as_ref()],
+        seeds = [
+            b"custody",
+            pool.key().as_ref(),
+            custody.mint.as_ref()
+        ],
         bump = custody.bump
     )]
     pub custody: Box<Account<'info, Custody>>,
@@ -45,8 +46,7 @@ pub struct GetAddLiquidityAmountAndFee<'info> {
     pub custody_oracle_account: AccountInfo<'info>,
 
     #[account(
-        seeds = [b"lp_token_mint",
-                 pool.key().as_ref()],
+        seeds = [b"lp_token_mint", pool.key().as_ref()],
         bump = pool.lp_token_bump
     )]
     pub lp_token_mint: Box<Account<'info, Mint>>,

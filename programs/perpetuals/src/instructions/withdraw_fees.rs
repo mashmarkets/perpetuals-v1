@@ -41,26 +41,29 @@ pub struct WithdrawFees<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,
 
     #[account(
         mut,
-        seeds = [b"custody",
-                 pool.key().as_ref(),
-                 custody.mint.key().as_ref()],
+        seeds = [
+            b"custody",
+            pool.key().as_ref(),
+            custody.mint.key().as_ref()
+        ],
         bump = custody.bump
     )]
     pub custody: Box<Account<'info, Custody>>,
 
     #[account(
         mut,
-        seeds = [b"custody_token_account",
-                 pool.key().as_ref(),
-                 custody.mint.as_ref()],
+        seeds = [
+            b"custody_token_account",
+            pool.key().as_ref(),
+            custody.mint.as_ref()
+        ],
         bump = custody.token_account_bump
     )]
     pub custody_token_account: Box<Account<'info, TokenAccount>>,

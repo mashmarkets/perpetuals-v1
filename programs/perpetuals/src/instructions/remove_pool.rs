@@ -44,8 +44,7 @@ pub struct RemovePool<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump,
         close = transfer_authority
     )]

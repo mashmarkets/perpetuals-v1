@@ -52,8 +52,7 @@ pub struct AddPool<'info> {
         init_if_needed,
         payer = admin,
         space = Pool::LEN,
-        seeds = [b"pool",
-                 params.name.as_bytes()],
+        seeds = [b"pool", params.name.as_bytes()],
         bump
     )]
     pub pool: Box<Account<'info, Pool>>,
@@ -64,8 +63,7 @@ pub struct AddPool<'info> {
         mint::authority = transfer_authority,
         mint::freeze_authority = transfer_authority,
         mint::decimals = Perpetuals::LP_DECIMALS,
-        seeds = [b"lp_token_mint",
-                 pool.key().as_ref()],
+        seeds = [b"lp_token_mint", pool.key().as_ref()],
         bump
     )]
     pub lp_token_mint: Box<Account<'info, Mint>>,

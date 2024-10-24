@@ -28,17 +28,18 @@ pub struct SetCustodyConfig<'info> {
 
     #[account(
         mut,
-        seeds = [b"pool",
-                 pool.name.as_bytes()],
+        seeds = [b"pool", pool.name.as_bytes()],
         bump = pool.bump
     )]
     pub pool: Box<Account<'info, Pool>>,
 
     #[account(
         mut,
-        seeds = [b"custody",
-                 pool.key().as_ref(),
-                 custody.mint.as_ref()],
+        seeds = [
+            b"custody",
+            pool.key().as_ref(),
+            custody.mint.as_ref()
+        ],
         bump
     )]
     pub custody: Box<Account<'info, Custody>>,
