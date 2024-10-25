@@ -118,7 +118,7 @@ const parseCustody = (
       maxPriceAgeSec: c.oracle.maxPriceAgeSec,
       maxPriceError: fromBN(c.oracle.maxPriceError),
       oracleAccount: c.oracle.oracleAccount.toString() as Address,
-      oracleAuthority: c.oracle.oracleAccount.toString() as Address,
+      oracleAuthority: c.oracle.oracleAuthority.toString() as Address,
       oracleType: c.oracle.oracleType, // TODO: - Convert to "ENUM"
     },
     permissions: {
@@ -493,6 +493,7 @@ export const usePositionPnl = (position: Position | undefined) => {
 
   return useQuery({
     queryKey: ["getPnl", position?.address.toString()],
+    refetchInterval: 5 * 1000,
     enabled: !!program && !!position && !!custody,
     queryFn: () => getPnl(program!, { position: position!, custody: custody! }),
   });
