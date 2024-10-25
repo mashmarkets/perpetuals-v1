@@ -1,22 +1,30 @@
-# Solana Perpetuals
+# Mash Markets Perpetuals
 
 ## Introduction
 
-Solana Perpetuals protocol is an open-source implementation of a non-custodial decentralized exchange that supports leveraged trading in a variety of assets.
+Mash Markets is a decentralized derivatives exchange built on Solana. Unlike traditional DEXs that rely on order books, Mash Markets uses a liquidity pool model where users can trade derivatives directly against liquidity pools. This system eliminates the need for market makers and ensures that trades are fast, seamless, and executed with minimal slippage.
 
-## Quick start
+## Quick Start Guide
 
-### Setup Environment
+### Environment Setup
 
-1. Clone the repository from <https://github.com/mashmarkets/perpetuals-b.git>.
-2. Install the version 1.17.7 of Solana tools 
-3. Install the latest Rust stable from <https://rustup.rs/>. If you already have Rust, run `rustup update` to get the latest version.
-4. Install version of 0.28.0 of Anchor framework from <https://www.anchor-lang.com/docs/installation>. 
+1. Clone the repository:
+   ```bash
+   git clone https://github.com/mashmarkets/perpetuals-v1.git
+   ```
 
+2. Install required tools:
+   - Solana tools v1.17.7
+   - Anchor framework v0.28.0 from <https://www.anchor-lang.com/docs/installation>
+   - Latest stable Rust from <https://rustup.rs/>
+     - Existing Rust installation? Run `rustup update`
 
-Rustfmt is used to format the code. 
-
-5. Execute `git config core.hooksPath .githooks` to activate pre-commit hooks.
+3. Set up code formatting:
+   - Project uses Rustfmt for consistent code style
+   - Enable pre-commit hooks:
+     ```bash
+     git config core.hooksPath .githooks
+     ```
 
 #### [Optional] Vscode setup
 
@@ -24,30 +32,25 @@ Rustfmt is used to format the code.
 
 ### Build
 
-First, generate a new key for the program address with `solana-keygen new -o <PROG_ID_JSON>`. Then replace the existing program ID with the newly generated address in `Anchor.toml` and `programs/perpetuals/src/lib.rs`.
+Run `anchor keys sync` to create new keypair for the program and replace the existing program ID in `Anchor.toml` and `programs/perpetuals/src/lib.rs`.
 
 Also, ensure the path to your wallet in `Anchor.toml` is correct. Alternatively, when running Anchor deploy or test commands, you can specify your wallet with `--provider.wallet` argument. The wallet's pubkey will be set as an upgrade authority upon initial deployment of the program. It is strongly recommended to make upgrade authority a multisig when deploying to the mainnet.
 
-To build the program run `anchor build` command from the `perpetuals` directory:
-
-```sh
-cd perpetuals
-anchor build
-```
+To build the program run `anchor build` 
 
 ### Test
+There are helpers in the [tasks.sh](tasks.sh) file to run integration and unit tests.
 
 Integration and unit tests (Rust) can be started as follows:
 
 ```sh
-cargo test-bpf -- --nocapture
+./tasks.sh test-perpetuals-native
 ```
 
 Integration tests (Typescript) can be started as follows:
 
 ```sh
-npm install
-anchor test -- --features test
+./tasks.sh test-perpetuals-anchor
 ```
 
 By default, integration tests are executed on a local validator, so it won't cost you any SOL.
@@ -57,7 +60,7 @@ By default, integration tests are executed on a local validator, so it won't cos
 To deploy the program to the devnet and upload the IDL use the following commands:
 
 ```sh
-anchor deploy --provider.cluster devnet --program-keypair <PROG_ID_JSON>
+anchor deploy --provider.cluster devnet
 anchor idl init --provider.cluster devnet --filepath ./target/idl/perpetuals.json <PROGRAM ID>
 ```
 
@@ -153,56 +156,14 @@ CLI offers other useful commands. You can get the list of all of them by running
 npx ts-node src/cli.ts --help
 ```
 
-## UI (Deprecated)
+## Frontend 
 
-### UI doesn't support the latest version of the on-chain program. The code is still available but for the reference only. Latest supported commit is 34f9bbb.
+To start the Frontend
 
-We have implemented a coressponding UI for the smartcontract, written in Typescript/Tailwind/Next. To quickly spin up a UI linked to the contract, first follow the previous directions to build the contract, and to init the exchange.
-
-In the main directory, run `./migrations/migrate-target.sh` to copy over the target build directory to the ui.
-
-Now, you can use the following CLI commands to quickly spin-up a `TestPool1` consisting of the three following tokens.
-
-Sol Token: `J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix`
-
-Test Token oracle: `BLArYBCUYhdWiY8PCUTpvFE21iaJq85dvxLk9bYMobcU`
-
-USDC oracle: `5SSkXsEKQepHHAewytPVwdej4epN1nxgLVM84L4KXgy7`
-
-```
-cd app
-
-npx ts-node src/cli.ts -k <ADMIN_WALLET> add-pool TestPool1
-
-npx ts-node src/cli.ts -k <ADMIN_WALLET> add-custody TestPool1 So11111111111111111111111111111111111111112 J83w4HKfqxwcq3BEMMkPFSppX3gqekLyLJBexebFVkix
-
-npx ts-node src/cli.ts -k <ADMIN_WALLET> add-custody TestPool1 6QGdQbaZEgpXqqbGwXJZXwbZ9xJnthfyYNZ92ARzTdAX BLArYBCUYhdWiY8PCUTpvFE21iaJq85dvxLk9bYMobcU
-
-npx ts-node src/cli.ts -k <ADMIN_WALLET> add-custody TestPool1 Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr 5SSkXsEKQepHHAewytPVwdej4epN1nxgLVM84L4KXgy7 true
+```sh
+pnpm install
+cd packages/ui
+pnpm run dev
 ```
 
-Now, use the following commands to build and run the UI, (navigate to localhost:3000 to use the UI):
-
-```
-cd ../ui
-yarn install
-yarn dev
-```
-
-## Support
-
-If you are experiencing technical difficulties while working with the Perpetuals codebase, open an issue on [Github](https://github.com/solana-labs/perpetuals/issues). For more general questions about programming on Solana blockchain use [StackExchange](https://solana.stackexchange.com).
-
-If you find a bug in the code, you can raise an issue on [Github](https://github.com/solana-labs/perpetuals/issues). But if this is a security issue, please don't disclose it on Github or in public channels. Send information to solana.farms@protonmail.com instead.
-
-## Contributing
-
-Contributions are very welcome. Please refer to the [Contributing](https://github.com/solana-labs/solana/blob/master/CONTRIBUTING.md) guidelines for more information.
-
-## License
-
-Solana Perpetuals codebase is released under [Apache License 2.0](LICENSE).
-
-## Disclaimer
-
-By accessing or using Solana Perpetuals or any of its components, you accept and agree with the [Disclaimer](DISCLAIMER.md).
+By default the UI will be available at http://localhost:3000

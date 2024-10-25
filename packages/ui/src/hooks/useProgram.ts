@@ -2,8 +2,7 @@ import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 
-import PerpetualsJson from "@/target/idl/perpetuals.json";
-import { IDL, Perpetuals } from "@/target/types/perpetuals";
+import { IDL, Perpetuals } from "@/target/perpetuals";
 
 export const useAnchorProvider = () => {
   const wallet = useAnchorWallet();
@@ -21,6 +20,6 @@ export const useProgram = () => {
   if (provider === undefined) {
     return undefined;
   }
-  const programId = new PublicKey(PerpetualsJson.metadata.address);
+  const programId = new PublicKey(IDL.metadata.address);
   return new Program<Perpetuals>(IDL, programId, provider);
 };

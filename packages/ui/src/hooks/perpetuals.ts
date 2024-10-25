@@ -12,7 +12,7 @@ import {
   getRemoveLiquidityAmountAndFee,
 } from "@/actions/perpetuals";
 import { queryClient } from "@/pages/_app";
-import { Perpetuals } from "@/target/types/perpetuals";
+import { Perpetuals } from "@/target/perpetuals";
 
 import { connectionBatcher } from "./accounts";
 import { useProgram } from "./useProgram";

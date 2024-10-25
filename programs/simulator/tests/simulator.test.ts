@@ -1,7 +1,6 @@
 import fs from "fs";
-import { describe, it, expect } from "vitest";
+import { describe, expect, it } from "vitest";
 import * as anchor from "@coral-xyz/anchor";
-
 import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
@@ -14,10 +13,10 @@ import {
 } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
 import { startAnchor } from "solana-bankrun";
-
-import type { Simulator } from "../../../target/types/simulator";
-import IDL from "../../../target/idl/simulator.json";
 import { getAccount, getMint } from "spl-token-bankrun";
+
+import IDL from "../../../target/idl/simulator.json";
+import type { Simulator } from "../../../target/types/simulator";
 
 describe("Token Faucet", async () => {
   const context = await startAnchor(".", [], []);
@@ -26,9 +25,9 @@ describe("Token Faucet", async () => {
   const SIMULATOR_ADDRESS = Keypair.fromSecretKey(
     new Uint8Array(
       JSON.parse(
-        fs.readFileSync("./target/deploy/simulator-keypair.json", "utf-8")
-      )
-    )
+        fs.readFileSync("./target/deploy/simulator-keypair.json", "utf-8"),
+      ),
+    ),
   ).publicKey;
   anchor.setProvider(provider);
 
@@ -36,17 +35,17 @@ describe("Token Faucet", async () => {
   const program = new anchor.Program<Simulator>(
     IDL as Simulator,
     SIMULATOR_ADDRESS,
-    provider
+    provider,
   );
 
   const canonical = new PublicKey(
-    "So11111111111111111111111111111111111111112"
+    "So11111111111111111111111111111111111111112",
   );
   // Derive the PDA to use as mint account address.
   // This same PDA is also used as the mint authority.
   const [mintPDA] = PublicKey.findProgramAddressSync(
     [Buffer.from("mint"), canonical.toBuffer()],
-    program.programId
+    program.programId,
   );
 
   it("Create a token!", async () => {
@@ -72,7 +71,7 @@ describe("Token Faucet", async () => {
   it("Mint 1 Token!", async () => {
     const associatedTokenAccountAddress = getAssociatedTokenAddressSync(
       mintPDA,
-      payer.publicKey
+      payer.publicKey,
     );
 
     await program.methods
@@ -84,7 +83,7 @@ describe("Token Faucet", async () => {
       .rpc();
 
     expect(
-      await getAccount(context.banksClient, associatedTokenAccountAddress)
+      await getAccount(context.banksClient, associatedTokenAccountAddress),
     ).toMatchObject({
       amount: BigInt(1_000_000),
       mint: mintPDA,

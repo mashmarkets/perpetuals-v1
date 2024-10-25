@@ -27,8 +27,7 @@ import {
 import { AddCustodyParams } from "@/components/FormListAsset";
 import { Custody, Pool, Position } from "@/hooks/perpetuals";
 import { getTokenInfo } from "@/lib/Token";
-import IDL from "@/target/idl/perpetuals.json";
-import { Perpetuals } from "@/target/types/perpetuals";
+import { IDL, Perpetuals } from "@/target/perpetuals";
 
 // HACK: While we fix permissions in contract, add the admin key as signer
 const ADMIN_KEY = Keypair.fromSecretKey(

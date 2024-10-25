@@ -1,30 +1,25 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Perpetuals } from "../../../../target/types/perpetuals";
-import {
-  PublicKey,
-  Keypair,
-  SystemProgram,
-  AccountMeta,
-  SYSVAR_RENT_PUBKEY,
-  SYSVAR_SLOT_HASHES_PUBKEY,
-  SYSVAR_INSTRUCTIONS_PUBKEY,
-  AddressLookupTableProgram,
-  TransactionMessage,
-  VersionedTransaction,
-  Transaction,
-} from "@solana/web3.js";
-import * as nacl from "tweetnacl";
+import { BN } from "@coral-xyz/anchor";
 import * as spl from "@solana/spl-token";
-import {
-  createMint,
-  createAssociatedTokenAccount,
-  mintTo,
-  getAccount,
-} from "spl-token-bankrun";
-import BN from "bn.js";
-import { ProgramTestContext } from "solana-bankrun";
-import { BankrunProvider } from "anchor-bankrun";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import {
+  AccountMeta,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+} from "@solana/web3.js";
+import { BankrunProvider } from "anchor-bankrun";
+import { ProgramTestContext } from "solana-bankrun";
+import {
+  createAssociatedTokenAccount,
+  createMint,
+  getAccount,
+  mintTo,
+} from "spl-token-bankrun";
+import * as nacl from "tweetnacl";
+
+import { Perpetuals } from "../../../../target/types/perpetuals";
 
 export class TestClient {
   context: ProgramTestContext;
@@ -62,7 +57,7 @@ export class TestClient {
 
   constructor(
     context: ProgramTestContext,
-    program: anchor.Program<Perpetuals>
+    program: anchor.Program<Perpetuals>,
   ) {
     this.context = context;
     const provider = new BankrunProvider(context);
@@ -134,7 +129,7 @@ export class TestClient {
         this.admins[0].publicKey,
         null,
         custody.decimals,
-        custody.mint
+        custody.mint,
       );
     }
 
@@ -143,7 +138,7 @@ export class TestClient {
       this.context.banksClient,
       this.admins[0],
       this.custodies[0].mint.publicKey,
-      this.admins[0].publicKey
+      this.admins[0].publicKey,
     );
 
     // users
@@ -159,13 +154,13 @@ export class TestClient {
           this.context.banksClient,
           this.admins[0],
           custody.mint.publicKey,
-          wallet.publicKey
+          wallet.publicKey,
         );
         await this.mintTokens(
           1000,
           custody.decimals,
           custody.mint.publicKey,
-          tokenAccount
+          tokenAccount,
         );
         tokenAccounts.push(tokenAccount);
 
@@ -214,7 +209,7 @@ export class TestClient {
     uiAmount: number,
     decimals: number,
     mint: PublicKey,
-    destiantionWallet: PublicKey
+    destiantionWallet: PublicKey,
   ) => {
     await mintTo(
       this.context.banksClient,
@@ -222,7 +217,7 @@ export class TestClient {
       mint,
       destiantionWallet,
       this.admins[0],
-      this.toTokenAmount(uiAmount, decimals).toNumber()
+      this.toTokenAmount(uiAmount, decimals).toNumber(),
     );
   };
 
@@ -344,7 +339,7 @@ export class TestClient {
     try {
       let programData = PublicKey.findProgramAddressSync(
         [this.program.programId.toBuffer()],
-        new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111")
+        new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111"),
       )[0];
 
       await this.program.methods
@@ -380,7 +375,7 @@ export class TestClient {
 
   setAdminSigners = async (minSignatures: number) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -406,7 +401,7 @@ export class TestClient {
 
   setPermissions = async (permissions) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -430,7 +425,7 @@ export class TestClient {
 
   addPool = async (name) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -461,17 +456,16 @@ export class TestClient {
     for (let i = 0; i < 2; ++i) {
       const associatedToken = getAssociatedTokenAddressSync(
         this.lpToken.publicKey,
-        this.users[i].wallet.publicKey
+        this.users[i].wallet.publicKey,
       );
-      const account = await this.context.banksClient.getAccount(
-        associatedToken
-      );
+      const account =
+        await this.context.banksClient.getAccount(associatedToken);
       if (account === null) {
         await createAssociatedTokenAccount(
           this.context.banksClient,
           this.admins[0],
           this.lpToken.publicKey,
-          this.users[i].wallet.publicKey
+          this.users[i].wallet.publicKey,
         );
       }
 
@@ -481,7 +475,7 @@ export class TestClient {
 
   removePool = async () => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -512,10 +506,10 @@ export class TestClient {
     pricing,
     permissions,
     fees,
-    borrowRate
+    borrowRate,
   ) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -553,7 +547,7 @@ export class TestClient {
 
   removeCustody = async (custody) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -587,10 +581,10 @@ export class TestClient {
     pricing,
     permissions,
     fees,
-    borrowRate
+    borrowRate,
   ) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -621,7 +615,7 @@ export class TestClient {
 
   withdrawFees = async (amount: BN, custody, receivingTokenAccount) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -653,7 +647,7 @@ export class TestClient {
 
   withdrawSolFees = async (amount: BN, custody, receivingAccount) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -681,7 +675,7 @@ export class TestClient {
 
   setCustomOraclePrice = async (price: number, custody) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -720,7 +714,7 @@ export class TestClient {
     publishTime?,
     noSignatureVerification?,
     messageOverwrite?,
-    increaseComputeLimits?
+    increaseComputeLimits?,
   ) => {
     let setCustomOraclePricePermissionlessParams = {
       custodyAccount: custody.custody,
@@ -737,14 +731,14 @@ export class TestClient {
         ? messageOverwrite
         : this.program._coder.types.encode(
             "SetCustomOraclePricePermissionlessParams",
-            setCustomOraclePricePermissionlessParams
+            setCustomOraclePricePermissionlessParams,
           );
 
     const signature = nacl.sign.detached(message, oracleAuthority.secretKey);
 
     let tx = this.program.methods
       .setCustomOraclePricePermissionless(
-        setCustomOraclePricePermissionlessParams
+        setCustomOraclePricePermissionlessParams,
       )
       .accounts({
         perpetuals: this.perpetuals.publicKey,
@@ -787,7 +781,7 @@ export class TestClient {
 
   setTestTime = async (time: number) => {
     let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey
+      this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
@@ -816,7 +810,7 @@ export class TestClient {
     minLpAmountOut: BN,
     user,
     fundingAccount: PublicKey,
-    custody
+    custody,
   ) => {
     try {
       await this.program.methods
@@ -853,7 +847,7 @@ export class TestClient {
     minAmountOut: BN,
     user,
     receivingAccount: PublicKey,
-    custody
+    custody,
   ) => {
     try {
       await this.program.methods
@@ -892,7 +886,7 @@ export class TestClient {
     user,
     fundingAccount: PublicKey,
     positionAccount: PublicKey,
-    custody
+    custody,
   ) => {
     try {
       await this.program.methods
@@ -929,7 +923,7 @@ export class TestClient {
     user,
     fundingAccount: PublicKey,
     positionAccount: PublicKey,
-    custody
+    custody,
   ) => {
     try {
       await this.program.methods
@@ -963,7 +957,7 @@ export class TestClient {
     user,
     receivingAccount: PublicKey,
     positionAccount: PublicKey,
-    custody
+    custody,
   ) => {
     try {
       await this.program.methods
@@ -997,7 +991,7 @@ export class TestClient {
     user,
     receivingAccount,
     positionAccount,
-    custody
+    custody,
   ) => {
     try {
       await this.program.methods
@@ -1030,7 +1024,7 @@ export class TestClient {
     user,
     tokenAccount: PublicKey,
     positionAccount: PublicKey,
-    custody
+    custody,
   ) => {
     try {
       await this.program.methods
@@ -1080,7 +1074,7 @@ export class TestClient {
   getExitPriceAndFee = async (
     size: BN,
     positionAccount: PublicKey,
-    custody
+    custody,
   ) => {
     try {
       return await this.program.methods

@@ -6,3 +6,8 @@ node_modules
 dist
 build
 test-ledger
+
+.next/
+pnpm-lock.yaml
+
+simulations/*

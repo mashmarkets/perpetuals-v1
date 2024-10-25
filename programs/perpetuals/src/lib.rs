@@ -22,7 +22,7 @@ solana_security_txt::security_txt! {
     auditors: "Halborn"
 }
 
-declare_id!("GkZTLm2G9BFeZU6MRarJHt4CgTkRL9m2tZWvyhvBzMaF");
+declare_id!("6iQGU4VcVkZXzVbFq6jpceXw1V6YfGnM38ujrKZ32cz8");
 
 #[program]
 pub mod perpetuals {

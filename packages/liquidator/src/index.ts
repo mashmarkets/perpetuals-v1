@@ -1,12 +1,3 @@
-import fs from "fs";
-import { fileURLToPath } from "url";
-import path from "path";
-
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { setIntervalAsync } from "set-interval-async/dynamic";
-import { memoize } from "lodash-es";
-
-import { IDL, Perpetuals } from "./target/types/perpetuals.js";
 import {
   AnchorProvider,
   BN,
@@ -22,25 +13,17 @@ import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { memoize } from "lodash-es";
+import { setIntervalAsync } from "set-interval-async/dynamic";
 
-import PerpetualsJson from "./target/idl/perpetuals.json" assert { type: "json" };
-console.log(PerpetualsJson.metadata.address);
-const getAddressFromIdl = () => {
-  const fileName = path.join(
-    path.dirname(fileURLToPath(import.meta.url)),
-    "./target/idl/perpetuals.json"
-  );
+import { IDL, Perpetuals } from "./target/perpetuals.js";
 
-  const idl = JSON.parse(fs.readFileSync(fileName, "utf-8"));
-
-  return idl.metadata.address;
-};
-
-const programId = new PublicKey(process.env.PROGRAM_ID ?? getAddressFromIdl());
+const programId = new PublicKey(process.env.PROGRAM_ID ?? IDL.metadata.address);
 
 const fromBN = (v: BN) => BigInt(v.toString());
 const parsePosition = (
-  data: ProgramAccount<IdlAccounts<Perpetuals>["position"]>
+  data: ProgramAccount<IdlAccounts<Perpetuals>["position"]>,
 ) => {
   const p = data.account;
   return {
@@ -63,7 +46,7 @@ const parsePosition = (
   };
 };
 const parseCustody = (
-  data: ProgramAccount<IdlAccounts<Perpetuals>["custody"]>
+  data: ProgramAccount<IdlAccounts<Perpetuals>["custody"]>,
 ) => {
   const c = data.account;
   return {
@@ -111,7 +94,7 @@ const parseCustody = (
       borrowSizeUsd: fromBN(c.longPositions.borrowSizeUsd),
       collateralUsd: fromBN(c.longPositions.collateralUsd),
       cumulativeInterestSnapshot: fromBN(
-        c.longPositions.cumulativeInterestSnapshot
+        c.longPositions.cumulativeInterestSnapshot,
       ),
       cumulativeInterestUsd: fromBN(c.longPositions.cumulativeInterestUsd),
       lockedAmount: fromBN(c.longPositions.lockedAmount),
@@ -181,7 +164,7 @@ const findPerpetualsAddressSync = (
       }
       return x;
     }),
-    programId
+    programId,
   )[0];
 
   return publicKey.toString() as Address;
@@ -196,18 +179,18 @@ export async function startInterval(callback: () => void, interval: number) {
 async function liquidate(
   program: Program<Perpetuals>,
   position: ReturnType<typeof parsePosition>,
-  custody: ReturnType<typeof parseCustody>
+  custody: ReturnType<typeof parseCustody>,
 ) {
   // Send collateral to position owner
   const receivingAccount = getAssociatedTokenAddressSync(
     new PublicKey(custody.mint),
-    new PublicKey(position.owner)
+    new PublicKey(position.owner),
   );
 
   // Send the rewards to ourselves
   const rewardsReceivingAccount = getAssociatedTokenAddressSync(
     new PublicKey(custody.mint),
-    program.provider.publicKey!
+    program.provider.publicKey!,
   );
 
   return await program.methods
@@ -217,13 +200,13 @@ async function liquidate(
         program.provider.publicKey!,
         receivingAccount,
         new PublicKey(position.owner),
-        new PublicKey(custody.mint)
+        new PublicKey(custody.mint),
       ),
       createAssociatedTokenAccountIdempotentInstruction(
         program.provider.publicKey!,
         rewardsReceivingAccount,
         program.provider.publicKey!,
-        new PublicKey(custody.mint)
+        new PublicKey(custody.mint),
       ),
     ])
     .accounts({
@@ -239,12 +222,27 @@ async function liquidate(
       custodyTokenAccount: findPerpetualsAddressSync(
         "custody_token_account",
         position.pool,
-        custody.mint
+        custody.mint,
       ),
       tokenProgram: TOKEN_PROGRAM_ID,
     })
     .rpc();
 }
+
+const loadWallet = () => {
+  try {
+    return new Wallet(
+      Keypair.fromSecretKey(
+        Uint8Array.from(JSON.parse(process.env.PRIVATE_KEY as string)),
+      ),
+    );
+  } catch {
+    throw new Error(
+      "Private key not found. Please set the PRIVATE_KEY environment variable.",
+    );
+  }
+};
+
 async function main() {
   // Setup
   const INTERVAL = process.env.INTERVAL
@@ -254,24 +252,20 @@ async function main() {
     process.env.RPC_ENDPOINT ?? "https://api.devnet.solana.com";
   const connection = new Connection(RPC_ENDPOINT);
 
-  const wallet = new Wallet(
-    Keypair.fromSecretKey(
-      Uint8Array.from(JSON.parse(process.env.PRIVATE_KEY as string))
-    )
-  );
+  const wallet = loadWallet();
   const provider = new AnchorProvider(connection, wallet, {});
   const program = new Program<Perpetuals>(IDL, programId, provider);
 
   console.log(
-    `Running liquidator against ${programId.toString()}\nUsing RPC endpoint: ${RPC_ENDPOINT}\nUsing wallet: ${wallet.publicKey.toString()}`
+    `Running liquidator against ${programId.toString()}\nUsing RPC endpoint: ${RPC_ENDPOINT}\nUsing wallet: ${wallet.publicKey.toString()}`,
   );
 
   const getCustody = memoize((custody: Address) =>
     program.account.custody
       .fetch(new PublicKey(custody))
       .then((account) =>
-        parseCustody({ publicKey: new PublicKey(custody), account })
-      )
+        parseCustody({ publicKey: new PublicKey(custody), account }),
+      ),
   );
 
   startInterval(async () => {
@@ -314,7 +308,7 @@ async function main() {
         positions.length
       } positions and liquidated ${count} of them in ${
         (Date.now() - start) / 1000
-      }s`
+      }s`,
     );
   }, INTERVAL);
 }

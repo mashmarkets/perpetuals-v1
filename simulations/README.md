@@ -1,5 +1,5 @@
 1. Overview and Set up
-This simulation models a perpetuals protocol that includes liquidity providers, traders, and pools, and how they interact. The simulation uses cadCAD to model this complex system over time and under different conditions.
+   This simulation models a perpetuals protocol that includes liquidity providers, traders, and pools, and how they interact. The simulation uses cadCAD to model this complex system over time and under different conditions.
 
 Setting up the venv:
 $ python3.9 -m venv venv

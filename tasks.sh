@@ -5,45 +5,59 @@ PROGRAM_KEY="./target/deploy/perpetuals-keypair.json"
 function close {
   if [ -z "$1" ]; then
     echo "Error: KEY parameter is required"
-    echo "Usage: close <key_path>"
+    echo "Usage: ./tasks.sh close <key_path>"
     return 1
   fi
+
   # Pass in devnet for safety - so we don't do on prod
   solana program close -u devnet -k "$1" $(solana address -k $PROGRAM_KEY) --bypass-warning
 }
 
+# Named after anchor types options, but supports multiple destinations
+function types {
+  pnpm exec tsx ./scripts/patch.js
+  rm -rf packages/ui/src/target/*
+  cp -rf target/types/ packages/ui/src/target
+
+  rm -rf packages/liquidator/src/target/*
+  cp -rf target/types/perpetuals.ts packages/liquidator/src/target
+
+  rm -rf packages/cli/src/target/*
+  cp -rf target/types/perpetuals.ts packages/cli/src/target
+}
 
 function deploy {
   if [ -z "$1" ]; then
     echo "Error: KEY parameter is required"
-    echo "Usage: deploy <key_path>"
+    echo "Usage: ./tasks.sh deploy <key_path>"
     return 1
   fi
   rm $PROGRAM_KEY
   anchor keys sync
   anchor build
   anchor deploy --provider.cluster devnet --provider.wallet "$1"
-
-  rm -rf ui/src/target/*
-  mkdir -p ui/src/target/types
-  mkdir -p ui/src/target/idl
-  cp -rf target/idl ui/src/target
-  cp -rf target/types ui/src/target
 }
 
+
 function setup {
-  tsx ./app/src/setup.ts
+  if [ -z "$1" ]; then
+    echo "Error: KEY parameter is required"
+    echo "Usage: ./tasks.sh setup <key_path>"
+    return 1
+  fi
+  PRIVATE_KEY="$1" pnpm exec tsx ./scripts/setup.ts
 }
 
 function redeploy {
   if [ -z "$1" ]; then
     echo "Error: KEY parameter is required"
-    echo "Usage: redeploy <key_path>"
+    echo "Usage: ./tasks.sh redeploy <key_path>"
     return 1
   fi
   close "$1"
   deploy "$1"
-  setup
+  types
+  setup "$1"
 }
 
 

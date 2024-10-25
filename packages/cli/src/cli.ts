@@ -1,9 +1,10 @@
 /// Command-line interface for basic admin functions
 
-import { BN } from "@coral-xyz/anchor";
+import * as anchor from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
-import { PerpetualsClient } from "./client.js";
 import { Command } from "commander";
+
+import { PerpetualsClient } from "./client.js";
 import {
   BorrowRateParams,
   Fees,
@@ -13,6 +14,8 @@ import {
   PricingParams,
   SetCustomOraclePriceParams,
 } from "./types.js";
+
+const { BN } = anchor;
 
 let client: PerpetualsClient;
 
@@ -31,7 +34,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .option(
       "-u, --url <string>",
       "URL for Solana's JSON RPC",
-      "https://api.devnet.solana.com"
+      "https://api.devnet.solana.com",
     )
     .requiredOption("-k, --keypair <path>", "Filepath to the admin keypair")
     .hook("preSubcommand", (thisCommand, subCommand) => {
@@ -112,7 +115,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         pricingConfig,
         permissions,
         fees,
-        borrowRate
+        borrowRate,
       );
     });
 
@@ -124,14 +127,14 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .requiredOption("-i, --amount-in <int>", "Amount to deposit")
     .requiredOption(
       "-o, --min-amount-out <int>",
-      "Minimum LP amount to receive"
+      "Minimum LP amount to receive",
     )
     .action(async (poolName, tokenMint, options) => {
       await client.addLiquidity(
         poolName,
         new PublicKey(tokenMint),
         new BN(options.amountIn),
-        new BN(options.minAmountOut)
+        new BN(options.minAmountOut),
       );
     });
 
@@ -154,8 +157,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getAddLiquidityAmountAndFee(
           poolName,
           new PublicKey(tokenMint),
-          new BN(options.amount)
-        )
+          new BN(options.amount),
+        ),
       );
     });
 
@@ -189,7 +192,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .argument("<pubkey>", "Token mint")
     .action(async (poolName, tokenMint) => {
       client.prettyPrint(
-        await client.getCustody(poolName, new PublicKey(tokenMint))
+        await client.getCustody(poolName, new PublicKey(tokenMint)),
       );
     });
 
@@ -202,8 +205,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
       client.prettyPrint(
         client.getCustodyCustomOracleAccountKey(
           poolName,
-          new PublicKey(tokenMint)
-        )
+          new PublicKey(tokenMint),
+        ),
       );
     });
 
@@ -220,8 +223,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
           poolName,
           new PublicKey(tokenMint),
           new BN(options.collateral),
-          new BN(options.size)
-        )
+          new BN(options.size),
+        ),
       );
     });
 
@@ -236,8 +239,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getExitPriceAndFee(
           new PublicKey(wallet),
           poolName,
-          new PublicKey(tokenMint)
-        )
+          new PublicKey(tokenMint),
+        ),
       );
     });
 
@@ -256,8 +259,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
           poolName,
           new PublicKey(tokenMint),
           new BN(options.addCollateral),
-          new BN(options.removeCollateral)
-        )
+          new BN(options.removeCollateral),
+        ),
       );
     });
 
@@ -272,8 +275,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getLiquidationState(
           new PublicKey(wallet),
           poolName,
-          new PublicKey(tokenMint)
-        )
+          new PublicKey(tokenMint),
+        ),
       );
     });
 
@@ -303,8 +306,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getOraclePrice(
           poolName,
           new PublicKey(tokenMint),
-          options.ema
-        )
+          options.ema,
+        ),
       );
     });
 
@@ -326,8 +329,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getPnl(
           new PublicKey(wallet),
           poolName,
-          new PublicKey(tokenMint)
-        )
+          new PublicKey(tokenMint),
+        ),
       );
     });
 
@@ -353,7 +356,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .argument("<pubkey>", "Token mint")
     .action(async (poolName, tokenMint) => {
       client.prettyPrint(
-        await client.getPoolTokenPositions(poolName, new PublicKey(tokenMint))
+        await client.getPoolTokenPositions(poolName, new PublicKey(tokenMint)),
       );
     });
 
@@ -368,8 +371,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getRemoveLiquidityAmountAndFee(
           poolName,
           new PublicKey(tokenMint),
-          new BN(options.amount)
-        )
+          new BN(options.amount),
+        ),
       );
     });
 
@@ -384,8 +387,8 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         await client.getUserPosition(
           new PublicKey(wallet),
           poolName,
-          new PublicKey(tokenMint)
-        )
+          new PublicKey(tokenMint),
+        ),
       );
     });
 
@@ -415,7 +418,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
       };
       await client.init(
         args.map((x) => new PublicKey(x)),
-        perpetualsConfig
+        perpetualsConfig,
       );
     });
 
@@ -433,7 +436,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
         new PublicKey(tokenMint),
         new BN(options.price),
         new BN(options.collateral),
-        new BN(options.size)
+        new BN(options.size),
       );
     });
 
@@ -462,7 +465,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .action(async (args, options) => {
       await client.setAdminSigners(
         args.map((x) => new PublicKey(x)),
-        options.minSignatures
+        options.minSignatures,
       );
     });
 
@@ -486,7 +489,7 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
       await client.setCustomOraclePrice(
         poolName,
         new PublicKey(tokenMint),
-        priceConfig
+        priceConfig,
       );
     });
 

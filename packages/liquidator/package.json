@@ -1,0 +1,19 @@
+{
+  "dependencies": {
+    "@coral-xyz/anchor": "0.28.0",
+    "@solana/addresses": "2.0.0-rc.1",
+    "@solana/spl-token": "0.3.11",
+    "@solana/web3.js": "1.95.3",
+    "lodash-es": "4.17.21",
+    "rpc-websockets": "7.11.0",
+    "set-interval-async": "3.0.3"
+  },
+  "devDependencies": {
+    "typescript": "5.6.3"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dockerignore": "rsync -avn . /dev/shm --exclude-from .dockerignore"
+  },
+  "type": "module"
+}

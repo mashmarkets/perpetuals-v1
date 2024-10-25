@@ -1,43 +1,39 @@
-import {
-  setProvider,
-  Program,
-  AnchorProvider,
-  workspace,
-  utils,
-  BN,
-} from "@coral-xyz/anchor";
-import { Perpetuals } from "./target/types/perpetuals.js";
-import {
-  PublicKey,
-  SystemProgram,
-  Keypair,
-  SYSVAR_RENT_PUBKEY,
-  AccountMeta,
-  TransactionInstruction,
-} from "@solana/web3.js";
+import { readFileSync } from "fs";
+import * as anchor from "@coral-xyz/anchor";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddress,
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { sha256 } from "js-sha256";
-import { encode } from "bs58";
-import { readFileSync } from "fs";
 import {
-  InitParams,
-  OracleParams,
-  PricingParams,
-  Permissions,
-  Fees,
-  BorrowRateParams,
-  SetCustomOraclePriceParams,
+  AccountMeta,
+  Keypair,
+  PublicKey,
+  SystemProgram,
+  SYSVAR_RENT_PUBKEY,
+  TransactionInstruction,
+} from "@solana/web3.js";
+import { encode } from "bs58";
+import { sha256 } from "js-sha256";
+
+import { Perpetuals } from "./target/perpetuals.js";
+import {
   AmountAndFee,
-  NewPositionPricesAndFee,
-  PriceAndFee,
-  ProfitAndLoss,
+  BorrowRateParams,
   Custody,
+  Fees,
+  InitParams,
+  NewPositionPricesAndFee,
+  OracleParams,
+  Permissions,
+  PriceAndFee,
+  PricingParams,
+  ProfitAndLoss,
+  SetCustomOraclePriceParams,
 } from "./types.js";
+
+const { AnchorProvider, BN, Program, setProvider, utils, workspace } = anchor;
 
 export class PerpetualsClient {
   provider: AnchorProvider;
@@ -60,7 +56,7 @@ export class PerpetualsClient {
     this.program = workspace.Perpetuals as Program<Perpetuals>;
 
     this.admin = Keypair.fromSecretKey(
-      new Uint8Array(JSON.parse(readFileSync(adminKey).toString()))
+      new Uint8Array(JSON.parse(readFileSync(adminKey).toString())),
     );
 
     this.multisig = this.findProgramAddress("multisig");
@@ -74,7 +70,7 @@ export class PerpetualsClient {
 
   findProgramAddress = (
     label: string,
-    extraSeeds = null
+    extraSeeds = null,
   ): {
     publicKey: PublicKey;
     bump: number;
@@ -95,7 +91,7 @@ export class PerpetualsClient {
 
     const [publicKey, bump] = PublicKey.findProgramAddressSync(
       seeds,
-      this.program.programId
+      this.program.programId,
     );
 
     return { publicKey, bump };
@@ -135,7 +131,7 @@ export class PerpetualsClient {
 
   getCustodyTokenAccountKey = (
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ): PublicKey => {
     return this.findProgramAddress("custody_token_account", [
       this.getPoolKey(poolName),
@@ -145,14 +141,14 @@ export class PerpetualsClient {
 
   getCustodyOracleAccountKey = async (
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ): Promise<PublicKey> => {
     return (await this.getCustody(poolName, tokenMint)).oracle.oracleAccount;
   };
 
   getCustodyCustomOracleAccountKey = (
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ): PublicKey => {
     return this.findProgramAddress("oracle_account", [
       this.getPoolKey(poolName),
@@ -162,7 +158,7 @@ export class PerpetualsClient {
 
   getCustody = async (poolName: string, tokenMint: PublicKey) => {
     return this.program.account.custody.fetch(
-      this.getCustodyKey(poolName, tokenMint)
+      this.getCustodyKey(poolName, tokenMint),
     );
   };
 
@@ -170,7 +166,7 @@ export class PerpetualsClient {
     //return this.program.account.custody.all();
     const pool = await this.getPool(poolName);
     const custodies = (await this.program.account.custody.fetchMultiple(
-      pool.custodies
+      pool.custodies,
     )) as (Custody | null)[];
 
     if (custodies.some((custody) => !custody)) {
@@ -183,7 +179,7 @@ export class PerpetualsClient {
   getCustodyMetas = async (poolName: string): Promise<AccountMeta[]> => {
     const pool = await this.getPool(poolName);
     const custodies = (await this.program.account.custody.fetchMultiple(
-      pool.custodies
+      pool.custodies,
     )) as (Custody | null)[];
 
     if (custodies.some((custody) => !custody)) {
@@ -218,7 +214,7 @@ export class PerpetualsClient {
   getPositionKey = (
     wallet: PublicKey,
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ): PublicKey => {
     const pool = this.getPoolKey(poolName);
     const custody = this.getCustodyKey(poolName, tokenMint);
@@ -234,10 +230,10 @@ export class PerpetualsClient {
   getUserPosition = async (
     wallet: PublicKey,
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ) => {
     return this.program.account.position.fetch(
-      this.getPositionKey(wallet, poolName, tokenMint)
+      this.getPositionKey(wallet, poolName, tokenMint),
     );
   };
 
@@ -246,20 +242,20 @@ export class PerpetualsClient {
       Buffer.concat([
         this.getAccountDiscriminator("Position"),
         wallet.toBuffer(),
-      ])
+      ]),
     );
 
     const positions = await this.provider.connection.getProgramAccounts(
       this.program.programId,
       {
         filters: [{ dataSize: 232 }, { memcmp: { bytes: data, offset: 0 } }],
-      }
+      },
     );
 
     return Promise.all(
       positions.map((position) => {
         return this.program.account.position.fetch(position.pubkey);
-      })
+      }),
     );
   };
 
@@ -268,19 +264,19 @@ export class PerpetualsClient {
     const custodyKey = this.getCustodyKey(poolName, tokenMint);
     console.log(poolKey, custodyKey);
     const data = encode(
-      Buffer.concat([poolKey.toBuffer(), custodyKey.toBuffer()])
+      Buffer.concat([poolKey.toBuffer(), custodyKey.toBuffer()]),
     );
     const positions = await this.provider.connection.getProgramAccounts(
       this.program.programId,
       {
         filters: [{ dataSize: 232 }, { memcmp: { bytes: data, offset: 40 } }],
-      }
+      },
     );
 
     return Promise.all(
       positions.map((position) => {
         return this.program.account.position.fetch(position.pubkey);
-      })
+      }),
     );
   };
 
@@ -318,7 +314,7 @@ export class PerpetualsClient {
   init = async (admins: PublicKey[], config: InitParams): Promise<string> => {
     const perpetualsProgramData = PublicKey.findProgramAddressSync(
       [this.program.programId.toBuffer()],
-      new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111")
+      new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111"),
     )[0];
 
     const adminMetas = [];
@@ -353,7 +349,7 @@ export class PerpetualsClient {
 
   setAdminSigners = async (
     admins: PublicKey[],
-    minSignatures: number
+    minSignatures: number,
   ): Promise<void> => {
     const adminMetas = [];
 
@@ -431,7 +427,7 @@ export class PerpetualsClient {
     pricingConfig: PricingParams,
     permissions: Permissions,
     fees: Fees,
-    borrowRate: BorrowRateParams
+    borrowRate: BorrowRateParams,
   ): Promise<string> => {
     return await this.program.methods
       .addCustody({
@@ -450,7 +446,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyTokenAccount: this.getCustodyTokenAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         custodyTokenMint: tokenMint,
         systemProgram: SystemProgram.programId,
@@ -467,7 +463,7 @@ export class PerpetualsClient {
 
   removeCustody = async (
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ): Promise<void> => {
     await this.program.methods
       .removeCustody({})
@@ -480,7 +476,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyTokenAccount: this.getCustodyTokenAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -496,7 +492,7 @@ export class PerpetualsClient {
   setCustomOraclePrice = async (
     poolName: string,
     tokenMint: PublicKey,
-    priceConfig: SetCustomOraclePriceParams
+    priceConfig: SetCustomOraclePriceParams,
   ): Promise<void> => {
     await this.program.methods
       .setCustomOraclePrice(priceConfig)
@@ -508,7 +504,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         oracleAccount: this.getCustodyCustomOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         systemProgram: SystemProgram.programId,
       })
@@ -525,7 +521,7 @@ export class PerpetualsClient {
     tokenMint: PublicKey,
     amountIn: BN,
     minLpAmountOut: BN,
-    preInstructions: TransactionInstruction[] = []
+    preInstructions: TransactionInstruction[] = [],
   ): Promise<string> => {
     const lpTokenMint = this.getPoolLpTokenKey(poolName);
 
@@ -536,11 +532,11 @@ export class PerpetualsClient {
         owner: this.provider.wallet.publicKey,
         fundingAccount: await getAssociatedTokenAddress(
           tokenMint,
-          this.provider.wallet.publicKey
+          this.provider.wallet.publicKey,
         ),
         lpTokenAccount: await getAssociatedTokenAddress(
           lpTokenMint,
-          this.provider.wallet.publicKey
+          this.provider.wallet.publicKey,
         ),
         transferAuthority: this.authority.publicKey,
         perpetuals: this.perpetuals.publicKey,
@@ -548,11 +544,11 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         custodyTokenAccount: this.getCustodyTokenAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         lpTokenMint,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -570,7 +566,7 @@ export class PerpetualsClient {
     poolName: string,
     tokenMint: PublicKey,
     receivingAccount: PublicKey,
-    rewardsReceivingAccount: PublicKey
+    rewardsReceivingAccount: PublicKey,
   ): Promise<void> => {
     await this.program.methods
       .liquidate({})
@@ -585,11 +581,11 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         custodyTokenAccount: this.getCustodyTokenAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         tokenProgram: TOKEN_PROGRAM_ID,
       })
@@ -605,7 +601,7 @@ export class PerpetualsClient {
     tokenMint: PublicKey,
     price: BN,
     collateral: BN,
-    size: BN
+    size: BN,
   ): Promise<void> => {
     await this.program.methods
       .openPosition({
@@ -617,7 +613,7 @@ export class PerpetualsClient {
         owner: this.provider.wallet.publicKey,
         fundingAccount: await getAssociatedTokenAddress(
           tokenMint,
-          this.provider.wallet.publicKey
+          this.provider.wallet.publicKey,
         ),
         transferAuthority: this.authority.publicKey,
         perpetuals: this.perpetuals.publicKey,
@@ -625,16 +621,16 @@ export class PerpetualsClient {
         position: this.getPositionKey(
           this.provider.wallet.publicKey,
           poolName,
-          tokenMint
+          tokenMint,
         ),
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         custodyTokenAccount: this.getCustodyTokenAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         systemProgram: SystemProgram.programId,
         tokenProgram: TOKEN_PROGRAM_ID,
@@ -649,7 +645,7 @@ export class PerpetualsClient {
   getOraclePrice = async (
     poolName: string,
     tokenMint: PublicKey,
-    ema: boolean
+    ema: boolean,
   ): Promise<BN> => {
     return this.program.methods
       .getOraclePrice({
@@ -661,7 +657,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
       })
       .view()
@@ -674,7 +670,7 @@ export class PerpetualsClient {
   getAddLiquidityAmountAndFee = async (
     poolName: string,
     tokenMint: PublicKey,
-    amount: BN
+    amount: BN,
   ): Promise<AmountAndFee> => {
     return this.program.methods
       .getAddLiquidityAmountAndFee({
@@ -686,7 +682,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         lpTokenMint: this.getPoolLpTokenKey(poolName),
       })
@@ -701,7 +697,7 @@ export class PerpetualsClient {
   getRemoveLiquidityAmountAndFee = async (
     poolName: string,
     tokenMint: PublicKey,
-    lpAmount: BN
+    lpAmount: BN,
   ): Promise<AmountAndFee> => {
     return this.program.methods
       .getRemoveLiquidityAmountAndFee({
@@ -713,7 +709,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         lpTokenMint: this.getPoolLpTokenKey(poolName),
       })
@@ -729,7 +725,7 @@ export class PerpetualsClient {
     poolName: string,
     tokenMint: PublicKey,
     collateral: BN,
-    size: BN
+    size: BN,
   ): Promise<NewPositionPricesAndFee> => {
     return this.program.methods
       .getEntryPriceAndFee({
@@ -742,7 +738,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
       })
       .view()
@@ -755,7 +751,7 @@ export class PerpetualsClient {
   getExitPriceAndFee = async (
     wallet: PublicKey,
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ): Promise<PriceAndFee> => {
     return this.program.methods
       .getExitPriceAndFee({})
@@ -766,7 +762,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
       })
       .view()
@@ -781,7 +777,7 @@ export class PerpetualsClient {
     poolName: string,
     tokenMint: PublicKey,
     addCollateral: BN,
-    removeCollateral: BN
+    removeCollateral: BN,
   ): Promise<BN> => {
     return this.program.methods
       .getLiquidationPrice({
@@ -795,7 +791,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
       })
       .view()
@@ -808,7 +804,7 @@ export class PerpetualsClient {
   getLiquidationState = async (
     wallet: PublicKey,
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ): Promise<number> => {
     return this.program.methods
       .getLiquidationState({})
@@ -819,7 +815,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
       })
       .view()
@@ -832,7 +828,7 @@ export class PerpetualsClient {
   getPnl = async (
     wallet: PublicKey,
     poolName: string,
-    tokenMint: PublicKey
+    tokenMint: PublicKey,
   ): Promise<ProfitAndLoss> => {
     return this.program.methods
       .getPnl({})
@@ -843,7 +839,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyOracleAccount: await this.getCustodyOracleAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
       })
       .view()
@@ -879,7 +875,7 @@ export class PerpetualsClient {
   }): Promise<void> => {
     const receivingTokenAccount = getAssociatedTokenAddressSync(
       tokenMint,
-      this.admin.publicKey
+      this.admin.publicKey,
     );
     await this.program.methods
       .withdrawFees({ amount })
@@ -888,7 +884,7 @@ export class PerpetualsClient {
           this.admin.publicKey, //payer
           receivingTokenAccount,
           this.admin.publicKey, // owner
-          tokenMint // mint
+          tokenMint, // mint
         ),
       ])
       .accounts({
@@ -900,7 +896,7 @@ export class PerpetualsClient {
         custody: this.getCustodyKey(poolName, tokenMint),
         custodyTokenAccount: this.getCustodyTokenAccountKey(
           poolName,
-          tokenMint
+          tokenMint,
         ),
         receivingTokenAccount,
         tokenProgram: TOKEN_PROGRAM_ID,

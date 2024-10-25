@@ -24,6 +24,4 @@ COPY --from=build /app/out /app/out
 WORKDIR /app
 
 
-# Solana sdk wants ESM, but loading json in node is experimental
-ENV NODE_OPTIONS="--no-warnings=ExperimentalWarning"
-CMD [ "out/liquidator.js"]
+CMD [ "out/index.js"]
