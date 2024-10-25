@@ -16,12 +16,12 @@ import { SidebarTab } from "@/components/ui/SidebarTab";
 import { SolidButton } from "@/components/ui/SolidButton";
 import {
   useCustody,
+  useGetLiquidationPrice,
   usePosition,
-  usePositionLiquidationPrice,
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
-import { useProgram } from "@/hooks/useProgram";
+import { useWritePerpetualsProgram } from "@/hooks/useProgram";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -41,7 +41,7 @@ export function CollateralModal({
   const [tab, setTab] = useState(Tab.Add);
 
   const { publicKey } = useWallet();
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const queryClient = useQueryClient();
 
   const { data: position } = usePosition(positionAddress);
@@ -49,14 +49,14 @@ export function CollateralModal({
   const { data: collateralBalance } = useBalance(custody?.mint, publicKey);
   const { data: price } = usePrice(custody?.mint);
 
-  const { data: currentLiquidationPrice } = usePositionLiquidationPrice({
+  const { data: currentLiquidationPrice } = useGetLiquidationPrice({
     position,
   });
 
   const CUSTODY_POWER = custody ? 10 ** custody.decimals : 0;
 
   const amounts = useDebounce({ depositAmount, withdrawAmount }, 400);
-  const { data: newLiquidationPrice } = usePositionLiquidationPrice({
+  const { data: newLiquidationPrice } = useGetLiquidationPrice({
     position,
     addCollateral: BigInt(Math.round(amounts.depositAmount * CUSTODY_POWER)),
     // This is awkward, because the actual function takes USD, but the estimate takes in collateral amount

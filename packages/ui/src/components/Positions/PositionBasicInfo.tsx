@@ -12,9 +12,9 @@ import {
   Custody,
   Position,
   useCustody,
+  useGetLiquidationPrice,
+  useGetPnl,
   usePosition,
-  usePositionLiquidationPrice,
-  usePositionPnl,
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
@@ -53,8 +53,8 @@ export default function PositionBasicInfo({
 }) {
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
-  const { data: liquidationPrice } = usePositionLiquidationPrice({ position });
-  const { data: pnl } = usePositionPnl(position);
+  const { data: liquidationPrice } = useGetLiquidationPrice({ position });
+  const { data: pnl } = useGetPnl(position);
 
   const mint = custody?.mint;
   const { data: price } = usePrice(mint);

@@ -24,7 +24,7 @@ import {
   usePoolCustodies,
 } from "@/hooks/perpetuals";
 import { useBalance, useMint } from "@/hooks/token";
-import { useProgram } from "@/hooks/useProgram";
+import { useWritePerpetualsProgram } from "@/hooks/useProgram";
 import { getTokenSymbol } from "@/lib/Token";
 import { LP_POWER } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -43,7 +43,7 @@ export default function LiquidityCard({
   const [liqAmount, setLiqAmount] = useState(0);
 
   const queryClient = useQueryClient();
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const { publicKey } = useWallet();
   const { data: pool } = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);

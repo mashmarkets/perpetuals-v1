@@ -9,12 +9,12 @@ import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/ui/SolidButton";
 import {
   useCustody,
+  useGetLiquidationPrice,
+  useGetPnl,
   usePosition,
-  usePositionLiquidationPrice,
-  usePositionPnl,
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
-import { useProgram } from "@/hooks/useProgram";
+import { useWritePerpetualsProgram } from "@/hooks/useProgram";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -30,14 +30,14 @@ export function PositionAdditionalInfo({
 
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
-  const { data: liquidationPrice } = usePositionLiquidationPrice({ position });
-  const { data: pnl } = usePositionPnl(position);
+  const { data: liquidationPrice } = useGetLiquidationPrice({ position });
+  const { data: pnl } = useGetPnl(position);
 
   const mint = custody?.mint;
   const { data: price } = usePrice(mint);
 
   const { publicKey } = useWallet();
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
 
   const closePositionMutation = useMutation({
     onSuccess: () => {

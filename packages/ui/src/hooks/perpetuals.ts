@@ -15,7 +15,10 @@ import { queryClient } from "@/pages/_app";
 import { Perpetuals } from "@/target/perpetuals";
 
 import { connectionBatcher } from "./accounts";
-import { useProgram } from "./useProgram";
+import {
+  useReadPerpetualsProgram,
+  useWritePerpetualsProgram,
+} from "./useProgram";
 
 const fromBN = (v: BN) => BigInt(v.toString());
 
@@ -178,7 +181,7 @@ queryClient.setQueryDefaults(["position"], {
 
 export const usePool = (pool: Address | undefined) => {
   const { connection } = useConnection();
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
 
   return useQuery<Pool | null>({
     queryKey: ["pool", pool],
@@ -201,7 +204,7 @@ export const usePool = (pool: Address | undefined) => {
 
 export const usePools = (pools: Address[]) => {
   const { connection } = useConnection();
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
   return useQueries({
     queries: pools.map((pool) => ({
       queryKey: ["pool", pool],
@@ -233,7 +236,7 @@ export const usePools = (pools: Address[]) => {
 };
 
 const useAllPoolsAddress = () => {
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
   const client = useQueryClient();
   return useQuery<Address[]>({
     queryKey: ["pools"],
@@ -260,7 +263,7 @@ export const useAllPools = () => {
 
 export const useCustody = (custody: Address | undefined) => {
   const { connection } = useConnection();
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
 
   return useQuery({
     queryKey: ["custody", custody?.toString()],
@@ -280,7 +283,7 @@ export const useCustody = (custody: Address | undefined) => {
 // Inspired by https://github.com/TanStack/query/discussions/6305
 export const useCustodies = (custodies: Address[]) => {
   const { connection } = useConnection();
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
 
   return useQueries({
     queries: custodies.map((custody) => ({
@@ -314,7 +317,7 @@ export const useCustodies = (custodies: Address[]) => {
 
 export const usePoolCustodies = (poolKey: Address | undefined) => {
   const { connection } = useConnection();
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
   const pool = usePool(poolKey);
 
   const custodies = pool?.data?.custodies ?? [];
@@ -351,7 +354,7 @@ export const usePoolCustodies = (poolKey: Address | undefined) => {
 
 export const usePosition = (position: Address | undefined) => {
   const { connection } = useConnection();
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
 
   return useQuery({
     queryKey: ["position", position?.toString()],
@@ -374,7 +377,7 @@ export const usePosition = (position: Address | undefined) => {
 
 export const usePositions = (positions: Address[]) => {
   const { connection } = useConnection();
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
 
   return useQueries({
     queries: positions.map((position) => ({
@@ -410,7 +413,7 @@ export const usePositions = (positions: Address[]) => {
 };
 
 export const useAllUserPositions = (user: PublicKey | null) => {
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
   const client = useQueryClient();
   return useQuery<Address[]>({
     queryKey: ["positions", user?.toString()],
@@ -452,7 +455,7 @@ export const useAllUserPositions = (user: PublicKey | null) => {
   });
 };
 
-export const usePositionLiquidationPrice = ({
+export const useGetLiquidationPrice = ({
   position,
   addCollateral = BigInt(0),
   removeCollateral = BigInt(0),
@@ -461,7 +464,7 @@ export const usePositionLiquidationPrice = ({
   addCollateral?: bigint;
   removeCollateral?: bigint;
 }) => {
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const { data: custody } = useCustody(position?.custody);
 
   return useQuery({
@@ -487,8 +490,8 @@ export const usePositionLiquidationPrice = ({
   });
 };
 
-export const usePositionPnl = (position: Position | undefined) => {
-  const program = useProgram();
+export const useGetPnl = (position: Position | undefined) => {
+  const program = useWritePerpetualsProgram();
   const { data: custody } = useCustody(position?.custody);
 
   return useQuery({
@@ -506,7 +509,7 @@ export const useGetAddLiquidityAmountAndFee = ({
   pool: Pick<Pool, "address" | "custodies"> | undefined | null;
   amountIn: bigint;
 }) => {
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const { data: custody } = useCustody(pool?.custodies[0]);
 
   return useQuery({
@@ -537,7 +540,7 @@ export const useGetRemoveLiquidityAmountAndFee = ({
   pool: Pick<Pool, "address" | "custodies"> | undefined | null;
   lpAmountIn: bigint;
 }) => {
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const { data: custody } = useCustody(pool?.custodies[0]);
 
   return useQuery({
@@ -566,7 +569,7 @@ queryClient.setQueryDefaults(["getGetAssetsUnderManagement"], {
   staleTime: 5 * ONE_MINUTE,
 });
 export const useGetAssetsUnderManagement = (pool: Pool | undefined | null) => {
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const { data: custody } = useCustody(pool?.custodies[0]);
 
   return useQuery({
@@ -586,7 +589,7 @@ export const useGetAssetsUnderManagement = (pool: Pool | undefined | null) => {
 };
 
 export const useMultipleGetAssetsUnderManagement = (pools: Pool[]) => {
-  const program = useProgram();
+  const program = useReadPerpetualsProgram();
   const custodies = useCustodies((pools ?? []).flatMap((x) => x.custodies));
   return useQueries({
     queries: pools.map((pool) => ({

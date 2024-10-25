@@ -5,8 +5,6 @@ import { create, indexedResolver, windowScheduler } from "@yornaath/batshit";
 import { getCoingeckoId } from "@/lib/Token";
 import { queryClient } from "@/pages/_app";
 
-import { useProgram } from "./useProgram";
-
 export interface PriceStat {
   change24hr: number;
   currentPrice: number;
@@ -52,12 +50,11 @@ const ONE_MINUTE = 60 * 1000;
 queryClient.setQueryDefaults(["price"], {
   refetchInterval: ONE_MINUTE, // 1 MINUTE
 });
-export const usePrice = (mint: Address | undefined) => {
-  const program = useProgram();
 
+export const usePrice = (mint: Address | undefined) => {
   return useQuery<PriceStat>({
     queryKey: ["price", mint?.toString()],
-    enabled: !!program && !!mint,
+    enabled: !!mint,
     queryFn: () => coingeckoBatcher.fetch(mint!) as Promise<PriceStat>,
     staleTime: 5 * ONE_MINUTE,
   });

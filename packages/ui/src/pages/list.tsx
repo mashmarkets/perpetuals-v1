@@ -8,13 +8,13 @@ import {
   addPoolAndCustody as listAssetFn,
 } from "@/actions/perpetuals";
 import FormListList, { AddCustodyParams } from "@/components/FormListAsset";
-import { useProgram } from "@/hooks/useProgram";
+import { useWritePerpetualsProgram } from "@/hooks/useProgram";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
 
 const CreatePool: React.FC = () => {
   const router = useRouter();
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const queryClient = useQueryClient();
 
   const listAsset = useMutation({

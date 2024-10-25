@@ -24,7 +24,7 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
-import { useProgram } from "@/hooks/useProgram";
+import { useWritePerpetualsProgram } from "@/hooks/useProgram";
 import { getTokenInfo } from "@/lib/Token";
 import { BPS_POWER, PRICE_POWER, RATE_POWER, Side } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -36,7 +36,7 @@ enum Input {
 }
 
 const useEntryEstimate = (params: Omit<OpenPositionParams, "price">) => {
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const debounced = useDebounce(params, 400);
   return useQuery({
     queryKey: [
@@ -71,7 +71,7 @@ export function TradePosition({
   mint: Address;
   poolAddress: Address;
 }) {
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const { publicKey } = useWallet();
   const queryClient = useQueryClient();
   const { data: allPositions } = useAllUserPositions(publicKey);

@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { addCustody as addCustodyFn } from "@/actions/perpetuals";
 import AddCustodyForm, { AddCustodyParams } from "@/components/FormListAsset";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
-import { useProgram } from "@/hooks/useProgram";
+import { useWritePerpetualsProgram } from "@/hooks/useProgram";
 import { safeAddress } from "@/utils/utils";
 
 const Accordion = ({
@@ -33,7 +33,7 @@ const Accordion = ({
 
 const ManagePoolPage = () => {
   const router = useRouter();
-  const program = useProgram();
+  const program = useWritePerpetualsProgram();
   const queryClient = useQueryClient();
   const poolAddress = safeAddress(router.query.poolAddress);
 
