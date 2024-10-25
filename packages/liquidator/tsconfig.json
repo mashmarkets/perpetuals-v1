@@ -3,16 +3,13 @@
   "_version": "20.1.0",
 
   "compilerOptions": {
-    "esModuleInterop": true,
     "lib": ["es2023"],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
-    "outDir": "./out",
-    "resolveJsonModule": true,
+    "module": "node16",
+    "target": "es2022",
+    "outDir": "out",
+    "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "strict": false,
-    "target": "es2022"
-  },
-  "exclude": ["node_modules"],
-  "include": ["src/**/*.ts"]
+    "moduleResolution": "node16"
+  }
 }

@@ -1,3 +1,4 @@
+import { createRequire } from "node:module";
 import {
   AnchorProvider,
   BN,
@@ -18,6 +19,11 @@ import { memoize } from "lodash-es";
 import { setIntervalAsync } from "set-interval-async/dynamic";
 
 import { IDL, Perpetuals } from "./target/perpetuals.js";
+import { sleep } from "./utils.js";
+
+// Related to https://github.com/jhurliman/node-rate-limiter/issues/80
+const require = createRequire(import.meta.url);
+const RateLimiter = require("limiter").RateLimiter;
 
 const programId = new PublicKey(process.env.PROGRAM_ID ?? IDL.metadata.address);
 
@@ -147,6 +153,8 @@ const parseCustody = (
   };
 };
 
+type Position = ReturnType<typeof parsePosition>;
+type Custody = ReturnType<typeof parseCustody>;
 const findPerpetualsAddressSync = (
   ...seeds: Array<Buffer | string | PublicKey | Uint8Array | Address>
 ) => {
@@ -171,6 +179,7 @@ const findPerpetualsAddressSync = (
 };
 
 const perpetuals = findPerpetualsAddressSync("perpetuals");
+const transferAuthority = findPerpetualsAddressSync("transfer_authority");
 export async function startInterval(callback: () => void, interval: number) {
   await callback();
   setIntervalAsync(callback, interval);
@@ -178,8 +187,8 @@ export async function startInterval(callback: () => void, interval: number) {
 
 async function liquidate(
   program: Program<Perpetuals>,
-  position: ReturnType<typeof parsePosition>,
-  custody: ReturnType<typeof parseCustody>,
+  position: Position,
+  custody: Custody,
 ) {
   // Send collateral to position owner
   const receivingAccount = getAssociatedTokenAddressSync(
@@ -213,7 +222,7 @@ async function liquidate(
       signer: program.provider.publicKey,
       receivingAccount,
       rewardsReceivingAccount,
-      transferAuthority: this.authority.publicKey,
+      transferAuthority,
       perpetuals,
       pool: position.pool,
       position: position.address,
@@ -244,10 +253,6 @@ const loadWallet = () => {
 };
 
 async function main() {
-  // Setup
-  const INTERVAL = process.env.INTERVAL
-    ? parseInt(process.env.INTERVAL)
-    : 30_000;
   const RPC_ENDPOINT =
     process.env.RPC_ENDPOINT ?? "https://api.devnet.solana.com";
   const connection = new Connection(RPC_ENDPOINT);
@@ -256,29 +261,45 @@ async function main() {
   const provider = new AnchorProvider(connection, wallet, {});
   const program = new Program<Perpetuals>(IDL, programId, provider);
 
+  // https://solana.com/docs/core/clusters#devnet-rate-limits
+  const limiter = new RateLimiter({
+    tokensPerInterval: 40,
+    interval: 10 * 1000,
+  });
+
+  // Assume custody oracle doesn't change, so cache forever
+  const getCustody = memoize(async (custody: Address) => {
+    await limiter.removeTokens(1);
+    return await program.account.custody
+      .fetch(new PublicKey(custody))
+      .then((account) =>
+        parseCustody({ publicKey: new PublicKey(custody), account }),
+      );
+  });
+
   console.log(
     `Running liquidator against ${programId.toString()}\nUsing RPC endpoint: ${RPC_ENDPOINT}\nUsing wallet: ${wallet.publicKey.toString()}`,
   );
 
-  const getCustody = memoize((custody: Address) =>
-    program.account.custody
-      .fetch(new PublicKey(custody))
-      .then((account) =>
-        parseCustody({ publicKey: new PublicKey(custody), account }),
-      ),
-  );
+  let positions: Position[] = [];
 
-  startInterval(async () => {
-    const start = Date.now();
-    let count = 0;
-    // Get all positions
-    const positions = await program.account.position
+  // Start loop to fetch positions, awaiting for first fetch
+  await startInterval(async () => {
+    await limiter.removeTokens(1);
+    positions = await program.account.position
       .all()
       .then((x) => x.map(parsePosition));
+  }, 60 * 1000);
+
+  // Continuously check positions and liquidate
+  while (true) {
+    const start = Date.now();
+    let count = 0;
 
     for (const position of positions) {
       const custody = await getCustody(position.custody);
 
+      await limiter.removeTokens(1);
       const state = await program.methods
         .getLiquidationState({})
         .accounts({
@@ -297,20 +318,25 @@ async function main() {
 
       console.log(`Found position to liquidate: ${position.address}`);
       try {
+        await limiter.removeTokens(1);
         const tx = await liquidate(program, position, custody).catch(() => {});
         console.log(`Liquidated position with tx: ${tx}`);
       } catch (error) {
         console.log(`Failed to liquidate: ${position.address}`, error);
       }
     }
+    const delta = Date.now() - start;
     console.log(
       `Checked ${
         positions.length
-      } positions and liquidated ${count} of them in ${
-        (Date.now() - start) / 1000
-      }s`,
+      } positions and liquidated ${count} of them in ${delta / 1000}s`,
     );
-  }, INTERVAL);
+
+    // Wait at least 1 second before looping again
+    if (delta < 1000) {
+      await sleep(1000 - delta);
+    }
+  }
 }
 
 main();
