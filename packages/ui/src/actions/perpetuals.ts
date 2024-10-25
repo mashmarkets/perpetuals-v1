@@ -525,15 +525,19 @@ async function getParsedSimulationResult<T>(
   ix: TransactionInstruction,
   name: string,
 ): Promise<T | undefined> {
-  const returnType = IDL.instructions.find((f) => f.name === name)?.returns;
-  if (returnType === undefined || typeof returnType === "string") {
+  const instruction = IDL.instructions.find((f) => f.name === name);
+  if (
+    !instruction ||
+    !("returns" in instruction) ||
+    typeof instruction.returns === "string"
+  ) {
     console.log(
       "Cannot find type name for instruction. Please check a struct is returned",
       name,
     );
     return undefined;
   }
-  const typeName = returnType.defined;
+  const typeName = instruction.returns.defined;
 
   if (typeName === undefined) {
     console.log("Cannot find type name for instruction: ", name);

@@ -9,11 +9,13 @@ Mash Markets is a decentralized derivatives exchange built on Solana. Unlike tra
 ### Environment Setup
 
 1. Clone the repository:
+
    ```bash
    git clone https://github.com/mashmarkets/perpetuals-v1.git
    ```
 
 2. Install required tools:
+
    - Solana tools v1.17.7
    - Anchor framework v0.28.0 from <https://www.anchor-lang.com/docs/installation>
    - Latest stable Rust from <https://rustup.rs/>
@@ -36,9 +38,10 @@ Run `anchor keys sync` to create new keypair for the program and replace the exi
 
 Also, ensure the path to your wallet in `Anchor.toml` is correct. Alternatively, when running Anchor deploy or test commands, you can specify your wallet with `--provider.wallet` argument. The wallet's pubkey will be set as an upgrade authority upon initial deployment of the program. It is strongly recommended to make upgrade authority a multisig when deploying to the mainnet.
 
-To build the program run `anchor build` 
+To build the program run `anchor build`
 
 ### Test
+
 There are helpers in the [tasks.sh](tasks.sh) file to run integration and unit tests.
 
 Integration and unit tests (Rust) can be started as follows:
@@ -156,7 +159,7 @@ CLI offers other useful commands. You can get the list of all of them by running
 npx ts-node src/cli.ts --help
 ```
 
-## Frontend 
+## Frontend
 
 To start the Frontend
 
