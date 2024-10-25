@@ -16,10 +16,14 @@ export const useAnchorProvider = () => {
 };
 
 export const useProgram = () => {
-  const provider = useAnchorProvider();
-  if (provider === undefined) {
-    return undefined;
-  }
+  const wallet = useAnchorWallet();
+  const { connection } = useConnection();
   const programId = new PublicKey(IDL.metadata.address);
+
+  if (!wallet) {
+    return new Program<Perpetuals>(IDL, programId, { connection });
+  }
+
+  const provider = new AnchorProvider(connection, wallet as Wallet, {});
   return new Program<Perpetuals>(IDL, programId, provider);
 };
