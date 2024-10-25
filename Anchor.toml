@@ -5,7 +5,7 @@ skip-lint = false
 perpetuals = "GkZTLm2G9BFeZU6MRarJHt4CgTkRL9m2tZWvyhvBzMaF"
 
 [programs.localnet]
-perpetuals = "8skhDgZ72wEy4EySH3rTXkgEDLYiAJ1gvAXMZT2LLaou"
+perpetuals = "GkZTLm2G9BFeZU6MRarJHt4CgTkRL9m2tZWvyhvBzMaF"
 
 [registry]
 url = "https://api.apr.dev"
