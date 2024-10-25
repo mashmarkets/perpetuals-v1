@@ -47,19 +47,26 @@ function redeploy {
 }
 
 
-function test-native {
+function test-perpetuals-native {
   RUST_BACKTRACE=1 RUST_LOG= cargo test-bpf -- --nocapture
 }
 
-function test-anchor {
+function test-perpetuals-anchor {
   # We don't want the validator as we using bankrun
-  command anchor build -- --features test
-  RUST_LOG= command npm run test -- --run
+  command anchor build -p perpetuals -- --features test
+  RUST_LOG= command npm run test -- --run --dir "./programs/perpetuals/tests/anchor"
+}
+
+function test-simulator {
+  # We don't want the validator as we using bankrun
+  command anchor build -p simulator 
+  RUST_LOG= command npm run test -- --run --dir "./programs/simulator/tests"
 }
 
 function test {
-  native
-  anchor
+  test-perpetuals-native
+  test-perpetuals-anchor
+  test-simulator
 }
 
 ${@:-all}
