@@ -71,16 +71,16 @@ function test-perpetuals-anchor {
   RUST_LOG= command npm run test -- --run --dir "./programs/perpetuals/tests/anchor"
 }
 
-function test-simulator {
+function test-faucet {
   # We don't want the validator as we using bankrun
-  command anchor build -p simulator 
-  RUST_LOG= command npm run test -- --run --dir "./programs/simulator/tests"
+  command anchor build -p faucet 
+  RUST_LOG= command npm run test -- --run --dir "./programs/faucet/tests"
 }
 
 function test {
   test-perpetuals-native
   test-perpetuals-anchor
-  test-simulator
+  test-faucet
 }
 
 ${@:-all}

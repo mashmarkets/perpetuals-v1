@@ -3,17 +3,21 @@ seeds = false
 skip-lint = false
 [programs.devnet]
 perpetuals = "6iQGU4VcVkZXzVbFq6jpceXw1V6YfGnM38ujrKZ32cz8"
-simulator = "BfHV8RBTKSKFCkCYdbwyPEb3DLACKfBzq8Y2FPXipiaC"
+faucet = "BfHV8RBTKSKFCkCYdbwyPEb3DLACKfBzq8Y2FPXipiaC"
+
+[programs.localnet]
+perpetuals = "6iQGU4VcVkZXzVbFq6jpceXw1V6YfGnM38ujrKZ32cz8"
+faucet = "BfHV8RBTKSKFCkCYdbwyPEb3DLACKfBzq8Y2FPXipiaC"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "Localnet"
-wallet = "/Users/user/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [workspace]
-members = ["programs/perpetuals", "programs/simulator"]
+members = ["programs/perpetuals", "programs/faucet"]
 
 [scripts]
 startup_wait = "100000"

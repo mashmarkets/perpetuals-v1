@@ -5,7 +5,7 @@ pub mod instructions;
 declare_id!("BfHV8RBTKSKFCkCYdbwyPEb3DLACKfBzq8Y2FPXipiaC");
 
 #[program]
-pub mod simulator {
+pub mod faucet {
 
     use super::*;
 

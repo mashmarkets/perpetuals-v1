@@ -1,9 +1,9 @@
-export type Simulator = {
+export type Faucet = {
   "metadata": {
-    "address": "BfHV8RBTKSKFCkCYdbwyPEb3DLACKfBzq8Y2FPXipiaC"
+    "address": "HWNkL84L4sGbQ3py5LAso1NJvHK5p29ymaGzXJmgqqMP"
   },
   "version": "0.1.0",
-  "name": "simulator",
+  "name": "faucet",
   "instructions": [
     {
       "name": "createToken",
@@ -93,12 +93,12 @@ export type Simulator = {
   ]
 };
 
-export const IDL: Simulator = {
+export const IDL: Faucet = {
   "metadata": {
-    "address": "BfHV8RBTKSKFCkCYdbwyPEb3DLACKfBzq8Y2FPXipiaC"
+    "address": "HWNkL84L4sGbQ3py5LAso1NJvHK5p29ymaGzXJmgqqMP"
   },
   "version": "0.1.0",
-  "name": "simulator",
+  "name": "faucet",
   "instructions": [
     {
       "name": "createToken",

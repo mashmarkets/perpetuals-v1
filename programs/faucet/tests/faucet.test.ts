@@ -16,25 +16,17 @@ import { startAnchor } from "solana-bankrun";
 import { getAccount, getMint } from "spl-token-bankrun";
 
 import IDL from "../../../target/idl/simulator.json";
-import type { Simulator } from "../../../target/types/simulator";
+import type { Faucet } from "../../../target/types/faucet";
 
 describe("Token Faucet", async () => {
   const context = await startAnchor(".", [], []);
   const provider = new BankrunProvider(context);
-  // Anchor <0.30.0 doesn't populate address on build, so get it from the keypair directly
-  const SIMULATOR_ADDRESS = Keypair.fromSecretKey(
-    new Uint8Array(
-      JSON.parse(
-        fs.readFileSync("./target/deploy/simulator-keypair.json", "utf-8"),
-      ),
-    ),
-  ).publicKey;
-  anchor.setProvider(provider);
 
+  anchor.setProvider(provider);
   const payer = provider.wallet as anchor.Wallet;
-  const program = new anchor.Program<Simulator>(
-    IDL as Simulator,
-    SIMULATOR_ADDRESS,
+  const program = new anchor.Program<Faucet>(
+    IDL as Faucet,
+    IDL.metadata.address,
     provider,
   );
 

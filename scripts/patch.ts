@@ -46,4 +46,4 @@ function patch(program: string) {
 }
 
 patch("Perpetuals");
-patch("Simulator");
+patch("Faucet");
