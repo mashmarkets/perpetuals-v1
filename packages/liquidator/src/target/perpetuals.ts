@@ -1,6 +1,6 @@
 export type Perpetuals = {
   "metadata": {
-    "address": "6iQGU4VcVkZXzVbFq6jpceXw1V6YfGnM38ujrKZ32cz8"
+    "address": "A1yYp7xVyNqqHSfSw2hMK8XvQHwGytiBjrabLAucBsqJ"
   },
   "version": "0.1.0",
   "name": "perpetuals",
@@ -2931,7 +2931,7 @@ export type Perpetuals = {
 
 export const IDL: Perpetuals = {
   "metadata": {
-    "address": "6iQGU4VcVkZXzVbFq6jpceXw1V6YfGnM38ujrKZ32cz8"
+    "address": "A1yYp7xVyNqqHSfSw2hMK8XvQHwGytiBjrabLAucBsqJ"
   },
   "version": "0.1.0",
   "name": "perpetuals",

@@ -6,22 +6,36 @@ use {
     },
 };
 
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct MintCreateParams {
+    amount: u64,
+    canonical: Pubkey,
+    decimals: u8,
+    epoch: i64,
+}
+
 #[derive(Accounts)]
-#[instruction(canonical: Pubkey)]
-pub struct MintToken<'info> {
+#[instruction(params: MintCreateParams)]
+pub struct MintCreate<'info> {
     #[account(mut)]
     pub payer: Signer<'info>,
 
-    // Mint account address is a PDA
+    // Create mint account
+    // Same PDA as address of the account and mint
     #[account(
-        mut,
-        seeds = [b"mint", canonical.key().as_ref()],
-        bump
+        init,
+        seeds = [
+            b"mint",
+            params.canonical.key().as_ref(),
+            params.epoch.to_le_bytes().as_ref()
+        ],
+        bump,
+        payer = payer,
+        mint::decimals = params.decimals,
+        mint::authority = mint.key(),
     )]
     pub mint: Account<'info, Mint>,
 
-    // Create Associated Token Account, if needed
-    // This is the account that will hold the minted tokens
     #[account(
         init_if_needed,
         payer = payer,
@@ -29,19 +43,17 @@ pub struct MintToken<'info> {
         associated_token::authority = payer,
     )]
     pub associated_token_account: Account<'info, TokenAccount>,
-
     pub token_program: Program<'info, Token>,
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub system_program: Program<'info, System>,
 }
 
-pub fn mint_token(ctx: Context<MintToken>, canonical: Pubkey, amount: u64) -> Result<()> {
+pub fn mint_create(ctx: Context<MintCreate>, params: MintCreateParams) -> Result<()> {
+    if params.amount == 0 {
+        return Ok(());
+    }
+
     let bump = *ctx.bumps.get("mint").ok_or(ProgramError::InvalidSeeds)?;
-    // PDA signer seeds
-
-    let signer_seeds: &[&[&[u8]]] = &[&[b"mint", canonical.as_ref(), &[bump]]];
-
-    // Invoke the mint_to instruction on the token program
     mint_to(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),
@@ -51,8 +63,13 @@ pub fn mint_token(ctx: Context<MintToken>, canonical: Pubkey, amount: u64) -> Re
                 authority: ctx.accounts.mint.to_account_info(), // PDA mint authority, required as signer
             },
         )
-        .with_signer(signer_seeds), // using PDA to sign
-        amount,
+        .with_signer(&[&[
+            b"mint",
+            params.canonical.as_ref(),
+            params.epoch.to_le_bytes().as_ref(),
+            &[bump],
+        ]]), // using PDA to sign
+        params.amount,
     )?;
 
     Ok(())

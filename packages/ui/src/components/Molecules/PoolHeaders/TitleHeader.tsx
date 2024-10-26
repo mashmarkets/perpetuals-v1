@@ -19,7 +19,6 @@ export function TitleHeader({
   const { data: pool } = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);
 
-  console.log(pool);
   return (
     <div className={twMerge("flex", "flex-col", "space-x-1", className)}>
       <div className="flex flex-row items-center">

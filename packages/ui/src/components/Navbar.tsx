@@ -1,11 +1,26 @@
 import ChartCandlestickIcon from "@carbon/icons-react/lib/ChartCandlestick";
 import StoragePoolIcon from "@carbon/icons-react/lib/StoragePool";
 import UserAdmin from "@carbon/icons-react/lib/UserAdmin";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  createTransferInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import { useWallet } from "@solana/wallet-adapter-react";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/router";
 import React, { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
+
+import { ADMIN_KEY, sendInstructions } from "@/actions/perpetuals";
+import { useBalance } from "@/hooks/token";
+import { useWriteFaucetProgram } from "@/hooks/useProgram";
+import { usdc } from "@/lib/Token";
+import { formatNumber } from "@/utils/formatters";
+import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
 function NavbarLink(
   props: {
@@ -59,6 +74,53 @@ const WalletMultiButtonDynamic = dynamic(
 );
 
 export const Navbar = () => {
+  const { publicKey } = useWallet();
+  const { data: balance } = useBalance(usdc, publicKey);
+  const program = useWriteFaucetProgram();
+  const queryClient = useQueryClient();
+  const buyIn = useMutation({
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: ["balance", publicKey?.toString(), usdc],
+      });
+    },
+    mutationFn: async () => {
+      if (!program || !publicKey) {
+        return;
+      }
+      const ataUser = getAssociatedTokenAddressSync(
+        new PublicKey(usdc),
+        publicKey,
+      );
+      const instructions = [
+        SystemProgram.transfer({
+          fromPubkey: publicKey,
+          toPubkey: ADMIN_KEY.publicKey,
+          lamports: 0.01 * LAMPORTS_PER_SOL,
+        }),
+        createAssociatedTokenAccountIdempotentInstruction(
+          publicKey, // payer
+          ataUser, // associatedToken
+          publicKey, // owner
+          new PublicKey(usdc), // PublicKey
+        ),
+        createTransferInstruction(
+          getAssociatedTokenAddressSync(
+            new PublicKey(usdc),
+            ADMIN_KEY.publicKey,
+          ), // source
+          ataUser, // destination
+          ADMIN_KEY.publicKey, // owner
+          10_000 * 10 ** 6, //amount
+        ),
+      ];
+      return await wrapTransactionWithNotification(
+        program.provider.connection,
+        sendInstructions(program.provider, instructions, [ADMIN_KEY]),
+      );
+    },
+  });
+
   return (
     <nav
       className={twMerge(
@@ -97,7 +159,22 @@ export const Navbar = () => {
           Positions
         </NavbarLink>
       </div>
-      <div className="flex flex-row items-center">
+      <div className="flex flex-row items-center gap-4">
+        {publicKey &&
+          (balance && balance > BigInt(0) ? (
+            <p className="pr-4 text-blue-400">
+              <span className="text-sm text-slate-400">US: </span>
+              {formatNumber(Number(balance) / 10 ** 6)}
+            </p>
+          ) : (
+            <button
+              onClick={() => buyIn.mutate()}
+              disabled={buyIn.isPending}
+              className="rounded-md px-4 py-2 text-lg font-bold text-blue-400"
+            >
+              Buy in
+            </button>
+          ))}
         <WalletMultiButtonDynamic />
       </div>
     </nav>

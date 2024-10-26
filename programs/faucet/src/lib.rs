@@ -1,19 +1,28 @@
 use anchor_lang::prelude::*;
 use instructions::*;
+pub mod error;
 pub mod instructions;
+pub mod state;
 
-declare_id!("BfHV8RBTKSKFCkCYdbwyPEb3DLACKfBzq8Y2FPXipiaC");
+declare_id!("AVyirMo5eEE9KMmpfD8B5otX1MBcPbQdfrBAnxBjTMJQ");
 
 #[program]
 pub mod faucet {
-
     use super::*;
 
-    pub fn create_token(ctx: Context<CreateToken>, seed: Pubkey, decimals: u8) -> Result<()> {
-        create::create_token(ctx, seed, decimals)
+    pub fn mint_create(ctx: Context<MintCreate>, params: MintCreateParams) -> Result<()> {
+        mint_create::mint_create(ctx, params)
     }
 
-    pub fn mint_token(ctx: Context<MintToken>, seed: Pubkey, amount: u64) -> Result<()> {
-        mint::mint_token(ctx, seed, amount)
+    pub fn oracle_add(ctx: Context<OracleAdd>, params: OracleAddParams) -> Result<()> {
+        oracle_add::oracle_add(ctx, params)
+    }
+
+    pub fn swap_buy(ctx: Context<SwapBuy>, params: SwapBuyParams) -> Result<()> {
+        swap_buy::swap_buy(ctx, params)
+    }
+
+    pub fn swap_sell(ctx: Context<SwapSell>, params: SwapSellParams) -> Result<()> {
+        swap_sell::swap_sell(ctx, params)
     }
 }

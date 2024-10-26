@@ -8,8 +8,8 @@ import { twMerge } from "tailwind-merge";
 import {
   findPerpetualsPositionAddressSync,
   getEntryPriceAndFee,
-  openPosition,
   OpenPositionParams,
+  openPositionWithSwap,
 } from "@/actions/perpetuals";
 import { TokenSelector } from "@/components/TokenSelector";
 import { TradeDetails } from "@/components/TradeSidebar/TradeDetails";
@@ -24,8 +24,11 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
-import { useWritePerpetualsProgram } from "@/hooks/useProgram";
-import { getTokenInfo } from "@/lib/Token";
+import {
+  useWriteFaucetProgram,
+  useWritePerpetualsProgram,
+} from "@/hooks/useProgram";
+import { getTokenInfo, usdc } from "@/lib/Token";
 import { BPS_POWER, PRICE_POWER, RATE_POWER, Side } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
@@ -71,7 +74,8 @@ export function TradePosition({
   mint: Address;
   poolAddress: Address;
 }) {
-  const program = useWritePerpetualsProgram();
+  const perpetuals = useWritePerpetualsProgram();
+  const faucet = useWriteFaucetProgram();
   const { publicKey } = useWallet();
   const queryClient = useQueryClient();
   const { data: allPositions } = useAllUserPositions(publicKey);
@@ -80,7 +84,7 @@ export function TradePosition({
   const custodies = usePoolCustodies(poolAddress);
   const custody = Object.values(custodies)[0];
 
-  const payToken = mint;
+  const payToken = usdc;
   const positionToken = mint;
   const [lastChanged, setLastChanged] = useState<Input>(Input.Pay);
   const [payAmount, setPayAmount] = useState(1);
@@ -89,10 +93,13 @@ export function TradePosition({
   const { data: price } = usePrice(positionToken);
   const { data: balance } = useBalance(payToken, publicKey);
   const { decimals } = getTokenInfo(mint);
+  const payDecimals = getTokenInfo(payToken).decimals;
 
+  const collateralAmount = price ? (payAmount / price.currentPrice) * 0.999 : 0;
   const params = {
-    collateral: BigInt(Math.round(payAmount * 10 ** decimals)),
-    mint,
+    collateral: BigInt(Math.round(collateralAmount * 10 ** decimals)),
+    mint: positionToken,
+    payMint: payToken,
     poolAddress,
     price: BigInt(Math.round((price?.currentPrice ?? 0) * PRICE_POWER * 1.05)),
     size: BigInt(Math.round(positionAmount * 10 ** decimals)),
@@ -108,7 +115,7 @@ export function TradePosition({
     : 0;
 
   const payTokenBalance = balance
-    ? Number(balance) / 10 ** decimals
+    ? Number(balance) / 10 ** payDecimals
     : undefined;
 
   const openPositionMutation = useMutation({
@@ -137,18 +144,20 @@ export function TradePosition({
       );
     },
     mutationFn: async () => {
-      if (program === undefined || price === undefined) {
+      if (
+        perpetuals === undefined ||
+        price === undefined ||
+        faucet === undefined
+      ) {
         return;
       }
 
-      console.log("Opening position: ", params);
-
       return wrapTransactionWithNotification(
-        program.provider.connection,
-        openPosition(program, params),
+        perpetuals.provider.connection,
+        openPositionWithSwap({ perpetuals, faucet }, params),
         {
-          pending: "Opening Position",
-          success: "Position Opened",
+          pending: "Opening position",
+          success: "Position opened",
           error: "Failed to open position",
         },
       );
@@ -222,15 +231,16 @@ export function TradePosition({
       /> */}
       <LeverageSlider
         className="mt-6"
-        value={positionAmount / (payAmount - priceSlippage * positionAmount)}
+        value={
+          positionAmount / (collateralAmount - priceSlippage * positionAmount)
+        }
         minLeverage={Number(custody.pricing.minInitialLeverage) / 10000}
         maxLeverage={Number(custody.pricing.maxInitialLeverage) / 10000}
         onChange={(l) => {
-          console.log(" Leverage: ", l);
           if (lastChanged === Input.Pay) {
-            setPositionAmount((l * payAmount) / (1 + priceSlippage * l));
+            setPositionAmount((l * collateralAmount) / (1 + priceSlippage * l));
           } else {
-            setPayAmount(positionAmount / l);
+            setPayAmount((positionAmount / l) * price.currentPrice);
           }
         }}
       />

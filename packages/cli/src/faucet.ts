@@ -1,53 +1,104 @@
-import { BN } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
-import { PublicKey, TransactionInstruction } from "@solana/web3.js";
+import { AnchorProvider, BN, Program, utils } from "@coral-xyz/anchor";
+import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 
-const programId = new PublicKey("dropFMi3YzWh5FJysWwmSfnGhh2LuGdXHm1wzNuu71z");
+import { Faucet, IDL } from "./target/faucet";
 
-export const getFaucetMint = (seed: PublicKey) =>
+export const findFaucetAddressSync = (...seeds) =>
   PublicKey.findProgramAddressSync(
-    [Buffer.from("mint"), seed.toBuffer()],
-    programId,
+    seeds.map((x) => {
+      if (x instanceof PublicKey) {
+        return x.toBuffer();
+      }
+      if (typeof x === "string") {
+        return utils.bytes.utf8.encode(x);
+      }
+      if (typeof x === "number" || x instanceof BN) {
+        return new BN(x.toString()).toArrayLike(Buffer, "le", 8);
+      }
+      return x;
+    }),
+    new PublicKey(IDL.metadata.address),
   )[0];
 
-export function createMintToInstruction({
-  payer,
-  seed,
-  amount,
-}: {
-  payer: PublicKey;
-  seed: PublicKey;
-  amount: BN;
-}) {
-  const mint = getFaucetMint(seed);
-  const ata = getAssociatedTokenAddressSync(mint, payer);
+export const findFaucetMint = (canonical: string, epoch: bigint) =>
+  findFaucetAddressSync(
+    "mint",
+    new PublicKey(canonical),
+    new BN(epoch.toString()),
+  );
 
-  const keys = [
-    { pubkey: payer, isWritable: true, isSigner: true },
-    { pubkey: mint, isWritable: true, isSigner: false },
-    { pubkey: ata, isWritable: true, isSigner: false },
-    {
-      pubkey: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
-      isWritable: false,
-      isSigner: false,
-    },
-    {
-      pubkey: new PublicKey("11111111111111111111111111111111"),
-      isWritable: false,
-      isSigner: false,
-    },
-  ];
+export const createFaucetProgram = (provider: AnchorProvider) => {
+  return new Program<Faucet>(IDL as Faucet, IDL.metadata.address, provider);
+};
 
-  const data = Buffer.concat([
-    new Uint8Array([0xac, 0x89, 0xb7, 0x0e, 0xcf, 0x6e, 0xea, 0x38]),
-    seed.toBuffer(),
-    new BN(amount).toArrayLike(Buffer, "le", 8),
-  ]);
+export const oracleAdd = async (
+  program: Program<Faucet>,
+  params: {
+    canonical: string;
+    feedId: string;
+    maxPriceAgeSec: bigint;
+    shardId?: number;
+  },
+) => {
+  const { feedId, shardId } = params;
+  const canonical = new PublicKey(params.canonical);
+  const maxPriceAgeSec = new BN(params.maxPriceAgeSec.toString());
 
-  return new TransactionInstruction({ keys, programId, data });
-}
+  const priceUpdate = getPriceFeedAccountForProgram(shardId, feedId);
+
+  return await program.methods
+    .oracleAdd({
+      canonical,
+      maxPriceAgeSec,
+      feedId,
+    })
+    .accounts({
+      payer: program.provider.publicKey,
+      oracle: findFaucetAddressSync("oracle", canonical),
+      priceUpdate,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc();
+};
+
+export const mintCreate = async (
+  program: Program<Faucet>,
+  params: {
+    amount: bigint;
+    canonical: string;
+    decimals: number;
+    epoch: bigint;
+  },
+) => {
+  const amount = new BN(params.amount.toString());
+  const epoch = new BN(params.epoch.toString());
+  const canonical = new PublicKey(params.canonical);
+
+  const mint = findFaucetAddressSync("mint", canonical, epoch);
+  const associatedTokenAccount = getAssociatedTokenAddressSync(
+    mint,
+    program.provider.publicKey,
+  );
+
+  return await program.methods
+    .mintCreate({
+      canonical,
+      decimals: params.decimals,
+      amount,
+      epoch,
+    })
+    .accounts({
+      mint,
+      associatedTokenAccount,
+      tokenProgram: TOKEN_PROGRAM_ID,
+      associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+      systemProgram: SystemProgram.programId,
+    })
+    .rpc();
+};

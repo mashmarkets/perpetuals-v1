@@ -1,5 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { address, Address, isAddress } from "@solana/addresses";
+import { address, Address } from "@solana/addresses";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -11,7 +11,6 @@ import { parseUnits } from "@/utils/viem";
 const transformToBigInt = (decimals: number) => (x: string) =>
   parseUnits(x, decimals);
 
-console.log("Is Address: ", isAddress("11111111111111111111111111111111"));
 const transformToAddress = (x: string, ctx: z.RefinementCtx) => {
   try {
     return address(x);
@@ -154,7 +153,6 @@ const AddCustodyForm = ({
 
   const oracleType = watch("oracle.oracleType");
   const list = getTokensKeyedBy("address");
-  console.log(errors);
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

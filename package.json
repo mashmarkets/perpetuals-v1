@@ -6,9 +6,12 @@
   },
   "devDependencies": {
     "@ianvs/prettier-plugin-sort-imports": "4.3.1",
+    "@pythnetwork/pyth-solana-receiver": "0.8.2",
+    "@solana/codecs-numbers": "2.0.0-experimental.5e8ac8d",
     "anchor-bankrun": "0.3.0",
     "prettier": "3.3.3",
     "prettier-plugin-tailwindcss": "0.6.8",
+    "rpc-websockets": "7.11.0",
     "solana-bankrun": "0.3.0",
     "spl-token-bankrun": "0.2.6",
     "tsx": "^4.19.1",

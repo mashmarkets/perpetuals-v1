@@ -8,8 +8,6 @@ import { TradePosition } from "@/components/TradeSidebar/TradePosition";
 import { SidebarTab } from "@/components/ui/SidebarTab";
 import { Side } from "@/lib/types";
 
-import AirdropButton from "../AirdropButton";
-
 export function TradeSidebar({
   className,
   mint,
@@ -50,7 +48,6 @@ export function TradeSidebar({
             <div>Short</div>
           </SidebarTab>
         </div>
-        <AirdropButton mint={mint} />
         {side === Side.Long && (
           <TradePosition
             className="mt-6"

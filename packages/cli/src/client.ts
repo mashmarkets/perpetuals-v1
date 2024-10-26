@@ -106,8 +106,6 @@ export class PerpetualsClient {
   };
 
   getPool = async (name: string) => {
-    console.log(`Pool key: ${this.getPoolKey(name).toBase58()}`);
-
     return this.program.account.pool.fetch(this.getPoolKey(name));
   };
 

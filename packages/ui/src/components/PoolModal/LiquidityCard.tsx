@@ -12,7 +12,6 @@ import {
   findPerpetualsAddressSync,
   removeLiquidity,
 } from "@/actions/perpetuals";
-import AirdropButton from "@/components/AirdropButton";
 import { LpSelector } from "@/components/PoolModal/LpSelector";
 import { TokenSelector } from "@/components/TokenSelector";
 import { SidebarTab } from "@/components/ui/SidebarTab";
@@ -184,15 +183,6 @@ export default function LiquidityCard({
             <div>Remove</div>
           </SidebarTab>
         </div>
-
-        {Object.values(custodies ?? {}).map((custody) => {
-          return (
-            <AirdropButton
-              key={custody.address.toString()}
-              mint={custody.mint}
-            />
-          );
-        })}
 
         <div>
           <div className="flex items-center justify-between">

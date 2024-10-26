@@ -4,7 +4,7 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { twMerge } from "tailwind-merge";
 
-import { closePosition } from "@/actions/perpetuals";
+import { closePositionWithSwap } from "@/actions/perpetuals";
 import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/ui/SolidButton";
 import {
@@ -14,7 +14,11 @@ import {
   usePosition,
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
-import { useWritePerpetualsProgram } from "@/hooks/useProgram";
+import {
+  useWriteFaucetProgram,
+  useWritePerpetualsProgram,
+} from "@/hooks/useProgram";
+import { usdc } from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -37,10 +41,16 @@ export function PositionAdditionalInfo({
   const { data: price } = usePrice(mint);
 
   const { publicKey } = useWallet();
-  const program = useWritePerpetualsProgram();
+  const perpetuals = useWritePerpetualsProgram();
+  const faucet = useWriteFaucetProgram();
+  const receiveMint = usdc;
 
   const closePositionMutation = useMutation({
     onSuccess: () => {
+      // Receive Balance
+      queryClient.invalidateQueries({
+        queryKey: ["balance", publicKey?.toString(), receiveMint],
+      });
       // Collateral Balance
       queryClient.invalidateQueries({
         queryKey: ["balance", publicKey?.toString(), mint],
@@ -58,7 +68,8 @@ export function PositionAdditionalInfo({
     },
     mutationFn: async () => {
       if (
-        program === undefined ||
+        perpetuals === undefined ||
+        faucet === undefined ||
         position === undefined ||
         custody === undefined ||
         price === undefined
@@ -70,12 +81,13 @@ export function PositionAdditionalInfo({
         position,
         custody,
         price: BigInt(Math.round(price.currentPrice * PRICE_POWER * 0.95)), // Slippage
+        receiveMint,
       };
 
       console.log("Closing position with params", params);
       return await wrapTransactionWithNotification(
-        program.provider.connection,
-        closePosition(program, params),
+        perpetuals.provider.connection,
+        closePositionWithSwap({ perpetuals, faucet }, params),
         {
           pending: "Closing Position",
           success: "Position Closed",

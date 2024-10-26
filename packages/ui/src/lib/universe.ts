@@ -9,6 +9,8 @@ export const universe = [
     extensions: {
       coingeckoId: "solana",
       oracle: "7UVimffxr9ow1uXYxsr4LHAcV58mLzhmwaeKvJ1pjLiE",
+      feedId:
+        "ef0d8b6fda2ceba41da15d4095d1da392a0d2f8ed0c6c7bc0f4cfac8c280b56d",
     },
   },
   {
@@ -21,6 +23,8 @@ export const universe = [
     extensions: {
       coingeckoId: "usd-coin",
       oracle: "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",
+      feedId:
+        "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
     },
   },
   {
@@ -33,6 +37,8 @@ export const universe = [
     extensions: {
       coingeckoId: "tether",
       oracle: "HT2PLQBcG5EiCcNSaMHAjSgd9F98ecpATbk4Sk5oYuM",
+      feedId:
+        "2b89b9dc8fdf9f34709a5b106b472f0f39bb6ca9ce04b0fd7f2e971688e2e53b",
     },
   },
   {
@@ -44,6 +50,8 @@ export const universe = [
     extensions: {
       coingeckoId: "jito-staked-sol",
       oracle: "AxaxyeDT8JnWERSaTKvFXvPKkEdxnamKSqpWbsSjYg1g",
+      feedId:
+        "67be9f519b95cf24338801051f9a808eff0a578ccb388db73b7f6fe1de019ffb",
     },
   },
   {
@@ -56,6 +64,8 @@ export const universe = [
     extensions: {
       coingeckoId: "dogwifcoin",
       oracle: "6B23K3tkb51vLZA14jcEQVCA1pfHptzEHFA93V5dYwbT",
+      feedId:
+        "4ca4beeca86f0d164160323817a4e42b10010a724c2217c6ee41b54cd4cc61fc",
     },
   },
   {
@@ -67,6 +77,8 @@ export const universe = [
     extensions: {
       coingeckoId: "bonk",
       oracle: "DBE3N8uNjhKPRHfANdwGvCZghWXyLPdqdSbEW2XFwBiX",
+      feedId:
+        "72b021217ca3fe68922a19aaf990109cb9d84e9ad004b4d2025ad6f529314419",
     },
   },
   {
@@ -78,6 +90,8 @@ export const universe = [
     extensions: {
       coingeckoId: "jupiter-exchange-solana",
       oracle: "7dbob1psH1iZBS7qPsm3Kwbf5DzSXK8Jyg31CTgTnxH5",
+      feedId:
+        "0a0408d619e9380abad35060f9192039ed5042fa6f82301d0e48bb52be830996",
     },
   },
   {
@@ -90,6 +104,8 @@ export const universe = [
     extensions: {
       coingeckoId: "msol",
       oracle: "5CKzb9j4ChgLUt8Gfm5CNGLN6khXKiqMbnGAW4cgXgxK",
+      feedId:
+        "c2289a6a43d2ce91c6f55caec370f4acc38a2ed477f58813334c6d03749ff2a4",
     },
   },
   {
@@ -101,6 +117,8 @@ export const universe = [
     extensions: {
       coingeckoId: "jupiter-perpetuals-liquidity-provider-token",
       oracle: "2TTGSRSezqFzeLUH8JwRUbtN66XLLaymfYsWRTMjfiMw",
+      feedId:
+        "c811abc82b4bad1f9bd711a2773ccaa935b03ecef974236942cec5e0eb845a3a",
     },
   },
   {
@@ -113,6 +131,8 @@ export const universe = [
     extensions: {
       coingeckoId: "wrapped-btc-wormhole",
       oracle: "4cSM2e6rvbGQUFiJbqytoVMi5GgghSMr8LwVrT9VPSPo",
+      feedId:
+        "e62df6c8b4a85fe1a67db44dc12de5db330f7ac66b72dc658afedf0f4a415b43",
     },
   },
   {
@@ -125,6 +145,8 @@ export const universe = [
     extensions: {
       coingeckoId: "socean-staked-sol",
       oracle: "Ceg5oePJv1a6RR541qKeQaTepvERA3i8SvyueX9tT8Sq",
+      feedId:
+        "f51570985c642c49c2d6e50156390fdba80bb6d5f7fa389d2f012ced4f7d208f",
     },
   },
   {
@@ -137,6 +159,8 @@ export const universe = [
     extensions: {
       coingeckoId: "ethereum-wormhole",
       oracle: "42amVS4KgzR9rA28tkVYqVXjq9Qa8dcZQMbH5EYFX6XC",
+      feedId:
+        "ff61491a931112ddf1bd8147cd1b641375f79f5825126d665480874634fd0ace",
     },
   },
   {
@@ -149,6 +173,8 @@ export const universe = [
     extensions: {
       coingeckoId: "cat-in-a-dogs-world",
       oracle: "EF6U755BdHMXim8RBw6XSC6Yk6XaouTKpwcBZ7QkcanB",
+      feedId:
+        "514aed52ca5294177f20187ae883cec4a018619772ddce41efcc36a6448f5d5d",
     },
   },
   {
@@ -161,6 +187,8 @@ export const universe = [
     extensions: {
       coingeckoId: "raydium",
       oracle: "Hhipna3EoWR7u8pDruUg8RxhP5F6XLh6SEHMVDmZhWi8",
+      feedId:
+        "91568baa8beb53db23eb3fb7f22c6e8bd303d103919e19733f2bb642d3e7987a",
     },
   },
   {
@@ -172,6 +200,8 @@ export const universe = [
     extensions: {
       coingeckoId: "kamino",
       oracle: "ArjngUHXrQPr1wH9Bqrji9hdDQirM6ijbzc1Jj1fXUk7",
+      feedId:
+        "b17e5bc5de742a8a378b54c9c75442b7d51e30ada63f28d9bd28d3c0e26511a0",
     },
   },
   {
@@ -184,6 +214,8 @@ export const universe = [
     extensions: {
       coingeckoId: "blazestake-staked-sol",
       oracle: "5cN76Xm2Dtx9MnrQqBDeZZRsWruTTcw37UruznAdSvvE",
+      feedId:
+        "89875379e70f8fbadc17aef315adf3a8d5d160b811435537e03c97e8aac97d9c",
     },
   },
   {
@@ -195,6 +227,8 @@ export const universe = [
     extensions: {
       coingeckoId: "pyth-network",
       oracle: "8vjchtMuJNY4oFQdTi8yCe6mhCaNBFaUbktT482TpLPS",
+      feedId:
+        "0bbf28e9a841a1cc788f6a361b17ca072d0ea3098a1e5df1c3922d06719579ff",
     },
   },
   {
@@ -206,6 +240,8 @@ export const universe = [
     extensions: {
       coingeckoId: "neon",
       oracle: "F2VfCymdNQiCa8Vyg5E7BwEv9UPwfm8cVN6eqQLqXiGo",
+      feedId:
+        "d82183dd487bef3208a227bb25d748930db58862c5121198e723ed0976eb92b7",
     },
   },
   {
@@ -218,6 +254,8 @@ export const universe = [
     extensions: {
       coingeckoId: "helium",
       oracle: "4DdmDswskDxXGpwHrXUfn2CNUm9rt21ac79GHNTN3J33",
+      feedId:
+        "649fdd7ec08e8e2a20f425729854e90293dcbe2376abc47197a14da6ff339756",
     },
   },
   {
@@ -230,6 +268,8 @@ export const universe = [
     extensions: {
       coingeckoId: "wen-4",
       oracle: "CsG7wXoqZKNxx4UnFtvozfwXQ9RgpKe7zSJa4LWh5MT9",
+      feedId:
+        "5169491cd7e2a44c98353b779d5eb612e4ac32e073f5cc534303d86307c2f1bc",
     },
   },
   {
@@ -242,6 +282,8 @@ export const universe = [
     extensions: {
       coingeckoId: "render-token",
       oracle: "HAm5DZhrgrWa12heKSxocQRyJWGCtXegC77hFQ8F5QTH",
+      feedId:
+        "3d4a2bd9535be6ce8059d75eadeba507b043257321aa544717c56fa19b49e35d",
     },
   },
   {
@@ -253,6 +295,8 @@ export const universe = [
     extensions: {
       coingeckoId: "wormhole",
       oracle: "BEMsCSQEGi2kwPA4mKnGjxnreijhMki7L4eeb96ypzF9",
+      feedId:
+        "eff7446475e218517566ea99e72a4abec2e1bd8498b43b7d8331e29dcb059389",
     },
   },
   {
@@ -264,6 +308,8 @@ export const universe = [
     extensions: {
       coingeckoId: "jito-governance-token",
       oracle: "7ajR2zA4MGMMTqRAVjghTKqPPn4kbrj3pYkAVRVwTGzP",
+      feedId:
+        "b43660a5f790c69354b0729a5ef9d50d68f1df92107540210b9cccba1f947cc2",
     },
   },
   {
@@ -275,6 +321,8 @@ export const universe = [
     extensions: {
       coingeckoId: "tensor",
       oracle: "9TSGDwcPQX4JpAvZbu2Wp5b68wSYkQvHCvfeBjYcCyC",
+      feedId:
+        "05ecd4597cd48fe13d6cc3596c62af4f9675aee06e2e0b94c06d8bee2b659e05",
     },
   },
   {
@@ -287,6 +335,8 @@ export const universe = [
     extensions: {
       coingeckoId: "orca",
       oracle: "4CBshVeNBEXz24GZpoj8SrqP5L7VGG3qjGd6tCST1pND",
+      feedId:
+        "37505261e557e251290b8c8899453064e8d760ed5c65a779726f2490980da74c",
     },
   },
   {
@@ -298,6 +348,8 @@ export const universe = [
     extensions: {
       coingeckoId: "liquid-staking-token",
       oracle: "7aT9A5knp62jVvnEW33xaWopaPHa3Y7ggULyYiUsDhu8",
+      feedId:
+        "12fb674ee496045b1d9cf7d5e65379acb026133c2ad69f3ed996fb9fe68e3a37",
     },
   },
   {
@@ -310,6 +362,8 @@ export const universe = [
     extensions: {
       coingeckoId: "helium-mobile",
       oracle: "DQ4C1tzvu28cwo1roN1Wm6TW35sfJEjLh517k3ZeWevx",
+      feedId:
+        "ff4c53361e36a9b837433c87d290c229e1f01aec5ef98d9f3f70953a20a629ce",
     },
   },
   {
@@ -322,6 +376,8 @@ export const universe = [
     extensions: {
       coingeckoId: "parcl",
       oracle: "6a9HN13ZFf57WZd4msn85KWLe5iTayqS8Ee8gstQkxqm",
+      feedId:
+        "5bbd1ce617792b476c55991c27cdfd89794f9f13356babc9c92405f5f0079683",
     },
   },
   {
@@ -334,6 +390,8 @@ export const universe = [
     extensions: {
       coingeckoId: "helium-iot",
       oracle: "8UYEn5Weq7toHwgcmctvcAxaNJo3SJxXEayM57rpoXr9",
+      feedId:
+        "6b701e292e0836d18a5904a08fe94534f9ab5c3d4ff37dc02c74dd0f4901944d",
     },
   },
   {
@@ -346,6 +404,8 @@ export const universe = [
     extensions: {
       coingeckoId: "samoyedcoin",
       oracle: "2eUVzcYccqXzsDU1iBuatUaDCbRKBjegEaPPeChzfocG",
+      feedId:
+        "49601625e1a342c1f90c3fe6a03ae0251991a1d76e480d2741524c29037be28a",
     },
   },
   {
@@ -358,6 +418,8 @@ export const universe = [
     extensions: {
       coingeckoId: "solend",
       oracle: "6vPfd6612huknxXaDapfj6cVmB8NvCwKm3BHKFxzo1EZ",
+      feedId:
+        "f8d030e4ef460b91ad23eabbbb27aec463e3c30ecc8d5c4b71e92f54a36ccdbd",
     },
   },
   {
@@ -370,6 +432,8 @@ export const universe = [
     extensions: {
       coingeckoId: "marinade",
       oracle: "GHKcxocPyzSjy7tWApQjKRkDNuVXd4Kk624zhuaR7xhC",
+      feedId:
+        "3607bf4d7b78666bd3736c7aacaf2fd2bc56caa8667d3224971ebe3c0623292a",
     },
   },
   {
@@ -381,6 +445,8 @@ export const universe = [
     extensions: {
       coingeckoId: "solblaze",
       oracle: "FFv5yoCGhEgWv6mXhwv4KX8A2dYcVAzi88a6Yu8Tf3iB",
+      feedId:
+        "93c3def9b169f49eed14c9d73ed0e942c666cf0e1290657ec82038ebb792c2a8",
     },
   },
   {
@@ -393,6 +459,8 @@ export const universe = [
     extensions: {
       coingeckoId: "bonfida",
       oracle: "2cfmeuVBf7bvBJcjKBQgAwfvpUvdZV7K8NZxUEuccrub",
+      feedId:
+        "c80657b7f6f3eac27218d09d5a4e54e47b25768d9f5e10ac15fe2cf900881400",
     },
   },
   {
@@ -405,6 +473,8 @@ export const universe = [
     extensions: {
       coingeckoId: "goosefx",
       oracle: "2WS7DByXgzmsGD1QfDyvY2pwAmxjsPDrF2DijwpRBxr7",
+      feedId:
+        "6034b1f68b9363dff2cf9d53b1a88fb4d0929c65f34d532db53738853efc00ad",
     },
   },
 ] as const;

@@ -13,10 +13,17 @@ interface Token {
   logoURI: string;
   extensions: {
     coingeckoId: string;
-    mainnet: Address;
+    canonical: Address;
     oracle: Address;
+    feedId: string;
   };
 }
+
+export const EPOCH = BigInt(0);
+// Asset for our credits
+export const usdc = getFaucetMint(
+  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
+);
 
 // Remap mainnet address to testnet faucet address
 const tokenList: Token[] = universe.map(
@@ -25,7 +32,7 @@ const tokenList: Token[] = universe.map(
       ...x,
       extensions: {
         ...x.extensions,
-        mainnet: x.address,
+        canonical: x.address,
       },
       address: (x.address === "So11111111111111111111111111111111111111112"
         ? "So11111111111111111111111111111111111111112"

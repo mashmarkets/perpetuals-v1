@@ -1,12 +1,18 @@
-import { BN } from "@coral-xyz/anchor";
+import { AnchorProvider, BN } from "@coral-xyz/anchor";
+import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
 
 import { PerpetualsClient } from "../packages/cli/src/client.js";
-import { createMintToInstruction } from "../packages/cli/src/faucet.js";
+import {
+  createFaucetProgram,
+  findFaucetMint,
+  mintCreate,
+  oracleAdd,
+} from "../packages/cli/src/faucet.js";
 import {
   BorrowRateParams,
   Fees,
@@ -15,72 +21,60 @@ import {
   PricingParams,
 } from "../packages/cli/src/types.js";
 
-interface PoolConfig {
+const epoch = BigInt(0);
+interface Token {
   address: string;
-  name: string;
   symbol: string;
   decimals: number;
-  logoURI: string;
   extensions: {
     coingeckoId: string;
-    oracle: string;
+    feedId: string;
     seed: BN;
-    mainnet: string;
   };
 }
-const pools = [
+const tokens = [
   {
-    address: "D4FMVb7xQDFWUvReycZEHJyU2RNiwyJTeZUcgiCTMdub",
-    name: "Bonk",
+    address: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
     symbol: "Bonk",
     decimals: 5,
-    logoURI: "https://arweave.net/hQiPZOsRZXGXBJd_82PhVdlM_hACsT_q6wqwf5cSY7I",
     extensions: {
       coingeckoId: "bonk",
-      mainnet: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-      oracle: "DBE3N8uNjhKPRHfANdwGvCZghWXyLPdqdSbEW2XFwBiX",
-      seed: new BN(500_000_000 * 10 ** 5),
+      feedId:
+        "72b021217ca3fe68922a19aaf990109cb9d84e9ad004b4d2025ad6f529314419",
+      seed: BigInt(500_000_000 * 10 ** 5),
     },
   },
   {
-    address: "8xtbXnx6bqWqsJh1mW4UNv9TgeTT6xmtNezyxkgKFiSe",
-    name: "Jito Staked SOL",
+    address: "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
     symbol: "JitoSOL",
     decimals: 9,
-    logoURI: "https://storage.googleapis.com/token-metadata/JitoSOL-256.png",
     extensions: {
       coingeckoId: "jito-staked-sol",
-      mainnet: "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
-      oracle: "AxaxyeDT8JnWERSaTKvFXvPKkEdxnamKSqpWbsSjYg1g",
-      seed: new BN(60 * 10 ** 9),
+      feedId:
+        "67be9f519b95cf24338801051f9a808eff0a578ccb388db73b7f6fe1de019ffb",
+      seed: BigInt(60 * 10 ** 9),
     },
   },
   {
-    address: "GJLgAsg2MvgE4V9S9KgJKyEzENjxzh5vFfLKb7bxPk5L",
-    name: "dogwifhat",
+    address: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
     symbol: "WIF",
     decimals: 6,
-    logoURI:
-      "https://bafkreibk3covs5ltyqxa272uodhculbr6kea6betidfwy3ajsav2vjzyum.ipfs.nftstorage.link",
     extensions: {
       coingeckoId: "dogwifcoin",
-      mainnet: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
-      oracle: "6B23K3tkb51vLZA14jcEQVCA1pfHptzEHFA93V5dYwbT",
-      seed: new BN(4_000 * 10 ** 6),
+      feedId:
+        "4ca4beeca86f0d164160323817a4e42b10010a724c2217c6ee41b54cd4cc61fc",
+      seed: BigInt(4_000 * 10 ** 6),
     },
   },
   {
-    address: "A5ADsUcZB56UJpRXwKU2fskyB7jmEFYBSUXyL6WjbWgG",
-    name: "USD Coin",
+    address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
     symbol: "USDC",
     decimals: 6,
-    logoURI:
-      "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png",
     extensions: {
-      mainnet: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
       coingeckoId: "usd-coin",
-      oracle: "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",
-      seed: new BN(10_000 * 10 ** 6),
+      feedId:
+        "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
+      seed: BigInt(100_000_000 * 10 ** 6),
     },
   },
 ].reduce(
@@ -88,20 +82,21 @@ const pools = [
     acc[curr.symbol] = curr;
     return acc;
   },
-  {} as Record<string, PoolConfig>,
+  {} as Record<string, Token>,
 );
 
-async function createPool(client: PerpetualsClient, config: PoolConfig) {
-  const poolName = config.symbol;
+async function createPool(client: PerpetualsClient, token: Token) {
+  const poolName = token.symbol;
   await client
     .addPool(poolName)
     .then((sig) => console.log(`Pool ${poolName} added: `, sig));
 
+  const oracle = getPriceFeedAccountForProgram(0, token.extensions.feedId);
   const oracleConfig: OracleParams = {
     maxPriceError: new BN(10_000), //u64 Max Price
     maxPriceAgeSec: 600, // 10 minutes. Seems we are using some old pyth oracles that often go stale
     oracleType: { ["pyth"]: {} }, // None, custom, pyth
-    oracleAccount: new PublicKey(config.extensions.oracle),
+    oracleAccount: oracle,
     oracleAuthority: PublicKey.default, // By default, permissionless oracle price update is not allowed. Pubkey allowed to sign permissionless off-chain price updates
   };
 
@@ -145,7 +140,7 @@ async function createPool(client: PerpetualsClient, config: PoolConfig) {
     optimalUtilization: new BN(800_000_000), // 80%
   };
 
-  const mint = new PublicKey(config.address);
+  const mint = findFaucetMint(token.address, epoch);
   await client
     .addCustody(
       poolName,
@@ -157,34 +152,43 @@ async function createPool(client: PerpetualsClient, config: PoolConfig) {
       borrowRate,
     )
     .then((sig) => console.log(`Custody for ${poolName} added: `, sig));
+
   const payer = client.program.provider.publicKey!;
 
   const lpMint = client.getPoolLpTokenKey(poolName);
   await client
-    .addLiquidity(poolName, mint, config.extensions.seed, new BN(0), [
-      createAssociatedTokenAccountIdempotentInstruction(
-        payer,
-        getAssociatedTokenAddressSync(lpMint, payer),
-        payer,
-        lpMint,
-      ),
-      await createMintToInstruction({
-        payer,
-        seed: new PublicKey(config.extensions.mainnet),
-        amount: config.extensions.seed,
-      }),
-    ])
+    .addLiquidity(
+      poolName,
+      mint,
+      new BN(token.extensions.seed.toString()),
+      new BN(0),
+      [
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          getAssociatedTokenAddressSync(lpMint, payer),
+          payer,
+          lpMint,
+        ),
+      ],
+    )
     .then((sig) => console.log(`Liquidity added for ${poolName}: `, sig));
 }
 
 async function main() {
   const KEY = process.env.PRIVATE_KEY;
-  process.env.ANCHOR_WALLET = KEY;
-  const client = new PerpetualsClient("https://api.devnet.solana.com", KEY);
+
+  // Wallet is set via this env variable
+  process.env.ANCHOR_WALLET = process.env.PRIVATE_KEY;
+  const provider = AnchorProvider.local("https://api.devnet.solana.com", {
+    commitment: "confirmed",
+    preflightCommitment: "confirmed",
+  });
+  const faucet = createFaucetProgram(provider);
+  const perpetuals = new PerpetualsClient("https://api.devnet.solana.com", KEY);
 
   // Initialize the protocol
-  await client
-    .init([client.program.provider.publicKey], {
+  await perpetuals
+    .init([perpetuals.program.provider.publicKey], {
       minSignatures: 1,
       allowAddLiquidity: true,
       allowRemoveLiquidity: true,
@@ -196,9 +200,38 @@ async function main() {
     })
     .then((sig) => console.log("Protocol initialized: ", sig));
 
-  await createPool(client, pools["JitoSOL"]);
-  await createPool(client, pools["WIF"]);
-  await createPool(client, pools["Bonk"]);
+  // Mint usdc to me
+  await mintCreate(faucet, {
+    canonical: tokens.USDC.address,
+    epoch,
+    decimals: tokens.USDC.decimals,
+    amount: tokens.USDC.extensions.seed,
+  }).then((sig) =>
+    console.log(`Created mint for ${tokens.USDC.symbol} in faucet: ${sig}`),
+  );
+
+  // Create pools
+  const pools = Object.values(tokens).filter((x) => x.symbol !== "USDC");
+  for (const token of pools) {
+    await oracleAdd(faucet, {
+      canonical: token.address,
+      maxPriceAgeSec: BigInt(600),
+      feedId: token.extensions.feedId,
+    }).then((sig) =>
+      console.log(`Added oracle for ${token.symbol} to faucet: ${sig}`),
+    );
+
+    await mintCreate(faucet, {
+      canonical: token.address,
+      epoch,
+      decimals: token.decimals,
+      amount: token.extensions.seed,
+    }).then((sig) =>
+      console.log(`Created mint for ${token.symbol} in faucet: ${sig}`),
+    );
+
+    await createPool(perpetuals, token);
+  }
 }
 
 main();

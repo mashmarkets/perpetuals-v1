@@ -1,45 +1,19 @@
 import { Address } from "@solana/addresses";
+import { NATIVE_MINT } from "@solana/spl-token";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { createMintToInstruction } from "@/actions/faucet";
-import { sendInstructions } from "@/actions/perpetuals";
-import { usePrice } from "@/hooks/price";
 import { useAnchorProvider } from "@/hooks/useProgram";
 import { getTokenSymbol, tokensByMint } from "@/lib/Token";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
 import { SolidButton } from "./ui/SolidButton";
 
-function roundToOneSignificantFigure(num: number): number {
-  if (num === 0) return 0; // Handle the case for 0 separately
-
-  // Determine the factor by which to multiply to shift the decimal point to the right
-  const exponent = Math.floor(Math.log10(Math.abs(num)));
-
-  // Calculate the rounding factor
-  const factor = Math.pow(10, exponent);
-
-  // Use Math.ceil to round up and then scale back down by the factor
-  return Math.ceil(num / factor) * factor;
-}
-
 export default function AirdropButton({ mint }: { mint: Address }) {
   const queryClient = useQueryClient();
   const provider = useAnchorProvider();
-  const { data: price } = usePrice(mint);
 
-  const {
-    symbol,
-    decimals,
-    extensions: { mainnet },
-  } = tokensByMint[mint.toString()]!;
-
-  const amount = price
-    ? roundToOneSignificantFigure(
-        (10_000 / price.currentPrice) * 10 ** decimals,
-      )
-    : 0;
+  const { symbol } = tokensByMint[mint.toString()]!;
 
   const airdropMutation = useMutation({
     onSuccess: () => {
@@ -55,19 +29,10 @@ export default function AirdropButton({ mint }: { mint: Address }) {
       if (provider === undefined || provider.publicKey === undefined) {
         return;
       }
-      const promise =
-        mint.toString() === "So11111111111111111111111111111111111111112"
-          ? provider.connection.requestAirdrop(
-              provider.publicKey!,
-              5 * LAMPORTS_PER_SOL,
-            )
-          : sendInstructions(provider, [
-              createMintToInstruction({
-                payer: provider.publicKey,
-                seed: mainnet,
-                amount: BigInt(amount),
-              }),
-            ]);
+      const promise = provider.connection.requestAirdrop(
+        provider.publicKey!,
+        5 * LAMPORTS_PER_SOL,
+      );
 
       return wrapTransactionWithNotification(provider.connection, promise, {
         pending: "Requesting Airdrop",
@@ -76,6 +41,10 @@ export default function AirdropButton({ mint }: { mint: Address }) {
       });
     },
   });
+
+  if (mint !== NATIVE_MINT.toString()) {
+    return <></>;
+  }
 
   return (
     <SolidButton
