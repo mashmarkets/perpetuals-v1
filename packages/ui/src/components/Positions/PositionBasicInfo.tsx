@@ -1,12 +1,12 @@
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
-// import EditIcon from "@carbon/icons-react/lib/Edit";
+import EditIcon from "@carbon/icons-react/lib/Edit";
 import GrowthIcon from "@carbon/icons-react/lib/Growth";
 import NewTab from "@carbon/icons-react/lib/NewTab";
 import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-// import { CollateralModal } from "@/components/CollateralModal";
+import { CollateralModal } from "@/components/CollateralModal";
 import { PositionColumn } from "@/components/Positions/PositionColumn";
 import {
   Custody,
@@ -134,7 +134,7 @@ export default function PositionBasicInfo({
               ? formatUsd(Number(position.collateralUsd) / USD_POWER)
               : "-"}
           </div>
-          {/* <CollateralModal positionAddress={positionAddress}>
+          <CollateralModal positionAddress={positionAddress}>
             <button className="group ml-2">
               <EditIcon
                 className={twMerge(
@@ -146,7 +146,7 @@ export default function PositionBasicInfo({
                 )}
               />
             </button>
-          </CollateralModal> */}
+          </CollateralModal>
         </div>
       </PositionColumn>
       <PositionColumn num={6}>

@@ -1,3 +1,5 @@
+export const MAX_U64 = BigInt("18446744073709551615");
+
 export const BPS_DECIMALS = 4;
 export const BPS_POWER = 10 ** BPS_DECIMALS;
 

@@ -18,7 +18,7 @@ import { twMerge } from "tailwind-merge";
 import { ADMIN_KEY, sendInstructions } from "@/actions/perpetuals";
 import { useBalance } from "@/hooks/token";
 import { useWriteFaucetProgram } from "@/hooks/useProgram";
-import { usdc } from "@/lib/Token";
+import { getTokenIcon, USDC_MINT } from "@/lib/Token";
 import { formatNumber } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
@@ -75,13 +75,13 @@ const WalletMultiButtonDynamic = dynamic(
 
 export const Navbar = () => {
   const { publicKey } = useWallet();
-  const { data: balance } = useBalance(usdc, publicKey);
+  const { data: balance } = useBalance(USDC_MINT, publicKey);
   const program = useWriteFaucetProgram();
   const queryClient = useQueryClient();
   const buyIn = useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), usdc],
+        queryKey: ["balance", publicKey?.toString(), USDC_MINT],
       });
     },
     mutationFn: async () => {
@@ -89,7 +89,7 @@ export const Navbar = () => {
         return;
       }
       const ataUser = getAssociatedTokenAddressSync(
-        new PublicKey(usdc),
+        new PublicKey(USDC_MINT),
         publicKey,
       );
       const instructions = [
@@ -102,11 +102,11 @@ export const Navbar = () => {
           publicKey, // payer
           ataUser, // associatedToken
           publicKey, // owner
-          new PublicKey(usdc), // PublicKey
+          new PublicKey(USDC_MINT), // PublicKey
         ),
         createTransferInstruction(
           getAssociatedTokenAddressSync(
-            new PublicKey(usdc),
+            new PublicKey(USDC_MINT),
             ADMIN_KEY.publicKey,
           ), // source
           ataUser, // destination
@@ -162,8 +162,8 @@ export const Navbar = () => {
       <div className="flex flex-row items-center gap-4">
         {publicKey &&
           (balance && balance > BigInt(0) ? (
-            <p className="pr-4 text-blue-400">
-              <span className="text-sm text-slate-400">US: </span>
+            <p className="gap flex items-center gap-2 pr-2 text-blue-400">
+              {getTokenIcon(USDC_MINT)}
               {formatNumber(Number(balance) / 10 ** 6)}
             </p>
           ) : (

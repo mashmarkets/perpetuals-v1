@@ -27,6 +27,7 @@ import {
 import { AddCustodyParams } from "@/components/FormListAsset";
 import { Custody, Pool, Position } from "@/hooks/perpetuals";
 import { EPOCH, getTokenInfo } from "@/lib/Token";
+import { MAX_U64 } from "@/lib/types";
 import { Faucet } from "@/target/faucet";
 import { IDL, Perpetuals } from "@/target/perpetuals";
 
@@ -156,51 +157,104 @@ export const sendInstructions = async (
 };
 
 export async function addCollateral(
-  program: Program<Perpetuals>,
-  {
-    position,
-    custody,
-    collateral,
-  }: { position: Position; custody: Custody; collateral: bigint },
+  programs: {
+    perpetuals: Program<Perpetuals>;
+    faucet: Program<Faucet>;
+  },
+  params: {
+    position: Position;
+    custody: Custody;
+    collateral: bigint;
+    payMint: Address;
+  },
 ) {
+  console.log("Adding collateral with params: ", params);
+  const { perpetuals: program, faucet } = programs;
+  const { position, custody, collateral } = params;
   if (position.custody.toString() != custody.address.toString()) {
     throw new Error("Position and Custody do not match");
   }
+  const publicKey = program.provider.publicKey!;
+  const payMint = new PublicKey(params.payMint);
+  const mint = new PublicKey(params.custody.mint);
 
-  const instruction = await program.methods
-    .addCollateral({
-      collateral: new BN(collateral.toString()),
-    })
-    .accounts({
-      owner: program.provider.publicKey,
-      fundingAccount: getAssociatedTokenAddressSync(
-        new PublicKey(custody.mint),
-        program.provider.publicKey!,
-      ),
-      transferAuthority,
-      perpetuals,
-      pool: position.pool,
-      position: position.address,
-      custody: custody.address,
-      custodyOracleAccount: custody.oracle.oracleAccount,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      custodyTokenAccount: findPerpetualsAddressSync(
-        "custody_token_account",
-        position.pool,
-        custody.mint,
-      ),
-    })
-    .instruction();
+  // Precompute for swap
+  const canonicalIn = new PublicKey(
+    getTokenInfo(params.payMint).extensions.canonical,
+  );
+  const canonicalOut = new PublicKey(
+    getTokenInfo(params.custody.mint).extensions.canonical,
+  );
+  const tokenAccountIn = getAssociatedTokenAddressSync(payMint, publicKey);
+  const tokenAccountOut = getAssociatedTokenAddressSync(mint, publicKey);
+  const priceUpdate = getTokenInfo(params.custody.mint).extensions.oracle;
 
-  const instructions = [instruction];
+  const instructions = [
+    // Create account to hold position mint tokens
+    createAssociatedTokenAccountIdempotentInstruction(
+      publicKey,
+      tokenAccountOut,
+      publicKey,
+      mint,
+    ),
+    // Swap pay token to position toke
+    await faucet.methods
+      .swapBuy({
+        amountOut: new BN(params.collateral.toString()),
+        canonicalIn: canonicalIn,
+        canonicalOut: canonicalOut,
+        epoch: new BN(EPOCH.toString()),
+      })
+      .accounts({
+        payer: publicKey,
+        oracle: findFaucetAddressSync("oracle", canonicalOut),
+        priceUpdate,
+        mintIn: payMint,
+        tokenAccountIn,
+        mintOut: mint,
+        tokenAccountOut,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
 
-  if (NATIVE_MINT.toString() === custody.mint) {
-    await addWrappedSolInstructions(
-      instructions,
-      program.provider.publicKey!,
-      BigInt(collateral.toString()),
-    );
-  }
+    // Add the actual collateral
+    await program.methods
+      .addCollateral({
+        collateral: new BN(collateral.toString()),
+      })
+      .accounts({
+        owner: program.provider.publicKey,
+        fundingAccount: getAssociatedTokenAddressSync(
+          new PublicKey(custody.mint),
+          program.provider.publicKey!,
+        ),
+        transferAuthority,
+        perpetuals,
+        pool: position.pool,
+        position: position.address,
+        custody: custody.address,
+        custodyOracleAccount: custody.oracle.oracleAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        custodyTokenAccount: findPerpetualsAddressSync(
+          "custody_token_account",
+          position.pool,
+          custody.mint,
+        ),
+      })
+      .instruction(),
+
+    // Close the token_account
+    createCloseAccountInstruction(tokenAccountOut, publicKey, publicKey),
+  ];
+
+  // if (NATIVE_MINT.toString() === custody.mint) {
+  //   await addWrappedSolInstructions(
+  //     instructions,
+  //     program.provider.publicKey!,
+  //     BigInt(collateral.toString()),
+  //   );
+  // }
 
   return sendInstructions(program.provider, instructions);
 }
@@ -366,7 +420,6 @@ export async function closePositionWithSwap(
   const tokenAccountOut = getAssociatedTokenAddressSync(mintOut, publicKey);
   const priceUpdate = getTokenInfo(custody.mint).extensions.oracle;
 
-  const MAX_U64 = "18446744073709551615";
   const instructions = [
     // Create the ata
     createAssociatedTokenAccountIdempotentInstruction(
@@ -403,7 +456,7 @@ export async function closePositionWithSwap(
     //Swap with max
     await faucet.methods
       .swapSell({
-        amountIn: new BN(MAX_U64),
+        amountIn: new BN(MAX_U64.toString()),
         canonicalIn,
         canonicalOut,
         epoch: new BN(EPOCH.toString()),
@@ -975,47 +1028,98 @@ export const getPnl = async (
 };
 
 export async function removeCollateral(
-  program: Program<Perpetuals>,
-  {
-    position,
-    custody,
-    collateralUsd,
-  }: { position: Position; custody: Custody; collateralUsd: bigint },
+  programs: {
+    perpetuals: Program<Perpetuals>;
+    faucet: Program<Faucet>;
+  },
+  params: {
+    position: Position;
+    custody: Custody;
+    collateralUsd: bigint;
+    receiveMint: Address;
+  },
 ) {
+  const { perpetuals: program, faucet } = programs;
+  const { position, custody, collateralUsd, receiveMint } = params;
+
   if (position.custody.toString() != custody.address.toString()) {
     throw new Error("Position and Custody do not match");
   }
 
-  const instruction = await program.methods
-    .removeCollateral({
-      collateralUsd: new BN(collateralUsd.toString()),
-    })
-    .accounts({
-      owner: program.provider.publicKey,
-      receivingAccount: getAssociatedTokenAddressSync(
-        new PublicKey(custody.mint),
-        program.provider.publicKey!,
-      ),
-      transferAuthority,
-      perpetuals,
-      pool: position.pool,
-      position: position.address,
-      custody: custody.address,
-      custodyOracleAccount: custody.oracle.oracleAccount,
-      tokenProgram: TOKEN_PROGRAM_ID,
-      custodyTokenAccount: findPerpetualsAddressSync(
-        "custody_token_account",
-        position.pool,
-        custody.mint,
-      ),
-    })
-    .instruction();
+  const publicKey = program.provider.publicKey!;
+  // Precompute for swap
+  const canonicalIn = new PublicKey(
+    getTokenInfo(custody.mint).extensions.canonical,
+  );
+  const canonicalOut = new PublicKey(
+    getTokenInfo(receiveMint).extensions.canonical,
+  );
 
-  const instructions = [instruction];
+  const mintIn = new PublicKey(custody.mint);
+  const mintOut = new PublicKey(receiveMint);
+  const tokenAccountIn = getAssociatedTokenAddressSync(mintIn, publicKey);
+  const tokenAccountOut = getAssociatedTokenAddressSync(mintOut, publicKey);
+  const priceUpdate = getTokenInfo(custody.mint).extensions.oracle;
 
-  if (NATIVE_MINT.toString() === custody.mint) {
-    await addWrappedSolInstructions(instructions, program.provider.publicKey!);
-  }
+  const instructions = [
+    // Create the ata
+    createAssociatedTokenAccountIdempotentInstruction(
+      publicKey,
+      tokenAccountIn,
+      publicKey,
+      new PublicKey(custody.mint),
+    ),
+    await program.methods
+      .removeCollateral({
+        collateralUsd: new BN(collateralUsd.toString()),
+      })
+      .accounts({
+        owner: program.provider.publicKey,
+        receivingAccount: getAssociatedTokenAddressSync(
+          new PublicKey(custody.mint),
+          program.provider.publicKey!,
+        ),
+        transferAuthority,
+        perpetuals,
+        pool: position.pool,
+        position: position.address,
+        custody: custody.address,
+        custodyOracleAccount: custody.oracle.oracleAccount,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        custodyTokenAccount: findPerpetualsAddressSync(
+          "custody_token_account",
+          position.pool,
+          custody.mint,
+        ),
+      })
+      .instruction(),
+    //Swap with max
+    await faucet.methods
+      .swapSell({
+        amountIn: new BN(MAX_U64.toString()),
+        canonicalIn,
+        canonicalOut,
+        epoch: new BN(EPOCH.toString()),
+      })
+      .accounts({
+        payer: publicKey,
+        oracle: findFaucetAddressSync("oracle", canonicalIn),
+        priceUpdate,
+        mintIn,
+        tokenAccountIn,
+        mintOut,
+        tokenAccountOut,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
+    // Close
+    createCloseAccountInstruction(tokenAccountIn, publicKey, publicKey),
+  ];
+
+  // if (NATIVE_MINT.toString() === custody.mint) {
+  //   await addWrappedSolInstructions(instructions, program.provider.publicKey!);
+  // }
 
   return sendInstructions(program.provider, instructions);
 }

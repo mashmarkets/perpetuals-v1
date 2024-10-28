@@ -179,11 +179,11 @@ export const universe = [
   },
   {
     address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    name: "USD Coin",
-    symbol: "USDC",
+    name: "USD Simulator",
+    symbol: "USO",
     decimals: 6,
     logoURI:
-      "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v/logo.png",
+      "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRTTUofphxYnADEdZOJpw2SCkoEIRdc3T8MSQ&s",
     extensions: {
       coingeckoId: "usd-coin",
       oracle: "Dpw1EAVrSB1ibxiDQyTAW6Zip3J4Btk2x4SgApQCeFbX",

@@ -21,7 +21,11 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
 import { useBalance } from "@/hooks/token";
-import { useWritePerpetualsProgram } from "@/hooks/useProgram";
+import {
+  useWriteFaucetProgram,
+  useWritePerpetualsProgram,
+} from "@/hooks/useProgram";
+import { USDC_MINT } from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -41,7 +45,8 @@ export function CollateralModal({
   const [tab, setTab] = useState(Tab.Add);
 
   const { publicKey } = useWallet();
-  const program = useWritePerpetualsProgram();
+  const perpetuals = useWritePerpetualsProgram();
+  const faucet = useWriteFaucetProgram();
   const queryClient = useQueryClient();
 
   const { data: position } = usePosition(positionAddress);
@@ -69,14 +74,19 @@ export function CollateralModal({
       : BigInt(0),
   });
 
-  const payToken = custody ? custody.mint : undefined;
+  // const payToken = custody ? custody.mint : undefined;
+  const payToken = USDC_MINT;
 
   const payTokenBalance = Number(collateralBalance) / CUSTODY_POWER;
+  const collateralAmount = price
+    ? (depositAmount * 0.995) / price.currentPrice
+    : 0;
+
   const changeCollateralUsd =
     tab === Tab.Add
       ? BigInt(
           Math.round(
-            (price?.currentPrice ?? 0) * depositAmount * CUSTODY_POWER,
+            (price?.currentPrice ?? 0) * collateralAmount * CUSTODY_POWER,
           ),
         )
       : BigInt(Math.round(-1 * withdrawAmount) * USD_POWER);
@@ -108,7 +118,8 @@ export function CollateralModal({
     },
     mutationFn: async () => {
       if (
-        program === undefined ||
+        perpetuals === undefined ||
+        faucet === undefined ||
         position === undefined ||
         custody === undefined
       ) {
@@ -116,19 +127,30 @@ export function CollateralModal({
       }
       const promise =
         tab === Tab.Add
-          ? addCollateral(program, {
-              position,
-              custody,
-              collateral: BigInt(Math.round(depositAmount * CUSTODY_POWER)),
-            })
-          : removeCollateral(program, {
-              position,
-              custody,
-              collateralUsd: BigInt(Math.round(withdrawAmount * USD_POWER)),
-            });
+          ? addCollateral(
+              { perpetuals, faucet },
+              {
+                position,
+                custody,
+                collateral: BigInt(
+                  Math.round(collateralAmount * CUSTODY_POWER),
+                ),
+                payMint: payToken,
+              },
+            )
+          : removeCollateral(
+              { perpetuals, faucet },
+              {
+                position,
+                custody,
+                collateralUsd: BigInt(Math.round(withdrawAmount * USD_POWER)),
+                receiveMint: USDC_MINT,
+              },
+            );
+      //receive
 
       return wrapTransactionWithNotification(
-        program.provider.connection,
+        perpetuals.provider.connection,
         promise,
         {
           pending:

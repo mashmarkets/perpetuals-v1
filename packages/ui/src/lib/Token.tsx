@@ -21,7 +21,7 @@ interface Token {
 
 export const EPOCH = BigInt(0);
 // Asset for our credits
-export const usdc = getFaucetMint(
+export const USDC_MINT = getFaucetMint(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
 );
 

@@ -4,12 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useAllPools } from "@/hooks/perpetuals";
-import {
-  getTokenInfo,
-  getTokensKeyedBy,
-  getTokenSymbol,
-  TRADEABLE_MINTS,
-} from "@/lib/Token";
+import { getTokenInfo, getTokenSymbol, TRADEABLE_MINTS } from "@/lib/Token";
 import { BPS_DECIMALS, RATE_DECIMALS, USD_DECIMALS } from "@/lib/types";
 import { parseUnits } from "@/utils/viem";
 

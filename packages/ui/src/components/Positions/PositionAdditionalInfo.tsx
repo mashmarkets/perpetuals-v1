@@ -18,7 +18,7 @@ import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
 } from "@/hooks/useProgram";
-import { usdc } from "@/lib/Token";
+import { USDC_MINT } from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -43,7 +43,7 @@ export function PositionAdditionalInfo({
   const { publicKey } = useWallet();
   const perpetuals = useWritePerpetualsProgram();
   const faucet = useWriteFaucetProgram();
-  const receiveMint = usdc;
+  const receiveMint = USDC_MINT;
 
   const closePositionMutation = useMutation({
     onSuccess: () => {

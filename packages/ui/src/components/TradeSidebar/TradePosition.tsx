@@ -28,7 +28,7 @@ import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
 } from "@/hooks/useProgram";
-import { getTokenInfo, usdc } from "@/lib/Token";
+import { getTokenInfo, USDC_MINT } from "@/lib/Token";
 import { BPS_POWER, PRICE_POWER, RATE_POWER, Side } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
@@ -84,7 +84,7 @@ export function TradePosition({
   const custodies = usePoolCustodies(poolAddress);
   const custody = Object.values(custodies)[0];
 
-  const payToken = usdc;
+  const payToken = USDC_MINT;
   const positionToken = mint;
   const [lastChanged, setLastChanged] = useState<Input>(Input.Pay);
   const [payAmount, setPayAmount] = useState(1);
@@ -95,7 +95,7 @@ export function TradePosition({
   const { decimals } = getTokenInfo(mint);
   const payDecimals = getTokenInfo(payToken).decimals;
 
-  const collateralAmount = price ? (payAmount / price.currentPrice) * 0.999 : 0;
+  const collateralAmount = price ? (payAmount / price.currentPrice) * 0.995 : 0;
   const params = {
     collateral: BigInt(Math.round(collateralAmount * 10 ** decimals)),
     mint: positionToken,
