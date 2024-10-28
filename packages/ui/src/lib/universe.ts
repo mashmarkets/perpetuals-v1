@@ -1,17 +1,17 @@
 export const universe = [
-  {
-    address: "27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4",
-    name: "Jupiter Perps",
-    symbol: "JLP",
-    decimals: 6,
-    logoURI: "https://static.jup.ag/jlp/icon.png",
-    extensions: {
-      coingeckoId: "jupiter-perpetuals-liquidity-provider-token",
-      oracle: "2TTGSRSezqFzeLUH8JwRUbtN66XLLaymfYsWRTMjfiMw",
-      feedId:
-        "c811abc82b4bad1f9bd711a2773ccaa935b03ecef974236942cec5e0eb845a3a",
-    },
-  },
+  // { // Feed does not exist on devnet
+  //   address: "27G8MtK7VtTcCHkpASjSDdkWWYfoqT6ggEuKidVJidD4",
+  //   name: "Jupiter Perps",
+  //   symbol: "JLP",
+  //   decimals: 6,
+  //   logoURI: "https://static.jup.ag/jlp/icon.png",
+  //   extensions: {
+  //     coingeckoId: "jupiter-perpetuals-liquidity-provider-token",
+  //     oracle: "2TTGSRSezqFzeLUH8JwRUbtN66XLLaymfYsWRTMjfiMw",
+  //     feedId:
+  //       "c811abc82b4bad1f9bd711a2773ccaa935b03ecef974236942cec5e0eb845a3a",
+  //   },
+  // },
   {
     address: "3NZ9JMVBmGAqocybic2c7LQCJScmgsAZ6vQqTDzcqmJh",
     name: "Wrapped BTC (Portal)",
@@ -109,19 +109,19 @@ export const universe = [
         "eff7446475e218517566ea99e72a4abec2e1bd8498b43b7d8331e29dcb059389",
     },
   },
-  {
-    address: "BLZEEuZUBVqFhj8adcCFPJvPVCiCyVmh3hkJMrU8KuJA",
-    name: "Blaze",
-    symbol: "BLZE",
-    decimals: 9,
-    logoURI: "https://solblaze.org/assets/blze.png?v=2",
-    extensions: {
-      coingeckoId: "solblaze",
-      oracle: "FFv5yoCGhEgWv6mXhwv4KX8A2dYcVAzi88a6Yu8Tf3iB",
-      feedId:
-        "93c3def9b169f49eed14c9d73ed0e942c666cf0e1290657ec82038ebb792c2a8",
-    },
-  },
+  // { Devnet feed no longer being updated
+  //   address: "BLZEEuZUBVqFhj8adcCFPJvPVCiCyVmh3hkJMrU8KuJA",
+  //   name: "Blaze",
+  //   symbol: "BLZE",
+  //   decimals: 9,
+  //   logoURI: "https://solblaze.org/assets/blze.png?v=2",
+  //   extensions: {
+  //     coingeckoId: "solblaze",
+  //     oracle: "FFv5yoCGhEgWv6mXhwv4KX8A2dYcVAzi88a6Yu8Tf3iB",
+  //     feedId:
+  //       "93c3def9b169f49eed14c9d73ed0e942c666cf0e1290657ec82038ebb792c2a8",
+  //   },
+  // },
   {
     address: "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1",
     name: "BlazeStake Staked SOL (bSOL)",
@@ -463,18 +463,18 @@ export const universe = [
         "05ecd4597cd48fe13d6cc3596c62af4f9675aee06e2e0b94c06d8bee2b659e05",
     },
   },
-  {
-    address: "WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk",
-    name: "Wen",
-    symbol: "WEN",
-    decimals: 5,
-    logoURI:
-      "https://shdw-drive.genesysgo.net/GwJapVHVvfM4Mw4sWszkzywncUWuxxPd6s9VuFfXRgie/wen_logo.png",
-    extensions: {
-      coingeckoId: "wen-4",
-      oracle: "CsG7wXoqZKNxx4UnFtvozfwXQ9RgpKe7zSJa4LWh5MT9",
-      feedId:
-        "5169491cd7e2a44c98353b779d5eb612e4ac32e073f5cc534303d86307c2f1bc",
-    },
-  },
+  // {
+  //   address: "WENWENvqqNya429ubCdR81ZmD69brwQaaBYY6p3LCpk",
+  //   name: "Wen",
+  //   symbol: "WEN",
+  //   decimals: 5,
+  //   logoURI:
+  //     "https://shdw-drive.genesysgo.net/GwJapVHVvfM4Mw4sWszkzywncUWuxxPd6s9VuFfXRgie/wen_logo.png",
+  //   extensions: {
+  //     coingeckoId: "wen-4",
+  //     oracle: "CsG7wXoqZKNxx4UnFtvozfwXQ9RgpKe7zSJa4LWh5MT9",
+  //     feedId:
+  //       "5169491cd7e2a44c98353b779d5eb612e4ac32e073f5cc534303d86307c2f1bc",
+  //   },
+  // },
 ] as const;

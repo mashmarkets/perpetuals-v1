@@ -4,7 +4,8 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { Connection, PublicKey } from "@solana/web3.js";
+import { PublicKey } from "@solana/web3.js";
+import axios from "axios";
 
 import { PerpetualsClient } from "../packages/cli/src/client.js";
 import {
@@ -20,6 +21,7 @@ import {
   Permissions,
   PricingParams,
 } from "../packages/cli/src/types.js";
+import { universe } from "../packages/ui/src/lib/universe";
 
 const epoch = BigInt(0);
 interface Token {
@@ -29,55 +31,9 @@ interface Token {
   extensions: {
     coingeckoId: string;
     feedId: string;
-    seed: BN;
   };
 }
-const tokens = [
-  {
-    address: "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
-    symbol: "Bonk",
-    decimals: 5,
-    extensions: {
-      coingeckoId: "bonk",
-      feedId:
-        "72b021217ca3fe68922a19aaf990109cb9d84e9ad004b4d2025ad6f529314419",
-      seed: BigInt(500_000_000 * 10 ** 5),
-    },
-  },
-  {
-    address: "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
-    symbol: "JitoSOL",
-    decimals: 9,
-    extensions: {
-      coingeckoId: "jito-staked-sol",
-      feedId:
-        "67be9f519b95cf24338801051f9a808eff0a578ccb388db73b7f6fe1de019ffb",
-      seed: BigInt(60 * 10 ** 9),
-    },
-  },
-  {
-    address: "EKpQGSJtjMFqKZ9KQanSqYXRcF8fBopzLHYxdM65zcjm",
-    symbol: "WIF",
-    decimals: 6,
-    extensions: {
-      coingeckoId: "dogwifcoin",
-      feedId:
-        "4ca4beeca86f0d164160323817a4e42b10010a724c2217c6ee41b54cd4cc61fc",
-      seed: BigInt(4_000 * 10 ** 6),
-    },
-  },
-  {
-    address: "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-    symbol: "USDC",
-    decimals: 6,
-    extensions: {
-      coingeckoId: "usd-coin",
-      feedId:
-        "eaa020c61cc479712813461ce153894a96a6c00b21ed0cfc2798d1f9a9e9c94a",
-      seed: BigInt(100_000_000 * 10 ** 6),
-    },
-  },
-].reduce(
+const tokens = universe.reduce(
   (acc, curr) => {
     acc[curr.symbol] = curr;
     return acc;
@@ -85,7 +41,41 @@ const tokens = [
   {} as Record<string, Token>,
 );
 
-async function createPool(client: PerpetualsClient, token: Token) {
+function roundToOneSignificantFigure(num: number): number {
+  if (num === 0) return 0; // Handle the case for 0 separately
+
+  // Determine the factor by which to multiply to shift the decimal point to the right
+  const exponent = Math.floor(Math.log10(Math.abs(num)));
+
+  // Calculate the rounding factor
+  const factor = Math.pow(10, exponent);
+
+  // Use Math.ceil to round up and then scale back down by the factor
+  return Math.ceil(num / factor) * factor;
+}
+const getPrices = async () => {
+  const ids = universe.map((t) => t.extensions.coingeckoId).join(",");
+  const { data } = await axios.get<
+    Record<string, { usd: number; usd_24_vol: number; usd_24h_change: number }>
+  >(
+    `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=USD&include_24hr_vol=true&include_24hr_change=true`,
+  );
+
+  return universe.reduce(
+    (acc, t) => {
+      const d = data[t.extensions.coingeckoId!];
+      acc[t.address] = d?.usd;
+      return acc;
+    },
+    {} as Record<string, number>,
+  );
+};
+
+async function createPool(
+  client: PerpetualsClient,
+  token: Token,
+  amount: BigInt,
+) {
   const poolName = token.symbol;
   await client
     .addPool(poolName)
@@ -157,20 +147,14 @@ async function createPool(client: PerpetualsClient, token: Token) {
 
   const lpMint = client.getPoolLpTokenKey(poolName);
   await client
-    .addLiquidity(
-      poolName,
-      mint,
-      new BN(token.extensions.seed.toString()),
-      new BN(0),
-      [
-        createAssociatedTokenAccountIdempotentInstruction(
-          payer,
-          getAssociatedTokenAddressSync(lpMint, payer),
-          payer,
-          lpMint,
-        ),
-      ],
-    )
+    .addLiquidity(poolName, mint, new BN(amount.toString()), new BN(0), [
+      createAssociatedTokenAccountIdempotentInstruction(
+        payer,
+        getAssociatedTokenAddressSync(lpMint, payer),
+        payer,
+        lpMint,
+      ),
+    ])
     .then((sig) => console.log(`Liquidity added for ${poolName}: `, sig));
 }
 
@@ -200,19 +184,37 @@ async function main() {
     })
     .then((sig) => console.log("Protocol initialized: ", sig));
 
+  const USDC = Object.values(tokens).find((x) => x.symbol === "USDC")!;
   // Mint usdc to me
   await mintCreate(faucet, {
-    canonical: tokens.USDC.address,
+    canonical: USDC.address,
     epoch,
-    decimals: tokens.USDC.decimals,
-    amount: tokens.USDC.extensions.seed,
+    decimals: USDC.decimals,
+    amount: BigInt(1_000_000_000 * 10 ** 6),
   }).then((sig) =>
     console.log(`Created mint for ${tokens.USDC.symbol} in faucet: ${sig}`),
   );
 
+  const prices = await getPrices();
   // Create pools
-  const pools = Object.values(tokens).filter((x) => x.symbol !== "USDC");
+  const pools = Object.values(tokens)
+    .filter((x) => !["USDC", "USDT"].includes(x.symbol))
+    .sort((a, b) => a.address.localeCompare(b.address));
+
   for (const token of pools) {
+    console.log(`\n [${token.symbol}] Setting up trading`);
+    const amount = BigInt(
+      roundToOneSignificantFigure(
+        (5_000_000 * 10 ** token.decimals) / prices[token.address],
+      ),
+    );
+
+    // console.log(`[${token.symbol}] Price ${prices[token.address]}`);
+    if (amount > BigInt("18446744073709551615")) {
+      console.log(`[${token.symbol}] Trying to create more than supply`);
+      continue;
+    }
+
     await oracleAdd(faucet, {
       canonical: token.address,
       maxPriceAgeSec: BigInt(600),
@@ -225,12 +227,12 @@ async function main() {
       canonical: token.address,
       epoch,
       decimals: token.decimals,
-      amount: token.extensions.seed,
+      amount,
     }).then((sig) =>
       console.log(`Created mint for ${token.symbol} in faucet: ${sig}`),
     );
 
-    await createPool(perpetuals, token);
+    await createPool(perpetuals, token, amount);
   }
 }
 

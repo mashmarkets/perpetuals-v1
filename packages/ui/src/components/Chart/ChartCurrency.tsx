@@ -5,12 +5,7 @@ import { cloneElement, useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 import { findPerpetualsAddressSync } from "@/actions/perpetuals";
-import {
-  getTokenIcon,
-  getTokenLabel,
-  getTokenSymbol,
-  TOKEN_LIST,
-} from "@/lib/Token";
+import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
 
 import { TokenSelectorList } from "../TokenSelectorList";
 
@@ -68,7 +63,6 @@ export function ChartCurrency({
       </button>
       {selectorOpen && (
         <TokenSelectorList
-          tokenList={TOKEN_LIST.filter((x) => !["USDC", "USDT"].includes(x))}
           onClose={() => setSelectorOpen(false)}
           onSelectToken={(token) => {
             router.push(

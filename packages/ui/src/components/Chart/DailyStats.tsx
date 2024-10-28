@@ -2,7 +2,7 @@ import { Address } from "@solana/addresses";
 import { twMerge } from "tailwind-merge";
 
 import { usePrice } from "@/hooks/price";
-import { formatNumberCommas } from "@/utils/formatters";
+import { formatPrice } from "@/utils/formatters";
 
 export function DailyStats({
   className,
@@ -22,7 +22,7 @@ export function DailyStats({
       <div>
         <div className="text-xs text-zinc-500">Current Price</div>
         <div className="text-sm text-white">
-          ${formatNumberCommas(stats.currentPrice)}
+          ${formatPrice(stats.currentPrice)}
         </div>
       </div>
       <div>
@@ -35,7 +35,12 @@ export function DailyStats({
             stats.change24hr > 0 && "text-emerald-400",
           )}
         >
-          ${formatNumberCommas(stats.change24hr)}
+          {(stats.change24hr / 100).toLocaleString(undefined, {
+            style: "percent",
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            signDisplay: "always",
+          })}
         </div>
       </div>
     </div>

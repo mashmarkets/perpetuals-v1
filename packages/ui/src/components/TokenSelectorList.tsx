@@ -8,7 +8,7 @@ import {
   getTokenIcon,
   getTokenLabel,
   getTokenSymbol,
-  TOKEN_LIST,
+  TRADEABLE_MINTS,
 } from "@/lib/Token";
 import { formatPrice } from "@/utils/formatters";
 
@@ -20,7 +20,7 @@ interface Props {
 }
 
 export function TokenSelectorList(props: Props) {
-  const list = props.tokenList ? props.tokenList : TOKEN_LIST;
+  const list = props.tokenList ? props.tokenList : TRADEABLE_MINTS;
 
   const prices = usePrices(list);
 
@@ -43,7 +43,7 @@ export function TokenSelectorList(props: Props) {
           {list.map((token) => {
             const icon = getTokenIcon(token);
 
-            const price = prices[token.toString()]?.currentPrice;
+            const stats = prices[token.toString()];
             return (
               <button
                 key={token.toString()}
@@ -74,10 +74,29 @@ export function TokenSelectorList(props: Props) {
                     {getTokenLabel(token)}
                   </div>
                 </div>
-                {price && (
-                  <div className="text-sm text-white">
-                    ${formatPrice(price)}
-                  </div>
+                {stats && (
+                  <>
+                    <div className="text-right text-sm text-white">
+                      ${formatPrice(stats.currentPrice)}
+                      <br />
+                      <span
+                        className={twMerge(
+                          "text-xs",
+                          stats.change24hr < 0 && "text-rose-400",
+                          stats.change24hr === 0 && "text-white",
+                          stats.change24hr > 0 && "text-emerald-400",
+                          "text-opacity-90",
+                        )}
+                      >
+                        {(stats.change24hr / 100).toLocaleString(undefined, {
+                          style: "percent",
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                          signDisplay: "always",
+                        })}
+                      </span>
+                    </div>
+                  </>
                 )}
               </button>
             );

@@ -19,7 +19,7 @@ pub struct OracleAdd<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-        init,
+        init_if_needed,
         payer = payer,
         space = 8 + Oracle::INIT_SPACE,
         seeds = [

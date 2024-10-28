@@ -1,6 +1,6 @@
 export type Faucet = {
   "metadata": {
-    "address": "AVyirMo5eEE9KMmpfD8B5otX1MBcPbQdfrBAnxBjTMJQ"
+    "address": "JArCk1B16SwusW63tvTfUzVmKFgRtCMQENB4rrHzu8FV"
   },
   "version": "0.1.0",
   "name": "faucet",
@@ -335,7 +335,7 @@ export type Faucet = {
 
 export const IDL: Faucet = {
   "metadata": {
-    "address": "AVyirMo5eEE9KMmpfD8B5otX1MBcPbQdfrBAnxBjTMJQ"
+    "address": "JArCk1B16SwusW63tvTfUzVmKFgRtCMQENB4rrHzu8FV"
   },
   "version": "0.1.0",
   "name": "faucet",

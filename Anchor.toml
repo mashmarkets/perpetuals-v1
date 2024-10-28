@@ -2,19 +2,19 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-faucet = "AVyirMo5eEE9KMmpfD8B5otX1MBcPbQdfrBAnxBjTMJQ"
-perpetuals = "A1yYp7xVyNqqHSfSw2hMK8XvQHwGytiBjrabLAucBsqJ"
+faucet = "JArCk1B16SwusW63tvTfUzVmKFgRtCMQENB4rrHzu8FV"
+perpetuals = "4NUsfUUaQRyhtQ4Q3qu33sfvmFhBhGu2V3xUCs5393kB"
 
 [programs.localnet]
-faucet = "AVyirMo5eEE9KMmpfD8B5otX1MBcPbQdfrBAnxBjTMJQ"
-perpetuals = "A1yYp7xVyNqqHSfSw2hMK8XvQHwGytiBjrabLAucBsqJ"
+faucet = "JArCk1B16SwusW63tvTfUzVmKFgRtCMQENB4rrHzu8FV"
+perpetuals = "4NUsfUUaQRyhtQ4Q3qu33sfvmFhBhGu2V3xUCs5393kB"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
-cluster = "Localnet"
-wallet = "~/.config/solana/id.json"
+cluster = "Devnet"
+wallet = "/Users/user/.config/solana/id.json"
 
 [workspace]
 members = ["programs/perpetuals", "programs/faucet"]

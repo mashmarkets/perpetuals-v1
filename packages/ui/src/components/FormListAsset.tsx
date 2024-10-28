@@ -4,7 +4,12 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useAllPools } from "@/hooks/perpetuals";
-import { getTokenInfo, getTokensKeyedBy, getTokenSymbol } from "@/lib/Token";
+import {
+  getTokenInfo,
+  getTokensKeyedBy,
+  getTokenSymbol,
+  TRADEABLE_MINTS,
+} from "@/lib/Token";
 import { BPS_DECIMALS, RATE_DECIMALS, USD_DECIMALS } from "@/lib/types";
 import { parseUnits } from "@/utils/viem";
 
@@ -152,7 +157,7 @@ const AddCustodyForm = ({
     });
 
   const oracleType = watch("oracle.oracleType");
-  const list = getTokensKeyedBy("address");
+  const list = TRADEABLE_MINTS.map(getTokenInfo);
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
@@ -186,9 +191,9 @@ const AddCustodyForm = ({
             className="w-full rounded border p-2"
           >
             <option value="">Prefill For</option>
-            {Object.entries(list)
-              .sort((a, b) => a[1].symbol.localeCompare(b[1].symbol))
-              .map(([key, value]) => {
+            {list
+              .sort((a, b) => a.symbol.localeCompare(b.symbol))
+              .map((value) => {
                 if (
                   custodies
                     .map((x) => x.mint.toString())
@@ -196,8 +201,8 @@ const AddCustodyForm = ({
                 )
                   return null;
                 return (
-                  <option key={key} value={key}>
-                    {value.symbol} ({key})
+                  <option key={value.address} value={value.address}>
+                    {value.symbol} ({value.address})
                   </option>
                 );
               })}

@@ -34,9 +34,8 @@ const tokenList: Token[] = universe.map(
         ...x.extensions,
         canonical: x.address,
       },
-      address: (x.address === "So11111111111111111111111111111111111111112"
-        ? "So11111111111111111111111111111111111111112"
-        : getFaucetMint(x.address as Address).toString()) as Address,
+      // Note: For simulation trading we also mock WSOL. Otherwise we should leave native mint intact
+      address: getFaucetMint(x.address as Address).toString() as Address,
     }) as Token,
 );
 
@@ -56,7 +55,10 @@ export const tokensByMint = getTokensKeyedBy("address");
 
 export const getTokenInfo = (mint: Address) => tokensByMint[mint]!;
 
-export const TOKEN_LIST = Object.keys(tokensByMint) as Address[];
+export const TRADEABLE_MINTS = Object.values(tokensByMint)
+  .filter((x) => !["USDC", "USDT"].includes(x.symbol))
+  .sort((a, b) => a.symbol.localeCompare(b.symbol))
+  .map((x) => x.address) as Address[];
 
 export function getTokenLabel(mint: Address | undefined) {
   if (
