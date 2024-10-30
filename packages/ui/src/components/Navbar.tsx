@@ -158,6 +158,9 @@ export const Navbar = () => {
         <NavbarLink href="/positions" icon={<UserAdmin />}>
           Positions
         </NavbarLink>
+        <NavbarLink href="/leaderboard" icon={<UserAdmin />}>
+          Leaderboard
+        </NavbarLink>
       </div>
       <div className="flex flex-row items-center gap-4">
         {publicKey &&

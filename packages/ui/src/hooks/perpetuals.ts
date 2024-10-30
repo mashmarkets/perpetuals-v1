@@ -302,11 +302,11 @@ export const useCustodies = (custodies: Address[]) => {
     })),
     combine: (results) => {
       return results.reduce(
-        (acc, v, i) => {
+        (acc, v) => {
           if (v.data === undefined) {
             return acc;
           }
-          acc[custodies[i]!.toString()] = v.data!;
+          acc[v.data.address] = v.data!;
           return acc;
         },
         {} as Record<string, Custody>,
@@ -399,15 +399,53 @@ export const usePositions = (positions: Address[]) => {
     })),
     combine: (results) => {
       return results.reduce(
-        (acc, v, i) => {
+        (acc, v) => {
           if (v.data === undefined) {
             return acc;
           }
-          acc[positions[i]!.toString()] = v.data!;
+          acc[v.data.address] = v.data!;
           return acc;
         },
         {} as Record<string, Position>,
       );
+    },
+  });
+};
+
+export const useAllPositions = () => {
+  const program = useReadPerpetualsProgram();
+  const client = useQueryClient();
+  return useQuery<Record<Address, Address[]>>({
+    queryKey: ["positions"],
+    enabled: !!program,
+    queryFn: async () => {
+      const data = await program!.account.position.all();
+      const positions = data.map(parsePosition);
+
+      // Update individual cache
+      positions.forEach((position) => {
+        client.setQueryData(
+          ["position", position.address.toString()],
+          position,
+        );
+      });
+
+      const groupedPositions = positions.reduce(
+        (acc, position) => {
+          const key = position.owner.toString();
+          acc[key] = acc[key] ?? [];
+          acc[key].push(position.address);
+          return acc;
+        },
+        {} as Record<string, Address[]>,
+      );
+
+      // Update positions cache
+      Object.entries(groupedPositions).forEach(([key, positions]) => {
+        client.setQueryData(["positions", key], positions);
+      });
+
+      return groupedPositions;
     },
   });
 };
