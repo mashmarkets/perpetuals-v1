@@ -23,6 +23,7 @@ function types {
   pnpm exec tsx ./scripts/patch.js
   rm -rf packages/ui/src/target/*
   cp -rf target/types/ packages/ui/src/target
+  cp -rf target/idl/perpetuals.json packages/ui/public/static/idl
 
   rm -rf packages/liquidator/src/target/*
   cp -rf target/types/perpetuals.ts packages/liquidator/src/target
