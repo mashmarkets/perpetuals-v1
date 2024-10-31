@@ -1,7 +1,9 @@
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
 import ChevronUpIcon from "@carbon/icons-react/lib/ChevronUp";
 import { Address } from "@solana/addresses";
+import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
+import { twMerge } from "tailwind-merge";
 
 import {
   useAllPositions,
@@ -76,6 +78,7 @@ const useLeaderboardData = () => {
 export default function Leaderboard() {
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
+  const { publicKey } = useWallet();
   const leaderboard = useLeaderboardData();
 
   const toggleUser = (userId: string) => {
@@ -93,12 +96,20 @@ export default function Leaderboard() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="mb-6 text-3xl font-bold">Leaderboard</h1>
 
-      <div className="rounded-lg bg-white shadow">
+      <div className="shadow">
         {leaderboard.map(
           ({ user, balance, equity, positions, equityFromPositions }, i) => (
-            <div key={user} className="border-b last:border-b-0">
+            <div
+              key={user}
+              className={twMerge(
+                "border-b-black bg-zinc-800 text-white",
+                publicKey !== null &&
+                  user === publicKey.toString() &&
+                  "bg-blue-400",
+              )}
+            >
               <div
-                className="flex cursor-pointer items-center justify-between p-4 hover:bg-gray-50"
+                className="flex cursor-pointer items-center justify-between p-4"
                 onClick={() => toggleUser(user)}
               >
                 <div className="mr-4 flex flex-1 items-center justify-between">
@@ -123,7 +134,7 @@ export default function Leaderboard() {
               </div>
 
               {expandedUsers.has(user) && (
-                <div className="bg-gray-50 p-4">
+                <div className="bg-zinc-900 p-4 pr-12">
                   <div className="mb-4 flex justify-between">
                     <h3 className="mb-1 font-medium">Spot</h3>
                     <div className="text-right text-gray-600">
@@ -159,7 +170,7 @@ export default function Leaderboard() {
                               <span>
                                 <span>Entry/</span>
                                 <span className="text-gray-600">Mark: </span>
-                                <span className="text-black">
+                                <span className="text-white">
                                   {formatPrice(
                                     Number(position.price) / PRICE_POWER,
                                   )}

@@ -1,4 +1,5 @@
 export const MAX_U64 = BigInt("18446744073709551615");
+export const SOL_RESERVE_AMOUNT = 0.005; // Keep this for transactions
 
 export const BPS_DECIMALS = 4;
 export const BPS_POWER = 10 ** BPS_DECIMALS;

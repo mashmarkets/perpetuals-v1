@@ -2,8 +2,8 @@ import { Address } from "@solana/addresses";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { create, indexedResolver, windowScheduler } from "@yornaath/batshit";
 
-import { getCoingeckoId } from "@/lib/Token";
-import { queryClient } from "@/pages/_app";
+import { getCoingeckoId, USDC_MINT } from "@/lib/Token";
+import { queryClient } from "@/utils/queryClient";
 
 export interface PriceStat {
   change24hr: number;
@@ -29,6 +29,16 @@ const coingeckoBatcher = create({
         ) =>
           mints.reduce(
             (acc, mint) => {
+              // Force USDC to be $1Dollar
+              if (mint === USDC_MINT) {
+                acc[mint.toString()] = {
+                  change24hr: 0,
+                  currentPrice: 1.0,
+                  high24hr: 0,
+                  low24hr: 0,
+                };
+                return acc;
+              }
               const d = data[getCoingeckoId(mint)!];
               acc[mint.toString()] = {
                 change24hr: d?.usd_24h_change ?? 0,
@@ -47,6 +57,7 @@ const coingeckoBatcher = create({
 });
 
 const ONE_MINUTE = 60 * 1000;
+
 queryClient.setQueryDefaults(["price"], {
   refetchInterval: ONE_MINUTE, // 1 MINUTE
 });

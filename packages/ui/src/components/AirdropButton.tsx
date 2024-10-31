@@ -48,7 +48,7 @@ export default function AirdropButton({ mint }: { mint: Address }) {
 
   return (
     <SolidButton
-      className="my-6 w-full bg-slate-500 hover:bg-slate-200"
+      className="bg-slate-500 hover:bg-slate-200"
       onClick={() => airdropMutation.mutate()}
     >
       Airdrop {getTokenSymbol(mint)}

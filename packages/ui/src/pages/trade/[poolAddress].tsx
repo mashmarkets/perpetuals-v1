@@ -49,33 +49,37 @@ export default function Page() {
   }
 
   return (
-    <div className="mx-auto flex w-full flex-row justify-center px-4 pt-11 lg:grid lg:grid-cols-[1fr,max-content] lg:gap-x-16 lg:px-16">
-      <div>
-        <div className="mb-8 flex items-center">
-          <ChartCurrency mint={mint} />
-          <DailyStats className="ml-12" mint={mint} />
-          <Link href="/pools/[poolAddress]" as={`/pools/${poolAddress}`}>
-            <div className="rounded-lg px-4 py-2 pl-6 pt-4 text-sm text-slate-400">
-              Earn ↗
-            </div>
-          </Link>
+    <>
+      <div className="mx-auto flex w-full flex-row justify-center px-4 pt-11 lg:grid lg:grid-cols-[1fr,max-content] lg:gap-x-16 lg:px-16">
+        <div>
+          <div className="mb-8 flex items-center">
+            <ChartCurrency mint={mint} />
+            <DailyStats className="ml-12" mint={mint} />
+            <Link href="/pools/[poolAddress]" as={`/pools/${poolAddress}`}>
+              <div className="rounded-lg px-4 py-2 pl-6 pt-4 text-sm text-slate-400">
+                Earn ↗
+              </div>
+            </Link>
+          </div>
+          <div className="h-[350px] md:h-[700px]">
+            <TradingViewWidget
+              autosize
+              symbol={getTradingViewSymbol(mint)}
+              theme="dark"
+              allow_symbol_change={false}
+            />
+          </div>
         </div>
-        <div className="h-[350px] md:h-[700px]">
-          <TradingViewWidget
-            autosize
-            symbol={getTradingViewSymbol(mint)}
-            theme="dark"
-            allow_symbol_change={false}
-          />
+        <div className="max-w-lg">
+          <TradeSidebar mint={mint} poolAddress={poolAddress} />
         </div>
-        <header className="mb-5 mt-20 flex items-center space-x-4">
+      </div>
+      <div className="mx-auto px-4 lg:px-16">
+        <header className="space-x-46 mb-5 mt-20 flex items-center">
           <div className="font-medium text-white">My Positions</div>
         </header>
         <ExistingPositions />
       </div>
-      <div className="max-w-lg">
-        <TradeSidebar mint={mint} poolAddress={poolAddress} />
-      </div>
-    </div>
+    </>
   );
 }

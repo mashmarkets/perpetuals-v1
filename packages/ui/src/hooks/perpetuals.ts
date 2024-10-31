@@ -11,8 +11,8 @@ import {
   getPnl,
   getRemoveLiquidityAmountAndFee,
 } from "@/actions/perpetuals";
-import { queryClient } from "@/pages/_app";
 import { Perpetuals } from "@/target/perpetuals";
+import { queryClient } from "@/utils/queryClient";
 
 import { connectionBatcher } from "./accounts";
 import {

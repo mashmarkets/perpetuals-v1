@@ -29,7 +29,7 @@ export const SolidButton = forwardRef<HTMLButtonElement, Props>(
         className={twMerge(
           "flex",
           "group",
-          "h-14",
+          "h-12",
           "items-center",
           "justify-center",
           "p-3",

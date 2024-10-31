@@ -1,4 +1,5 @@
 import { Address } from "@solana/addresses";
+import { NATIVE_MINT } from "@solana/spl-token";
 import { memoize } from "lodash-es";
 
 import { getFaucetMint } from "@/actions/faucet";
@@ -25,19 +26,30 @@ export const USDC_MINT = getFaucetMint(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
 );
 
+const SOL = universe.find((x) => x.symbol === "SOL")!;
 // Remap mainnet address to testnet faucet address
-const tokenList: Token[] = universe.map(
-  (x) =>
-    ({
-      ...x,
-      extensions: {
-        ...x.extensions,
-        canonical: x.address,
-      },
-      // Note: For simulation trading we also mock WSOL. Otherwise we should leave native mint intact
-      address: getFaucetMint(x.address as Address).toString() as Address,
-    }) as Token,
-);
+const tokenList: Token[] = [
+  // Add unmocked WSOL so we can use it in the buyin process
+  {
+    ...SOL,
+    extensions: {
+      ...SOL.extensions,
+      canonical: SOL.address as Address,
+    },
+  } as Token,
+  ...universe.map(
+    (x) =>
+      ({
+        ...x,
+        extensions: {
+          ...x.extensions,
+          canonical: x.address,
+        },
+        // Note: For simulation trading we also mock WSOL. Otherwise we should leave native mint intact
+        address: getFaucetMint(x.address as Address).toString() as Address,
+      }) as Token,
+  ),
+];
 
 export const getTokensKeyedBy = memoize(
   (k: keyof Omit<Token, "extensions">) => {
@@ -56,7 +68,11 @@ export const tokensByMint = getTokensKeyedBy("address");
 export const getTokenInfo = (mint: Address) => tokensByMint[mint]!;
 
 export const TRADEABLE_MINTS = Object.values(tokensByMint)
-  .filter((x) => !["USDC", "USDT"].includes(x.symbol))
+  .filter(
+    (x) =>
+      !["USDC", "USDT"].includes(x.symbol) &&
+      x.address !== NATIVE_MINT.toString(),
+  )
   .sort((a, b) => a.symbol.localeCompare(b.symbol))
   .map((x) => x.address) as Address[];
 

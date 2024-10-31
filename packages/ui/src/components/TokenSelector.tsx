@@ -18,6 +18,8 @@ function formatNumber(num: number) {
 
 interface Props {
   className?: string;
+  step?: string | number;
+  min?: string | number;
   amount?: number;
   token: Address;
   onChangeAmount?(amount: number): void;
@@ -109,7 +111,9 @@ export function TokenSelector(props: Props) {
               )}
               placeholder=""
               type="number"
-              value={Math.round(props.amount * 100) / 100}
+              step={props.step}
+              min={props.min}
+              value={props.amount}
               onChange={(e) => {
                 const value = e.currentTarget.valueAsNumber;
                 props.onChangeAmount?.(isNaN(value) ? 0 : value);
