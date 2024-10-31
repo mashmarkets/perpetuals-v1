@@ -15,17 +15,17 @@ import {
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import axios from "axios";
 import { memoize } from "lodash-es";
 import { setIntervalAsync } from "set-interval-async/dynamic";
 
+import { env } from "./env.js";
 import { IDL, Perpetuals } from "./target/perpetuals.js";
-import { sleep } from "./utils.js";
+import { getProgramIdFromUrl, notify, sleep } from "./utils.js";
 
 // Related to https://github.com/jhurliman/node-rate-limiter/issues/80
 const require = createRequire(import.meta.url);
 const RateLimiter = require("limiter").RateLimiter;
-
-const programId = new PublicKey(process.env.PROGRAM_ID ?? IDL.metadata.address);
 
 const fromBN = (v: BN) => BigInt(v.toString());
 const parsePosition = (
@@ -156,6 +156,7 @@ const parseCustody = (
 type Position = ReturnType<typeof parsePosition>;
 type Custody = ReturnType<typeof parseCustody>;
 const findPerpetualsAddressSync = (
+  program: Program<Perpetuals>,
   ...seeds: Array<Buffer | string | PublicKey | Uint8Array | Address>
 ) => {
   const publicKey = PublicKey.findProgramAddressSync(
@@ -172,14 +173,12 @@ const findPerpetualsAddressSync = (
       }
       return x;
     }),
-    programId,
+    program.programId,
   )[0];
 
   return publicKey.toString() as Address;
 };
 
-const perpetuals = findPerpetualsAddressSync("perpetuals");
-const transferAuthority = findPerpetualsAddressSync("transfer_authority");
 export async function startInterval(callback: () => void, interval: number) {
   await callback();
   setIntervalAsync(callback, interval);
@@ -222,13 +221,17 @@ async function liquidate(
       signer: program.provider.publicKey,
       receivingAccount,
       rewardsReceivingAccount,
-      transferAuthority,
-      perpetuals,
+      transferAuthority: findPerpetualsAddressSync(
+        program,
+        "transfer_authority",
+      ),
+      perpetuals: findPerpetualsAddressSync(program, "perpetuals"),
       pool: position.pool,
       position: position.address,
       custody: position.custody,
       custodyOracleAccount: custody.oracle.oracleAccount,
       custodyTokenAccount: findPerpetualsAddressSync(
+        program,
         "custody_token_account",
         position.pool,
         custody.mint,
@@ -253,9 +256,33 @@ const loadWallet = () => {
 };
 
 async function main() {
-  const RPC_ENDPOINT =
-    process.env.RPC_ENDPOINT ?? "https://api.devnet.solana.com";
-  const connection = new Connection(RPC_ENDPOINT);
+  const programId = env.PERPETUALS_IDL_URL
+    ? ((await getProgramIdFromUrl(env.PERPETUALS_IDL_URL)) ??
+      IDL.metadata.address)
+    : IDL.metadata.address;
+
+  // Pool IDL Endpoint to see if program address has changed
+  if (env.PERPETUALS_IDL_URL) {
+    startInterval(async () => {
+      const address = await getProgramIdFromUrl(env.PERPETUALS_IDL_URL!);
+      if (address && address.toString() !== programId.toString()) {
+        console.log("Found new program address, restarting...");
+        process.exit(0);
+      }
+    }, 60 * 1000);
+  }
+
+  // Ping healthcheck every minute if defined
+  if (env.HEALTHCHECKS_URL !== undefined) {
+    startInterval(() => {
+      axios.get(env.HEALTHCHECKS_URL!);
+    }, 60 * 1000);
+  }
+
+  const connection = new Connection(env.RPC_ENDPOINT, {
+    commitment: "confirmed",
+    disableRetryOnRateLimit: true,
+  });
 
   const wallet = loadWallet();
   const provider = new AnchorProvider(connection, wallet, {});
@@ -277,8 +304,9 @@ async function main() {
       );
   });
 
+  notify(`Starting liquidator against ${programId.toString()}`);
   console.log(
-    `Running liquidator against ${programId.toString()}\nUsing RPC endpoint: ${RPC_ENDPOINT}\nUsing wallet: ${wallet.publicKey.toString()}`,
+    `Using RPC endpoint: ${env.RPC_ENDPOINT}\nUsing wallet: ${wallet.publicKey.toString()}`,
   );
 
   let positions: Position[] = [];
@@ -289,6 +317,7 @@ async function main() {
     positions = await program.account.position
       .all()
       .then((x) => x.map(parsePosition));
+    console.log("Refreshed positions to track");
   }, 60 * 1000);
 
   // Continuously check positions and liquidate
@@ -296,33 +325,52 @@ async function main() {
     const start = Date.now();
     let count = 0;
 
-    for (const position of positions) {
+    // Loop backwards, so we can remove items from the array as we go along
+    for (let i = positions.length - 1; i >= 0; i--) {
+      const position = positions[i];
       const custody = await getCustody(position.custody);
 
       await limiter.removeTokens(1);
       const state = await program.methods
         .getLiquidationState({})
         .accounts({
-          perpetuals,
+          perpetuals: findPerpetualsAddressSync(program, "perpetuals"),
           pool: position.pool,
           position: position.address,
           custody: position.custody,
           custodyOracleAccount: custody.oracle.oracleAccount,
         })
-        .view();
+        .view()
+        .catch((error) => {
+          if (
+            error instanceof Error &&
+            JSON.stringify(error).includes(
+              "AccountNotInitialized. Error Number: 3012",
+            )
+          ) {
+            // Position no longer exists, so stop checking
+            positions.splice(i, 1);
+            return 0; // Return 0 so we exit early below
+          }
+
+          throw error;
+        });
 
       if (state === 0) {
         continue;
       }
       count += 1;
 
-      console.log(`Found position to liquidate: ${position.address}`);
+      notify(`Found position to liquidate: ${position.address}`);
       try {
         await limiter.removeTokens(1);
         const tx = await liquidate(program, position, custody).catch(() => {});
-        console.log(`Liquidated position with tx: ${tx}`);
+        notify(`Liquidated position with tx: ${tx}`);
       } catch (error) {
-        console.log(`Failed to liquidate: ${position.address}`, error);
+        notify(
+          `Failed to liquidate: ${position.address}. Check logs for more details`,
+        );
+        console.log(error);
       }
     }
     const delta = Date.now() - start;

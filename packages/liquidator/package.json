@@ -4,6 +4,8 @@
     "@solana/addresses": "2.0.0-rc.1",
     "@solana/spl-token": "0.3.11",
     "@solana/web3.js": "1.95.3",
+    "axios": "1.7.7",
+    "bn.js": "^5.2.1",
     "limiter": "2.1.0",
     "lodash-es": "4.17.21",
     "rpc-websockets": "7.11.0",
