@@ -855,7 +855,7 @@ export const getEntryPriceAndFee = async (
     entryPrice: BN;
     fee: BN;
     liquidationPrice: BN;
-  }>(program, instruction, "getEntryPriceAndFee");
+  }>(program, instruction, "get_entry_price_and_fee");
 
   if (estimate === undefined) {
     return {
@@ -938,7 +938,7 @@ export const getAddLiquidityAmountAndFee = async (
   const estimate = await getParsedSimulationResult<{
     amount: BN;
     fee: BN;
-  }>(program, instruction, "getAddLiquidityAmountAndFee");
+  }>(program, instruction, "get_add_liquidity_amount_and_fee");
 
   if (estimate === undefined) {
     throw new Error("Unable to get estimate");
@@ -980,7 +980,7 @@ export const getRemoveLiquidityAmountAndFee = async (
   const estimate = await getParsedSimulationResult<{
     amount: BN;
     fee: BN;
-  }>(program, instruction, "getRemoveLiquidityAmountAndFee");
+  }>(program, instruction, "get_remove_liquidity_amount_and_fee");
 
   if (estimate === undefined) {
     throw new Error("Unable to get estimate");
@@ -1016,7 +1016,7 @@ export const getPnl = async (
   const estimate = await getParsedSimulationResult<{
     profit: BN;
     loss: BN;
-  }>(program, instruction, "getPnl");
+  }>(program, instruction, "get_pnl");
 
   if (estimate === undefined) {
     return {
