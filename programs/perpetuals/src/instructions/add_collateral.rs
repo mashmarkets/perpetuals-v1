@@ -94,7 +94,10 @@ pub struct AddCollateralParams {
     collateral: u64,
 }
 
-pub fn add_collateral(ctx: Context<AddCollateral>, params: &AddCollateralParams) -> Result<()> {
+pub fn add_collateral<'info>(
+    ctx: Context<'_, '_, '_, 'info, AddCollateral<'info>>,
+    params: &AddCollateralParams,
+) -> Result<()> {
     // validate inputs
     msg!("Validate inputs");
     if params.collateral == 0 {

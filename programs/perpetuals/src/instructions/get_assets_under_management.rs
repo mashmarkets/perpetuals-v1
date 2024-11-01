@@ -29,8 +29,8 @@ pub struct GetAssetsUnderManagement<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct GetAssetsUnderManagementParams {}
 
-pub fn get_assets_under_management(
-    ctx: Context<GetAssetsUnderManagement>,
+pub fn get_assets_under_management<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetAssetsUnderManagement<'info>>,
     _params: &GetAssetsUnderManagementParams,
 ) -> Result<u128> {
     ctx.accounts.pool.get_assets_under_management_usd(

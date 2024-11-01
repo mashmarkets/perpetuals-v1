@@ -63,8 +63,8 @@ pub struct GetLiquidationPriceParams {
     remove_collateral: u64,
 }
 
-pub fn get_liquidation_price(
-    ctx: Context<GetLiquidationPrice>,
+pub fn get_liquidation_price<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetLiquidationPrice<'info>>,
     params: &GetLiquidationPriceParams,
 ) -> Result<u64> {
     let custody = &ctx.accounts.custody;

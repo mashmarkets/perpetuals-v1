@@ -29,7 +29,10 @@ pub mod perpetuals {
     use super::*;
 
     // admin instructions
-    pub fn init(ctx: Context<Init>, params: InitParams) -> Result<()> {
+    pub fn init<'info>(
+        ctx: Context<'_, '_, '_, 'info, Init<'info>>,
+        params: InitParams,
+    ) -> Result<()> {
         instructions::init(ctx, &params)
     }
 
@@ -121,106 +124,126 @@ pub mod perpetuals {
 
     // public instructions
 
-    pub fn add_liquidity(ctx: Context<AddLiquidity>, params: AddLiquidityParams) -> Result<()> {
+    pub fn add_liquidity<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddLiquidity<'info>>,
+        params: AddLiquidityParams,
+    ) -> Result<()> {
         instructions::add_liquidity(ctx, &params)
     }
 
-    pub fn remove_liquidity(
-        ctx: Context<RemoveLiquidity>,
+    pub fn remove_liquidity<'info>(
+        ctx: Context<'_, '_, '_, 'info, RemoveLiquidity<'info>>,
         params: RemoveLiquidityParams,
     ) -> Result<()> {
         instructions::remove_liquidity(ctx, &params)
     }
 
-    pub fn open_position(ctx: Context<OpenPosition>, params: OpenPositionParams) -> Result<()> {
+    pub fn open_position<'info>(
+        ctx: Context<'_, '_, '_, 'info, OpenPosition<'info>>,
+        params: OpenPositionParams,
+    ) -> Result<()> {
         instructions::open_position(ctx, &params)
     }
 
-    pub fn add_collateral(ctx: Context<AddCollateral>, params: AddCollateralParams) -> Result<()> {
+    pub fn add_collateral<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddCollateral<'info>>,
+        params: AddCollateralParams,
+    ) -> Result<()> {
         instructions::add_collateral(ctx, &params)
     }
 
-    pub fn remove_collateral(
-        ctx: Context<RemoveCollateral>,
+    pub fn remove_collateral<'info>(
+        ctx: Context<'_, '_, '_, 'info, RemoveCollateral<'info>>,
         params: RemoveCollateralParams,
     ) -> Result<()> {
         instructions::remove_collateral(ctx, &params)
     }
 
-    pub fn close_position(ctx: Context<ClosePosition>, params: ClosePositionParams) -> Result<()> {
+    pub fn close_position<'info>(
+        ctx: Context<'_, '_, '_, 'info, ClosePosition<'info>>,
+        params: ClosePositionParams,
+    ) -> Result<()> {
         instructions::close_position(ctx, &params)
     }
 
-    pub fn liquidate(ctx: Context<Liquidate>, params: LiquidateParams) -> Result<()> {
+    pub fn liquidate<'info>(
+        ctx: Context<'_, '_, '_, 'info, Liquidate<'info>>,
+        params: LiquidateParams,
+    ) -> Result<()> {
         instructions::liquidate(ctx, &params)
     }
 
-    pub fn update_pool_aum(ctx: Context<UpdatePoolAum>) -> Result<u128> {
+    pub fn update_pool_aum<'info>(
+        ctx: Context<'_, '_, '_, 'info, UpdatePoolAum<'info>>,
+    ) -> Result<u128> {
         instructions::update_pool_aum(ctx)
     }
 
-    pub fn get_add_liquidity_amount_and_fee(
-        ctx: Context<GetAddLiquidityAmountAndFee>,
+    pub fn get_add_liquidity_amount_and_fee<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetAddLiquidityAmountAndFee<'info>>,
         params: GetAddLiquidityAmountAndFeeParams,
     ) -> Result<AmountAndFee> {
         instructions::get_add_liquidity_amount_and_fee(ctx, &params)
     }
 
-    pub fn get_remove_liquidity_amount_and_fee(
-        ctx: Context<GetRemoveLiquidityAmountAndFee>,
+    pub fn get_remove_liquidity_amount_and_fee<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetRemoveLiquidityAmountAndFee<'info>>,
         params: GetRemoveLiquidityAmountAndFeeParams,
     ) -> Result<AmountAndFee> {
         instructions::get_remove_liquidity_amount_and_fee(ctx, &params)
     }
 
-    pub fn get_entry_price_and_fee(
-        ctx: Context<GetEntryPriceAndFee>,
+    pub fn get_entry_price_and_fee<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetEntryPriceAndFee<'info>>,
         params: GetEntryPriceAndFeeParams,
     ) -> Result<NewPositionPricesAndFee> {
         instructions::get_entry_price_and_fee(ctx, &params)
     }
 
-    pub fn get_exit_price_and_fee(
-        ctx: Context<GetExitPriceAndFee>,
+    pub fn get_exit_price_and_fee<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetExitPriceAndFee<'info>>,
         params: GetExitPriceAndFeeParams,
     ) -> Result<PriceAndFee> {
         instructions::get_exit_price_and_fee(ctx, &params)
     }
 
-    pub fn get_pnl(ctx: Context<GetPnl>, params: GetPnlParams) -> Result<ProfitAndLoss> {
+    pub fn get_pnl<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetPnl<'info>>,
+        params: GetPnlParams,
+    ) -> Result<ProfitAndLoss> {
         instructions::get_pnl(ctx, &params)
     }
 
-    pub fn get_liquidation_price(
-        ctx: Context<GetLiquidationPrice>,
+    pub fn get_liquidation_price<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetLiquidationPrice<'info>>,
         params: GetLiquidationPriceParams,
     ) -> Result<u64> {
         instructions::get_liquidation_price(ctx, &params)
     }
 
-    pub fn get_liquidation_state(
-        ctx: Context<GetLiquidationState>,
+    pub fn get_liquidation_state<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetLiquidationState<'info>>,
         params: GetLiquidationStateParams,
     ) -> Result<u8> {
         instructions::get_liquidation_state(ctx, &params)
     }
 
-    pub fn get_oracle_price(
-        ctx: Context<GetOraclePrice>,
+    pub fn get_oracle_price<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetOraclePrice<'info>>,
         params: GetOraclePriceParams,
     ) -> Result<u64> {
         instructions::get_oracle_price(ctx, &params)
     }
 
-    pub fn get_assets_under_management(
-        ctx: Context<GetAssetsUnderManagement>,
+    pub fn get_assets_under_management<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetAssetsUnderManagement<'info>>,
         params: GetAssetsUnderManagementParams,
     ) -> Result<u128> {
         instructions::get_assets_under_management(ctx, &params)
     }
 
-    pub fn get_lp_token_price(
-        ctx: Context<GetLpTokenPrice>,
+    pub fn get_lp_token_price<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetLpTokenPrice<'info>>,
         params: GetLpTokenPriceParams,
     ) -> Result<u64> {
         instructions::get_lp_token_price(ctx, &params)
@@ -228,8 +251,8 @@ pub mod perpetuals {
 
     // This instruction must be part of a larger transaction where the **first** instruction
     // is an ed25519 verification of the serialized oracle price update params.
-    pub fn set_custom_oracle_price_permissionless(
-        ctx: Context<SetCustomOraclePricePermissionless>,
+    pub fn set_custom_oracle_price_permissionless<'info>(
+        ctx: Context<'_, '_, '_, 'info, SetCustomOraclePricePermissionless<'info>>,
         params: SetCustomOraclePricePermissionlessParams,
     ) -> Result<()> {
         instructions::set_custom_oracle_price_permissionless(ctx, &params)

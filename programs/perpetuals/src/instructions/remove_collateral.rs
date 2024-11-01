@@ -95,8 +95,8 @@ pub struct RemoveCollateralParams {
     collateral_usd: u64,
 }
 
-pub fn remove_collateral(
-    ctx: Context<RemoveCollateral>,
+pub fn remove_collateral<'info>(
+    ctx: Context<'_, '_, '_, 'info, RemoveCollateral<'info>>,
     params: &RemoveCollateralParams,
 ) -> Result<()> {
     // check permissions

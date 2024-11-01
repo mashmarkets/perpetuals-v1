@@ -98,7 +98,10 @@ pub struct Liquidate<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct LiquidateParams {}
 
-pub fn liquidate(ctx: Context<Liquidate>, _params: &LiquidateParams) -> Result<()> {
+pub fn liquidate<'info>(
+    ctx: Context<'_, '_, '_, 'info, Liquidate<'info>>,
+    _params: &LiquidateParams,
+) -> Result<()> {
     // check permissions
     msg!("Check permissions");
     let perpetuals = ctx.accounts.perpetuals.as_mut();

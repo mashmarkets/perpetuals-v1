@@ -103,8 +103,8 @@ pub struct RemoveLiquidityParams {
     pub min_amount_out: u64,
 }
 
-pub fn remove_liquidity(
-    ctx: Context<RemoveLiquidity>,
+pub fn remove_liquidity<'info>(
+    ctx: Context<'_, '_, '_, 'info, RemoveLiquidity<'info>>,
     params: &RemoveLiquidityParams,
 ) -> Result<()> {
     // check permissions

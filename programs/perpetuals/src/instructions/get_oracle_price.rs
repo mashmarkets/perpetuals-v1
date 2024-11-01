@@ -41,8 +41,8 @@ pub struct GetOraclePriceParams {
     ema: bool,
 }
 
-pub fn get_oracle_price(
-    ctx: Context<GetOraclePrice>,
+pub fn get_oracle_price<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetOraclePrice<'info>>,
     params: &GetOraclePriceParams,
 ) -> Result<u64> {
     let custody = &ctx.accounts.custody;

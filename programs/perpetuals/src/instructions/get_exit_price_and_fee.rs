@@ -57,8 +57,8 @@ pub struct GetExitPriceAndFee<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct GetExitPriceAndFeeParams {}
 
-pub fn get_exit_price_and_fee(
-    ctx: Context<GetExitPriceAndFee>,
+pub fn get_exit_price_and_fee<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetExitPriceAndFee<'info>>,
     _params: &GetExitPriceAndFeeParams,
 ) -> Result<PriceAndFee> {
     // compute exit price and fee

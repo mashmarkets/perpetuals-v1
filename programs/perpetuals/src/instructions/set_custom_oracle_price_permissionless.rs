@@ -62,8 +62,8 @@ pub struct SetCustomOraclePricePermissionlessParams {
     pub publish_time: i64,
 }
 
-pub fn set_custom_oracle_price_permissionless(
-    ctx: Context<SetCustomOraclePricePermissionless>,
+pub fn set_custom_oracle_price_permissionless<'info>(
+    ctx: Context<'_, '_, '_, 'info, SetCustomOraclePricePermissionless<'info>>,
     params: &SetCustomOraclePricePermissionlessParams,
 ) -> Result<()> {
     if params.publish_time <= ctx.accounts.oracle_account.publish_time {

@@ -57,8 +57,8 @@ pub struct GetLiquidationState<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct GetLiquidationStateParams {}
 
-pub fn get_liquidation_state(
-    ctx: Context<GetLiquidationState>,
+pub fn get_liquidation_state<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetLiquidationState<'info>>,
     _params: &GetLiquidationStateParams,
 ) -> Result<u8> {
     let custody = &ctx.accounts.custody;

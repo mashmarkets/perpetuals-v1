@@ -49,8 +49,8 @@ pub struct GetEntryPriceAndFeeParams {
     size: u64,
 }
 
-pub fn get_entry_price_and_fee(
-    ctx: Context<GetEntryPriceAndFee>,
+pub fn get_entry_price_and_fee<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetEntryPriceAndFee<'info>>,
     params: &GetEntryPriceAndFeeParams,
 ) -> Result<NewPositionPricesAndFee> {
     // validate inputs

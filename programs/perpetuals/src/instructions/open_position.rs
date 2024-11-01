@@ -104,7 +104,10 @@ pub struct OpenPositionParams {
     pub size: u64,
 }
 
-pub fn open_position(ctx: Context<OpenPosition>, params: &OpenPositionParams) -> Result<()> {
+pub fn open_position<'info>(
+    ctx: Context<'_, '_, '_, 'info, OpenPosition<'info>>,
+    params: &OpenPositionParams,
+) -> Result<()> {
     // check permissions
     msg!("Check permissions");
     let perpetuals = ctx.accounts.perpetuals.as_mut();

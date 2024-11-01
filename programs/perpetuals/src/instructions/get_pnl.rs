@@ -57,7 +57,7 @@ pub struct GetPnl<'info> {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct GetPnlParams {}
 
-pub fn get_pnl(ctx: Context<GetPnl>, _params: &GetPnlParams) -> Result<ProfitAndLoss> {
+pub fn get_pnl<'info>(ctx: Context<'_, '_, '_, 'info, GetPnl<'info>>, _params: &GetPnlParams) -> Result<ProfitAndLoss> {
     // get oracle prices
     let position = &ctx.accounts.position;
     let pool = &ctx.accounts.pool;

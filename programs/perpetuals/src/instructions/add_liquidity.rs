@@ -103,7 +103,7 @@ pub struct AddLiquidityParams {
     pub min_lp_amount_out: u64,
 }
 
-pub fn add_liquidity(ctx: Context<AddLiquidity>, params: &AddLiquidityParams) -> Result<()> {
+pub fn add_liquidity<'info>(ctx: Context<'_, '_, '_, 'info, AddLiquidity<'info>>, params: &AddLiquidityParams) -> Result<()> {
     // check permissions
     msg!("Check permissions");
     let perpetuals = ctx.accounts.perpetuals.as_mut();

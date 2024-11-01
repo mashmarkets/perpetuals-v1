@@ -57,8 +57,8 @@ pub struct GetAddLiquidityAmountAndFeeParams {
     amount_in: u64,
 }
 
-pub fn get_add_liquidity_amount_and_fee(
-    ctx: Context<GetAddLiquidityAmountAndFee>,
+pub fn get_add_liquidity_amount_and_fee<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetAddLiquidityAmountAndFee<'info>>,
     params: &GetAddLiquidityAmountAndFeeParams,
 ) -> Result<AmountAndFee> {
     // validate inputs

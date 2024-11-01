@@ -57,8 +57,8 @@ pub struct GetRemoveLiquidityAmountAndFeeParams {
     lp_amount_in: u64,
 }
 
-pub fn get_remove_liquidity_amount_and_fee(
-    ctx: Context<GetRemoveLiquidityAmountAndFee>,
+pub fn get_remove_liquidity_amount_and_fee<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetRemoveLiquidityAmountAndFee<'info>>,
     params: &GetRemoveLiquidityAmountAndFeeParams,
 ) -> Result<AmountAndFee> {
     // validate inputs
