@@ -1,13 +1,18 @@
 import { describe, expect, it } from "vitest";
+import { aw } from "vitest/dist/chunks/reporters.C4ZHgdxQ";
 import { BN, Program, setProvider, utils, Wallet } from "@coral-xyz/anchor";
 import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
 import { getI32Codec, getI64Codec, getU64Codec } from "@solana/codecs-numbers";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
+  createCloseAccountInstruction,
+  createSyncNativeInstruction,
   getAssociatedTokenAddressSync,
+  NATIVE_MINT,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { PublicKey, SystemProgram } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
 import { startAnchor } from "solana-bankrun";
 import { getAccount, getMint } from "spl-token-bankrun";
@@ -243,5 +248,113 @@ describe("Token Faucet", async () => {
       mint: mintBonk,
       owner: payer.publicKey,
     });
+  });
+
+  it("Can buy in", async () => {
+    const tokenAccountIn = getAssociatedTokenAddressSync(
+      NATIVE_MINT,
+      payer.publicKey,
+    );
+    const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
+    console.log(await getMint(context.banksClient, mintUsdc));
+    const initialUsdc = (await getAccount(context.banksClient, ataUsdc)).amount;
+
+    await program.methods
+      .competitionEnter({
+        amount: new BN(0.05 * LAMPORTS_PER_SOL),
+        epoch: new BN(0),
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer.publicKey, // payer
+          tokenAccountIn, // associatedToken
+          payer.publicKey, // owner
+          NATIVE_MINT, // mint
+        ),
+        SystemProgram.transfer({
+          fromPubkey: payer.publicKey,
+          toPubkey: tokenAccountIn,
+          lamports: 0.05 * LAMPORTS_PER_SOL,
+        }),
+        createSyncNativeInstruction(tokenAccountIn),
+      ])
+      .accounts({
+        payer: payer.publicKey,
+        mintIn: NATIVE_MINT,
+        tokenAccountIn,
+        vault,
+        mintOut: mintUsdc,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenAccountOut: ataUsdc,
+        systemProgram: SystemProgram.programId,
+      })
+      .postInstructions([
+        createCloseAccountInstruction(
+          tokenAccountIn, // account
+          payer.publicKey, // destination
+          payer.publicKey, // authority
+        ),
+      ])
+      .rpc();
+
+    // Check amount has been transferred
+    expect(await getAccount(context.banksClient, ataUsdc)).toMatchObject({
+      amount: BigInt(10_000 * 10 ** 6) + initialUsdc,
+      mint: mintUsdc,
+    });
+    // Check amount has been transferred
+    expect(await getAccount(context.banksClient, vault)).toMatchObject({
+      amount: BigInt(0.05 * LAMPORTS_PER_SOL),
+      mint: NATIVE_MINT,
+    });
+  });
+
+  it("Can reject incorrect buy in amount", async () => {
+    const amount = 0.04 * LAMPORTS_PER_SOL;
+    const tokenAccountIn = getAssociatedTokenAddressSync(
+      NATIVE_MINT,
+      payer.publicKey,
+    );
+    const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
+
+    await expect(
+      program.methods
+        .competitionEnter({
+          amount: new BN(amount),
+          epoch: new BN(0),
+        })
+        .preInstructions([
+          createAssociatedTokenAccountIdempotentInstruction(
+            payer.publicKey, // payer
+            tokenAccountIn, // associatedToken
+            payer.publicKey, // owner
+            NATIVE_MINT, // mint
+          ),
+          SystemProgram.transfer({
+            fromPubkey: payer.publicKey,
+            toPubkey: tokenAccountIn,
+            lamports: amount,
+          }),
+          createSyncNativeInstruction(tokenAccountIn),
+        ])
+        .accounts({
+          payer: payer.publicKey,
+          mintIn: NATIVE_MINT,
+          tokenAccountIn,
+          vault,
+          mintOut: mintUsdc,
+          tokenProgram: TOKEN_PROGRAM_ID,
+          tokenAccountOut: ataUsdc,
+          systemProgram: SystemProgram.programId,
+        })
+        .postInstructions([
+          createCloseAccountInstruction(
+            tokenAccountIn, // account
+            payer.publicKey, // destination
+            payer.publicKey, // authority
+          ),
+        ])
+        .rpc(),
+    ).rejects.toThrow("Unknown action"); // Not parsing anchor errors correctly
   });
 });

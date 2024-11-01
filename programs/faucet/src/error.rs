@@ -6,4 +6,6 @@ pub enum ErrorCode {
     InsufficientFunds,
     #[msg("Invalid Quote Mint")]
     InvalidQuoteMint,
+    #[msg("Invalid Entry Amount")]
+    InvalidEntryAmount,
 }

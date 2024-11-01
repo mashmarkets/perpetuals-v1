@@ -6,6 +6,59 @@ export type Faucet = {
   "name": "faucet",
   "instructions": [
     {
+      "name": "competitionEnter",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mintIn",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccountIn",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintOut",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccountOut",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": "CompetitionEnterParams"
+          }
+        }
+      ]
+    },
+    {
       "name": "mintCreate",
       "accounts": [
         {
@@ -227,6 +280,22 @@ export type Faucet = {
   ],
   "types": [
     {
+      "name": "CompetitionEnterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "epoch",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "MintCreateParams",
       "type": {
         "kind": "struct",
@@ -329,6 +398,11 @@ export type Faucet = {
       "code": 6001,
       "name": "InvalidQuoteMint",
       "msg": "Invalid Quote Mint"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidEntryAmount",
+      "msg": "Invalid Entry Amount"
     }
   ]
 };
@@ -341,6 +415,59 @@ export const IDL: Faucet = {
   "name": "faucet",
   "instructions": [
     {
+      "name": "competitionEnter",
+      "accounts": [
+        {
+          "name": "payer",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "mintIn",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccountIn",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "vault",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "mintOut",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenAccountOut",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "systemProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": "CompetitionEnterParams"
+          }
+        }
+      ]
+    },
+    {
       "name": "mintCreate",
       "accounts": [
         {
@@ -562,6 +689,22 @@ export const IDL: Faucet = {
   ],
   "types": [
     {
+      "name": "CompetitionEnterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "epoch",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
       "name": "MintCreateParams",
       "type": {
         "kind": "struct",
@@ -664,6 +807,11 @@ export const IDL: Faucet = {
       "code": 6001,
       "name": "InvalidQuoteMint",
       "msg": "Invalid Quote Mint"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidEntryAmount",
+      "msg": "Invalid Entry Amount"
     }
   ]
 };

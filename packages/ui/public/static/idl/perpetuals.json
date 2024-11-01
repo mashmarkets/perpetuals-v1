@@ -1,4 +1,7 @@
 {
+  "metadata": {
+    "address": "3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr"
+  },
   "version": "0.1.0",
   "name": "perpetuals",
   "instructions": [
@@ -2999,8 +3002,5 @@
       "name": "PermissionlessOracleMessageMismatch",
       "msg": "Signed message does not match instruction params"
     }
-  ],
-  "metadata": {
-    "address": "3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr"
-  }
+  ]
 }

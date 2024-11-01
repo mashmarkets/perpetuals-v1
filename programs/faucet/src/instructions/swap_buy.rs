@@ -21,11 +21,11 @@ pub struct SwapBuy<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-      seeds = [
+        seeds = [
         b"oracle",
         params.canonical_out.key().as_ref()
-      ],
-      bump = oracle.bump
+        ],
+        bump = oracle.bump
     )]
     pub oracle: Account<'info, Oracle>,
 
@@ -33,37 +33,37 @@ pub struct SwapBuy<'info> {
     pub price_update: Account<'info, PriceUpdateV2>,
 
     #[account(
-      mut,
-      seeds = [
-        b"mint",
-        params.canonical_in.key().as_ref(),
-        params.epoch.to_le_bytes().as_ref()
-      ],
-      bump,
+        mut,
+        seeds = [
+            b"mint",
+            params.canonical_in.key().as_ref(),
+            params.epoch.to_le_bytes().as_ref()
+        ],
+        bump,
     )]
     pub mint_in: Account<'info, Mint>,
     #[account(
-      mut,
-      token::mint = mint_in,
-      token::authority = payer,
+        mut,
+        token::mint = mint_in,
+        token::authority = payer,
     )]
     pub token_account_in: Account<'info, TokenAccount>,
 
     #[account(
-      mut,
-      seeds = [
-        b"mint",
-        params.canonical_out.key().as_ref(),
-        params.epoch.to_le_bytes().as_ref()
-      ],
-      bump,
+        mut,
+        seeds = [
+            b"mint",
+            params.canonical_out.key().as_ref(),
+            params.epoch.to_le_bytes().as_ref()
+        ],
+        bump,
     )]
     pub mint_out: Account<'info, Mint>,
 
     #[account(
-      mut,
-      token::mint = mint_out,
-      token::authority = payer,
+        mut,
+        token::mint = mint_out,
+        token::authority = payer,
     )]
     pub token_account_out: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
