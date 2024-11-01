@@ -1,6 +1,6 @@
 export type Perpetuals = {
   "metadata": {
-    "address": "4NUsfUUaQRyhtQ4Q3qu33sfvmFhBhGu2V3xUCs5393kB"
+    "address": "3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr"
   },
   "version": "0.1.0",
   "name": "perpetuals",
@@ -112,6 +112,75 @@ export type Perpetuals = {
           "name": "params",
           "type": {
             "defined": "AddPoolParams"
+          }
+        }
+      ],
+      "returns": "u8"
+    },
+    {
+      "name": "forceClose",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "multisig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "receivingAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "perpetuals",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "custody",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "custodyOracleAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "custodyTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": "ForceCloseParams"
           }
         }
       ],
@@ -1844,6 +1913,13 @@ export type Perpetuals = {
             "type": "u64"
           }
         ]
+      }
+    },
+    {
+      "name": "ForceCloseParams",
+      "type": {
+        "kind": "struct",
+        "fields": []
       }
     },
     {
@@ -2931,7 +3007,7 @@ export type Perpetuals = {
 
 export const IDL: Perpetuals = {
   "metadata": {
-    "address": "4NUsfUUaQRyhtQ4Q3qu33sfvmFhBhGu2V3xUCs5393kB"
+    "address": "3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr"
   },
   "version": "0.1.0",
   "name": "perpetuals",
@@ -3043,6 +3119,75 @@ export const IDL: Perpetuals = {
           "name": "params",
           "type": {
             "defined": "AddPoolParams"
+          }
+        }
+      ],
+      "returns": "u8"
+    },
+    {
+      "name": "forceClose",
+      "accounts": [
+        {
+          "name": "admin",
+          "isMut": true,
+          "isSigner": true
+        },
+        {
+          "name": "multisig",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "receivingAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "transferAuthority",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "perpetuals",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "pool",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "position",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "custody",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "custodyOracleAccount",
+          "isMut": false,
+          "isSigner": false
+        },
+        {
+          "name": "custodyTokenAccount",
+          "isMut": true,
+          "isSigner": false
+        },
+        {
+          "name": "tokenProgram",
+          "isMut": false,
+          "isSigner": false
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": "ForceCloseParams"
           }
         }
       ],
@@ -4775,6 +4920,13 @@ export const IDL: Perpetuals = {
             "type": "u64"
           }
         ]
+      }
+    },
+    {
+      "name": "ForceCloseParams",
+      "type": {
+        "kind": "struct",
+        "fields": []
       }
     },
     {

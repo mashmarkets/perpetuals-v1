@@ -9,7 +9,7 @@ const IndexPage = () => {
   useEffect(() => {
     const { pathname } = Router;
     if (pathname == "/trade") {
-      Router.push(`/trade/${findPerpetualsAddressSync("pool", "WIF")}`);
+      Router.push(`/trade/${findPerpetualsAddressSync("pool", "SOL")}`);
     }
   });
 

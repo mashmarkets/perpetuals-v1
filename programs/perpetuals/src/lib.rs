@@ -22,7 +22,7 @@ solana_security_txt::security_txt! {
     auditors: "Halborn"
 }
 
-declare_id!("4NUsfUUaQRyhtQ4Q3qu33sfvmFhBhGu2V3xUCs5393kB");
+declare_id!("3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr");
 
 #[program]
 pub mod perpetuals {
@@ -38,6 +38,13 @@ pub mod perpetuals {
         params: AddPoolParams,
     ) -> Result<u8> {
         instructions::add_pool(ctx, &params)
+    }
+
+    pub fn force_close<'info>(
+        ctx: Context<'_, '_, '_, 'info, ForceClose<'info>>,
+        params: ForceCloseParams,
+    ) -> Result<u8> {
+        instructions::force_close(ctx, &params)
     }
 
     pub fn remove_pool<'info>(

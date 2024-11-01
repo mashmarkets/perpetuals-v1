@@ -2,12 +2,12 @@
 seeds = false
 skip-lint = false
 [programs.devnet]
-faucet = "JArCk1B16SwusW63tvTfUzVmKFgRtCMQENB4rrHzu8FV"
-perpetuals = "4NUsfUUaQRyhtQ4Q3qu33sfvmFhBhGu2V3xUCs5393kB"
+faucet = "BPXsk7o3PWaXMNJRyUk7m7VogYZQYAVXeNgPd5j1Dq9S"
+perpetuals = "3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr"
 
 [programs.localnet]
-faucet = "JArCk1B16SwusW63tvTfUzVmKFgRtCMQENB4rrHzu8FV"
-perpetuals = "4NUsfUUaQRyhtQ4Q3qu33sfvmFhBhGu2V3xUCs5393kB"
+faucet = "BPXsk7o3PWaXMNJRyUk7m7VogYZQYAVXeNgPd5j1Dq9S"
+perpetuals = "3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr"
 
 [registry]
 url = "https://api.apr.dev"

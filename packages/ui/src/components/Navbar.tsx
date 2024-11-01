@@ -122,7 +122,9 @@ export const Navbar = () => {
       </div>
       <div className="flex h-full items-center space-x-2">
         <span className="text-sm text-gray-400">Ends in: </span>
-        <p className="text-white">{countdown} • </p>
+        <p className="text-white" suppressHydrationWarning>
+          {countdown} •{" "}
+        </p>
         <p className="text-white">{(Number(prize) / 10 ** 9).toFixed(2)} SOL</p>
         <span className="text-sm text-gray-400"> Prize Pool</span>
       </div>

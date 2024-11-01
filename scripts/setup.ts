@@ -96,9 +96,9 @@ async function createPool(
     useUnrealizedPnlInAum: true,
     tradeSpreadLong: new BN(10), // 0.1%
     tradeSpreadShort: new BN(10), // 0.1%
-    minInitialLeverage: new BN(11_000), // 1.1x
-    maxInitialLeverage: new BN(1_000_000), // 100x
-    maxLeverage: new BN(5_000_000), // 500x
+    minInitialLeverage: new BN(1_000_000), // 100x
+    maxInitialLeverage: new BN(10_000_000), // 100x
+    maxLeverage: new BN(10_000_000), // 1000x
     maxPayoffMult: new BN(10_000), // 100%
     maxUtilization: new BN(10_000), // 100%
     maxPositionLockedUsd: new BN(0), // No limit
@@ -114,13 +114,13 @@ async function createPool(
     allowSizeChange: true,
   };
   const fees: Fees = {
-    utilizationMult: new BN(10_000), // 200%
-    addLiquidity: new BN(0), // 0.1%
-    removeLiquidity: new BN(50), // 0.1%
-    openPosition: new BN(0), // 0.0%
-    closePosition: new BN(0), // 0.0%
-    liquidation: new BN(100), // 1%
-    protocolShare: new BN(10), // 0.1%
+    utilizationMult: new BN(0), // 0%
+    addLiquidity: new BN(0), // 0%
+    removeLiquidity: new BN(0), // 0
+    openPosition: new BN(0), // 0%
+    closePosition: new BN(0), // 0%
+    liquidation: new BN(0), // 0%
+    protocolShare: new BN(0), // 0%
   };
 
   const borrowRate: BorrowRateParams = {
@@ -184,7 +184,9 @@ async function main() {
     })
     .then((sig) => console.log("Protocol initialized: ", sig));
 
-  const USDC = Object.values(tokens).find((x) => x.symbol === "USDC")!;
+  const USDC = Object.values(tokens).find(
+    (x) => x.address === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  )!;
   // Mint usdc to me
   await mintCreate(faucet, {
     canonical: USDC.address,
@@ -192,13 +194,13 @@ async function main() {
     decimals: USDC.decimals,
     amount: BigInt(1_000_000_000 * 10 ** 6),
   }).then((sig) =>
-    console.log(`Created mint for ${tokens.USDC.symbol} in faucet: ${sig}`),
+    console.log(`Created mint for ${USDC.symbol} in faucet: ${sig}`),
   );
 
   const prices = await getPrices();
   // Create pools
   const pools = Object.values(tokens)
-    .filter((x) => !["USDC", "USDT"].includes(x.symbol))
+    .filter((x) => ![USDC.symbol, "USDT"].includes(x.symbol))
     .sort((a, b) => a.address.localeCompare(b.address));
 
   for (const token of pools) {

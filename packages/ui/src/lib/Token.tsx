@@ -70,7 +70,7 @@ export const getTokenInfo = (mint: Address) => tokensByMint[mint]!;
 export const TRADEABLE_MINTS = Object.values(tokensByMint)
   .filter(
     (x) =>
-      !["USDC", "USDT"].includes(x.symbol) &&
+      !["USDC", "USDT", getTokenSymbol(USDC_MINT)].includes(x.symbol) &&
       x.address !== NATIVE_MINT.toString(),
   )
   .sort((a, b) => a.symbol.localeCompare(b.symbol))
