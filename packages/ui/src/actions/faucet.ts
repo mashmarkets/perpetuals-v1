@@ -3,7 +3,7 @@ import { Address } from "@solana/addresses";
 import { PublicKey } from "@solana/web3.js";
 
 import { EPOCH } from "@/lib/Token";
-import { IDL } from "@/target/faucet";
+import IDL from "@/target/faucet.json";
 
 export const findFaucetAddressSync = (...seeds: unknown[]) => {
   const publicKey = PublicKey.findProgramAddressSync(
@@ -19,7 +19,7 @@ export const findFaucetAddressSync = (...seeds: unknown[]) => {
       }
       return x;
     }),
-    new PublicKey(IDL.metadata.address),
+    new PublicKey(IDL.address),
   )[0];
 
   return publicKey.toString() as Address;

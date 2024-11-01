@@ -1,4 +1,5 @@
 use {
+    crate::try_from,
     anchor_lang::prelude::*,
     anchor_spl::token::{Burn, MintTo, Transfer},
 };
@@ -71,15 +72,9 @@ impl Perpetuals {
         true
     }
 
-    #[cfg(feature = "test")]
-    pub fn get_time(&self) -> Result<i64> {
-        Ok(self.inception_time)
-    }
-
-    #[cfg(not(feature = "test"))]
     pub fn get_time(&self) -> Result<i64> {
         let time = solana_program::sysvar::clock::Clock::get()?.unix_timestamp;
-        if time > 0 {
+        if time >= 0 {
             Ok(time)
         } else {
             Err(ProgramError::InvalidAccountData.into())
@@ -97,7 +92,8 @@ impl Perpetuals {
                 program_data.key(),
                 ErrorCode::InvalidProgramExecutable
             );
-            let program_data: Account<ProgramData> = Account::try_from(program_data)?;
+            let program_data = try_from!(Account<ProgramData>, program_data)?;
+
             if let Some(current_upgrade_authority) = program_data.upgrade_authority_address {
                 if current_upgrade_authority != Pubkey::default() {
                     require_keys_eq!(

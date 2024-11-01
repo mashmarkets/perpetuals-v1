@@ -29,7 +29,8 @@ import { Custody, Pool, Position } from "@/hooks/perpetuals";
 import { EPOCH, getTokenInfo } from "@/lib/Token";
 import { MAX_U64 } from "@/lib/types";
 import { Faucet } from "@/target/faucet";
-import { IDL, Perpetuals } from "@/target/perpetuals";
+import { Perpetuals } from "@/target/perpetuals";
+import IDL from "@/target/perpetuals.json";
 
 import { findFaucetAddressSync } from "./faucet";
 
@@ -59,7 +60,7 @@ export const findPerpetualsAddressSync = (
       }
       return x;
     }),
-    new PublicKey(IDL.metadata.address),
+    new PublicKey(IDL.address),
   )[0];
 
   return publicKey.toString() as Address;
@@ -804,7 +805,7 @@ async function getParsedSimulationResult<T>(
     );
     return undefined;
   }
-  const typeName = instruction.returns.defined;
+  const typeName = instruction?.returns?.defined;
 
   if (typeName === undefined) {
     console.log("Cannot find type name for instruction: ", name);
@@ -818,7 +819,10 @@ async function getParsedSimulationResult<T>(
     return undefined;
   }
 
-  return program.coder.types.decode(typeName, Buffer.from(result, "base64"));
+  return program.coder.types.decode(
+    typeName.name,
+    Buffer.from(result, "base64"),
+  );
 }
 
 export const getEntryPriceAndFee = async (

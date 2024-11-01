@@ -22,7 +22,15 @@ solana_security_txt::security_txt! {
     auditors: "Halborn"
 }
 
-declare_id!("3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr");
+declare_id!("Af8eHTdgfsgCk4Z5GViFEBPCkL5fKpE4N6V8G8qwgGnd");
+
+#[macro_export]
+macro_rules! try_from {
+    // https://github.com/coral-xyz/anchor/pull/2770
+    ($ty: ty, $acc: expr) => {
+        <$ty>::try_from(unsafe { core::mem::transmute::<_, &AccountInfo<'_>>($acc.as_ref()) })
+    };
+}
 
 #[program]
 pub mod perpetuals {
@@ -57,6 +65,12 @@ pub mod perpetuals {
         instructions::remove_pool(ctx, &params)
     }
 
+    pub fn add_custody_init<'info>(
+        ctx: Context<'_, '_, '_, 'info, AddCustodyInit<'info>>,
+        params: AddCustodyParams,
+    ) -> Result<u8> {
+        instructions::add_custody_init(ctx, &params)
+    }
     pub fn add_custody<'info>(
         ctx: Context<'_, '_, '_, 'info, AddCustody<'info>>,
         params: AddCustodyParams,
@@ -113,26 +127,17 @@ pub mod perpetuals {
         instructions::set_custom_oracle_price(ctx, &params)
     }
 
-    // test instructions
-
-    pub fn set_test_time<'info>(
-        ctx: Context<'_, '_, '_, 'info, SetTestTime<'info>>,
-        params: SetTestTimeParams,
-    ) -> Result<u8> {
-        instructions::set_test_time(ctx, &params)
-    }
-
     // public instructions
 
     pub fn add_liquidity<'info>(
-        ctx: Context<'_, '_, '_, 'info, AddLiquidity<'info>>,
+        ctx: Context<'_, '_, 'info, 'info, AddLiquidity<'info>>,
         params: AddLiquidityParams,
     ) -> Result<()> {
         instructions::add_liquidity(ctx, &params)
     }
 
     pub fn remove_liquidity<'info>(
-        ctx: Context<'_, '_, '_, 'info, RemoveLiquidity<'info>>,
+        ctx: Context<'_, '_, 'info, 'info, RemoveLiquidity<'info>>,
         params: RemoveLiquidityParams,
     ) -> Result<()> {
         instructions::remove_liquidity(ctx, &params)
@@ -174,20 +179,20 @@ pub mod perpetuals {
     }
 
     pub fn update_pool_aum<'info>(
-        ctx: Context<'_, '_, '_, 'info, UpdatePoolAum<'info>>,
+        ctx: Context<'_, '_, 'info, 'info, UpdatePoolAum<'info>>,
     ) -> Result<u128> {
         instructions::update_pool_aum(ctx)
     }
 
     pub fn get_add_liquidity_amount_and_fee<'info>(
-        ctx: Context<'_, '_, '_, 'info, GetAddLiquidityAmountAndFee<'info>>,
+        ctx: Context<'_, '_, 'info, 'info, GetAddLiquidityAmountAndFee<'info>>,
         params: GetAddLiquidityAmountAndFeeParams,
     ) -> Result<AmountAndFee> {
         instructions::get_add_liquidity_amount_and_fee(ctx, &params)
     }
 
     pub fn get_remove_liquidity_amount_and_fee<'info>(
-        ctx: Context<'_, '_, '_, 'info, GetRemoveLiquidityAmountAndFee<'info>>,
+        ctx: Context<'_, '_, 'info, 'info, GetRemoveLiquidityAmountAndFee<'info>>,
         params: GetRemoveLiquidityAmountAndFeeParams,
     ) -> Result<AmountAndFee> {
         instructions::get_remove_liquidity_amount_and_fee(ctx, &params)
@@ -236,14 +241,14 @@ pub mod perpetuals {
     }
 
     pub fn get_assets_under_management<'info>(
-        ctx: Context<'_, '_, '_, 'info, GetAssetsUnderManagement<'info>>,
+        ctx: Context<'_, '_, 'info, 'info, GetAssetsUnderManagement<'info>>,
         params: GetAssetsUnderManagementParams,
     ) -> Result<u128> {
         instructions::get_assets_under_management(ctx, &params)
     }
 
     pub fn get_lp_token_price<'info>(
-        ctx: Context<'_, '_, '_, 'info, GetLpTokenPrice<'info>>,
+        ctx: Context<'_, '_, 'info, 'info, GetLpTokenPrice<'info>>,
         params: GetLpTokenPriceParams,
     ) -> Result<u64> {
         instructions::get_lp_token_price(ctx, &params)

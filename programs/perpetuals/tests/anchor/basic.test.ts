@@ -4,7 +4,7 @@ import * as anchor from "@coral-xyz/anchor";
 import { BN, Program } from "@coral-xyz/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
-import { startAnchor } from "solana-bankrun";
+import { Clock, startAnchor } from "solana-bankrun";
 
 import IDL from "../../../../target/idl/perpetuals.json";
 import { Perpetuals } from "../../../../target/types/perpetuals";
@@ -23,30 +23,40 @@ describe("perpetuals", () => {
   let tokenExpected;
   let positionExpected;
 
+  let setClock: (epoch: number) => Promise<void>;
   it("init", async () => {
     const context = await startAnchor(".", [], []);
     const provider = new BankrunProvider(context);
-    // Anchor <0.30.0 doesn't populate address on build, so get it from the keypair directly
-    const PERPETUALS_ADDRESS = Keypair.fromSecretKey(
-      new Uint8Array(
-        JSON.parse(
-          fs.readFileSync("./target/deploy/perpetuals-keypair.json", "utf-8"),
-        ),
-      ),
-    ).publicKey;
-    const program = new Program<Perpetuals>(
-      IDL as any,
-      PERPETUALS_ADDRESS,
-      provider,
-    );
+
+    const program = new Program<Perpetuals>(IDL, provider);
 
     tc = new TestClient(context, program);
     tc.printErrors = true;
     await tc.initFixture();
+    setClock = async (ms: number) => {
+      const currentClock = await context.banksClient.getClock();
+      context.setClock(
+        new Clock(
+          currentClock.slot,
+          currentClock.epochStartTimestamp,
+          currentClock.epoch,
+          currentClock.leaderScheduleEpoch,
+          BigInt(ms),
+        ),
+      );
+    };
+    await setClock(0);
+    console.log("=== Fixtured done");
     await tc.init();
 
-    let err = await tc.ensureFails(tc.init());
-    expect(err.logs[3]).includes("already in use");
+    // await expect(tc.init()).rejects.toThrow("already in use");
+    tc.printErrors = false;
+    await new Promise((r) => setTimeout(r, 10)); // Avoid transaction already processed
+    await expect(tc.init()).rejects.toThrow("already in use");
+    tc.printErrors = true;
+    // let err = await tc.ensureFails(tc.init());
+    // console.log(err.logs);
+    // expect(err.logs[3]).includes("already in use");
 
     perpetualsExpected = {
       permissions: {
@@ -443,7 +453,7 @@ describe("perpetuals", () => {
         tc.custodies[1],
         publishTime,
       ),
-    ).rejects.toThrow("as");
+    ).rejects.toThrow("PermissionlessOracleSignerMismatch");
 
     // Sending the permissionless update without signature verification should fail.
     await expect(
@@ -473,14 +483,8 @@ describe("perpetuals", () => {
   });
 
   it("setTestTime", async () => {
-    await tc.setTestTime(111);
-
-    let perpetuals = await tc.program.account.perpetuals.fetch(
-      tc.perpetuals.publicKey,
-    );
-    expect(JSON.stringify(perpetuals.inceptionTime)).to.equal(
-      JSON.stringify(new BN(111)),
-    );
+    // Legacy
+    await setClock(111);
   });
 
   it("addLiquidity", async () => {

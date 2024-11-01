@@ -89,10 +89,7 @@ pub fn competition_enter(
 
     let amount_out = params.amount * 200; // 0.05 SOL = 10,000 USDC
                                           // Mint out token to user
-    let bump = *ctx
-        .bumps
-        .get("mint_out")
-        .ok_or(ProgramError::InvalidSeeds)?;
+    let bump = ctx.bumps.mint_out;
 
     mint_to(
         CpiContext::new(

@@ -115,10 +115,7 @@ pub fn swap_buy(ctx: Context<SwapBuy>, params: SwapBuyParams) -> Result<()> {
     )?;
 
     // Mint out token to user
-    let bump = *ctx
-        .bumps
-        .get("mint_out")
-        .ok_or(ProgramError::InvalidSeeds)?;
+    let bump = ctx.bumps.mint_out;
     mint_to(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),

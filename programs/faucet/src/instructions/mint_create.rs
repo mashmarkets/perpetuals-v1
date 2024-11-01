@@ -53,7 +53,7 @@ pub fn mint_create(ctx: Context<MintCreate>, params: MintCreateParams) -> Result
         return Ok(());
     }
 
-    let bump = *ctx.bumps.get("mint").ok_or(ProgramError::InvalidSeeds)?;
+    let bump = ctx.bumps.mint;
     mint_to(
         CpiContext::new(
             ctx.accounts.token_program.to_account_info(),

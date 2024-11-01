@@ -1,7 +1,7 @@
 //! Oracle price service handling
 
 use {
-    crate::{error::PerpetualsError, math, state::perpetuals::Perpetuals},
+    crate::{error::PerpetualsError, math, state::perpetuals::Perpetuals, try_from},
     anchor_lang::prelude::*,
     core::cmp::Ordering,
 };
@@ -228,7 +228,7 @@ impl OraclePrice {
             PerpetualsError::InvalidOracleAccount
         );
 
-        let oracle_acc = Account::<CustomOracle>::try_from(custom_price_info)?;
+        let oracle_acc = try_from!(Account::<CustomOracle>, custom_price_info)?;
 
         let last_update_age_sec = math::checked_sub(current_time, oracle_acc.publish_time)?;
         if last_update_age_sec > max_price_age_sec as i64 {

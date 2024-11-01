@@ -427,6 +427,30 @@ export class PerpetualsClient {
     fees: Fees,
     borrowRate: BorrowRateParams,
   ): Promise<string> => {
+    await this.program.methods
+      .addCustodyInit({
+        oracle: oracleConfig,
+        pricing: pricingConfig,
+        permissions,
+        fees,
+        borrowRate,
+      })
+      .accounts({
+        admin: this.admin.publicKey,
+        multisig: this.multisig.publicKey,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.getPoolKey(poolName),
+        custody: this.getCustodyKey(poolName, tokenMint),
+        custodyTokenMint: tokenMint,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
+      })
+      .signers([this.admin])
+      .rpc()
+      .then((tx) => console.log("Custody init: ", tx));
+
     return await this.program.methods
       .addCustody({
         oracle: oracleConfig,

@@ -73,7 +73,7 @@ pub struct ClosePosition<'info> {
     #[account(
         constraint = custody_oracle_account.key() == custody.oracle.oracle_account
     )]
-    pub custody_oracle_account: AccountInfo<'info>,
+    pub custody_oracle_account: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -94,7 +94,10 @@ pub struct ClosePositionParams {
     pub price: u64,
 }
 
-pub fn close_position<'info>(ctx: Context<'_, '_, '_, 'info, ClosePosition<'info>>, params: &ClosePositionParams) -> Result<()> {
+pub fn close_position<'info>(
+    ctx: Context<'_, '_, '_, 'info, ClosePosition<'info>>,
+    params: &ClosePositionParams,
+) -> Result<()> {
     // check permissions
     msg!("Check permissions");
     let perpetuals = ctx.accounts.perpetuals.as_mut();

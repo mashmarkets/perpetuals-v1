@@ -51,13 +51,16 @@ pub struct GetPnl<'info> {
     #[account(
         constraint = custody_oracle_account.key() == custody.oracle.oracle_account
     )]
-    pub custody_oracle_account: AccountInfo<'info>,
+    pub custody_oracle_account: UncheckedAccount<'info>,
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct GetPnlParams {}
 
-pub fn get_pnl<'info>(ctx: Context<'_, '_, '_, 'info, GetPnl<'info>>, _params: &GetPnlParams) -> Result<ProfitAndLoss> {
+pub fn get_pnl<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetPnl<'info>>,
+    _params: &GetPnlParams,
+) -> Result<ProfitAndLoss> {
     // get oracle prices
     let position = &ctx.accounts.position;
     let pool = &ctx.accounts.pool;

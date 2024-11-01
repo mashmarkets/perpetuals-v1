@@ -7,7 +7,8 @@ import {
 } from "@solana/spl-token";
 import { PublicKey, SystemProgram } from "@solana/web3.js";
 
-import { Faucet, IDL } from "./target/faucet";
+import { Faucet } from "./target/faucet";
+import IDL from "./target/faucet.json";
 
 export const findFaucetAddressSync = (...seeds) =>
   PublicKey.findProgramAddressSync(
@@ -23,7 +24,7 @@ export const findFaucetAddressSync = (...seeds) =>
       }
       return x;
     }),
-    new PublicKey(IDL.metadata.address),
+    new PublicKey(IDL.address),
   )[0];
 
 export const findFaucetMint = (canonical: string, epoch: bigint) =>
@@ -34,7 +35,7 @@ export const findFaucetMint = (canonical: string, epoch: bigint) =>
   );
 
 export const createFaucetProgram = (provider: AnchorProvider) => {
-  return new Program<Faucet>(IDL as Faucet, IDL.metadata.address, provider);
+  return new Program<Faucet>(IDL as Faucet, provider);
 };
 
 export const oracleAdd = async (

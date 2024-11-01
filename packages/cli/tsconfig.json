@@ -1,9 +1,10 @@
 {
   "compilerOptions": {
-    "typeRoots": ["./node_modules/@types"],
+    "esModuleInterop": true,
     "lib": ["es2015"],
     "module": "commonjs",
+    "resolveJsonModule": true,
     "target": "es6",
-    "esModuleInterop": true
+    "typeRoots": ["./node_modules/@types"]
   }
 }

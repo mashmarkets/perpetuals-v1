@@ -1,10 +1,11 @@
 import { AnchorProvider, Program, Wallet } from "@coral-xyz/anchor";
 import { useAnchorWallet, useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
 import { useMemo } from "react";
 
-import { Faucet, IDL as FaucetIDL } from "@/target/faucet";
-import { Perpetuals, IDL as PerpetualsIDL } from "@/target/perpetuals";
+import { Faucet } from "@/target/faucet";
+import FaucetIDL from "@/target/faucet.json";
+import { Perpetuals } from "@/target/perpetuals";
+import PerpetualsIDL from "@/target/perpetuals.json";
 
 export const useAnchorProvider = () => {
   const wallet = useAnchorWallet();
@@ -21,8 +22,7 @@ export const useReadPerpetualsProgram = () => {
   const { connection } = useConnection();
 
   return useMemo(() => {
-    const programId = new PublicKey(PerpetualsIDL.metadata.address);
-    return new Program<Perpetuals>(PerpetualsIDL, programId, { connection });
+    return new Program<Perpetuals>(PerpetualsIDL as Perpetuals, { connection });
   }, [connection]);
 };
 
@@ -34,9 +34,8 @@ export const useWritePerpetualsProgram = () => {
     if (!wallet) {
       return undefined;
     }
-    const programId = new PublicKey(PerpetualsIDL.metadata.address);
     const provider = new AnchorProvider(connection, wallet as Wallet, {});
-    return new Program<Perpetuals>(PerpetualsIDL, programId, provider);
+    return new Program<Perpetuals>(PerpetualsIDL as Perpetuals, provider);
   }, [wallet, connection]);
 };
 
@@ -48,8 +47,7 @@ export const useWriteFaucetProgram = () => {
     if (!wallet) {
       return undefined;
     }
-    const programId = new PublicKey(FaucetIDL.metadata.address);
     const provider = new AnchorProvider(connection, wallet as Wallet, {});
-    return new Program<Faucet>(FaucetIDL, programId, provider);
+    return new Program<Faucet>(FaucetIDL as Faucet, provider);
   }, [wallet, connection]);
 };

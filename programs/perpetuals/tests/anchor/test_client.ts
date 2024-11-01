@@ -514,6 +514,37 @@ export class TestClient {
     for (let i = 0; i < multisig.minSignatures; ++i) {
       try {
         await this.program.methods
+          .addCustodyInit({
+            oracle: oracleConfig,
+            pricing,
+            permissions,
+            fees,
+            borrowRate,
+          })
+          .accounts({
+            admin: this.admins[i].publicKey,
+            multisig: this.multisig.publicKey,
+            transferAuthority: this.authority.publicKey,
+            perpetuals: this.perpetuals.publicKey,
+            pool: this.pool.publicKey,
+            custody: custody.custody,
+            custodyTokenMint: custody.mint.publicKey,
+            systemProgram: SystemProgram.programId,
+            tokenProgram: spl.TOKEN_PROGRAM_ID,
+            rent: SYSVAR_RENT_PUBKEY,
+          })
+          .signers([this.admins[i]])
+          .rpc();
+      } catch (err) {
+        if (this.printErrors) {
+          console.log(err);
+        }
+        throw err;
+      }
+    }
+    for (let i = 0; i < multisig.minSignatures; ++i) {
+      try {
+        await this.program.methods
           .addCustody({
             oracle: oracleConfig,
             pricing,
@@ -729,8 +760,8 @@ export class TestClient {
     let message =
       messageOverwrite != null
         ? messageOverwrite
-        : this.program._coder.types.encode(
-            "SetCustomOraclePricePermissionlessParams",
+        : this.program.coder.types.encode(
+            "setCustomOraclePricePermissionlessParams",
             setCustomOraclePricePermissionlessParams,
           );
 
@@ -776,32 +807,6 @@ export class TestClient {
         console.log(err);
       }
       throw err;
-    }
-  };
-
-  setTestTime = async (time: number) => {
-    let multisig = await this.program.account.multisig.fetch(
-      this.multisig.publicKey,
-    );
-    for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .setTestTime({
-            time: new BN(time),
-          })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
     }
   };
 

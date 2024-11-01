@@ -43,7 +43,7 @@ pub struct GetAddLiquidityAmountAndFee<'info> {
     #[account(
         constraint = custody_oracle_account.key() == custody.oracle.oracle_account
     )]
-    pub custody_oracle_account: AccountInfo<'info>,
+    pub custody_oracle_account: UncheckedAccount<'info>,
 
     #[account(
         seeds = [b"lp_token_mint", pool.key().as_ref()],
@@ -58,7 +58,7 @@ pub struct GetAddLiquidityAmountAndFeeParams {
 }
 
 pub fn get_add_liquidity_amount_and_fee<'info>(
-    ctx: Context<'_, '_, '_, 'info, GetAddLiquidityAmountAndFee<'info>>,
+    ctx: Context<'_, '_, 'info, 'info, GetAddLiquidityAmountAndFee<'info>>,
     params: &GetAddLiquidityAmountAndFeeParams,
 ) -> Result<AmountAndFee> {
     // validate inputs

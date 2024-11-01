@@ -71,7 +71,7 @@ pub struct AddLiquidity<'info> {
     #[account(
         constraint = custody_oracle_account.key() == custody.oracle.oracle_account
     )]
-    pub custody_oracle_account: AccountInfo<'info>,
+    pub custody_oracle_account: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -103,7 +103,10 @@ pub struct AddLiquidityParams {
     pub min_lp_amount_out: u64,
 }
 
-pub fn add_liquidity<'info>(ctx: Context<'_, '_, '_, 'info, AddLiquidity<'info>>, params: &AddLiquidityParams) -> Result<()> {
+pub fn add_liquidity<'info>(
+    ctx: Context<'_, '_, 'info, 'info, AddLiquidity<'info>>,
+    params: &AddLiquidityParams,
+) -> Result<()> {
     // check permissions
     msg!("Check permissions");
     let perpetuals = ctx.accounts.perpetuals.as_mut();

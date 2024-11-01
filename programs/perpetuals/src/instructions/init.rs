@@ -1,13 +1,9 @@
 //! Init instruction handler
 
 use {
-    crate::{
-        error::PerpetualsError,
-        state::{multisig::Multisig, perpetuals::Perpetuals},
-    },
+    crate::{error::PerpetualsError, state::multisig::Multisig, state::perpetuals::Perpetuals},
     anchor_lang::prelude::*,
     anchor_spl::token::Token,
-    solana_program::program_error::ProgramError,
 };
 
 #[derive(Accounts)]
@@ -45,7 +41,7 @@ pub struct Init<'info> {
 
     /// CHECK: ProgramData account, doesn't work in tests
     #[account()]
-    pub perpetuals_program_data: AccountInfo<'info /*, ProgramData*/>,
+    pub perpetuals_program_data: UncheckedAccount<'info>,
 
     pub perpetuals_program: Program<'info, crate::program::Perpetuals>,
 
@@ -66,10 +62,13 @@ pub struct InitParams {
     pub allow_size_change: bool,
 }
 
-pub fn init<'info>(ctx: Context<'_, '_, '_, 'info, Init<'info>>, params: &InitParams) -> Result<()> {
+pub fn init<'info>(
+    ctx: Context<'_, '_, '_, 'info, Init<'info>>,
+    params: &InitParams,
+) -> Result<()> {
     Perpetuals::validate_upgrade_authority(
         ctx.accounts.upgrade_authority.key(),
-        &ctx.accounts.perpetuals_program_data.to_account_info(),
+        &ctx.accounts.perpetuals_program_data,
         &ctx.accounts.perpetuals_program,
     )?;
 
@@ -79,10 +78,7 @@ pub fn init<'info>(ctx: Context<'_, '_, '_, 'info, Init<'info>>, params: &InitPa
     multisig.set_signers(ctx.remaining_accounts, params.min_signatures)?;
 
     // record multisig PDA bump
-    multisig.bump = *ctx
-        .bumps
-        .get("multisig")
-        .ok_or(ProgramError::InvalidSeeds)?;
+    multisig.bump = ctx.bumps.multisig;
 
     // record perpetuals
     let perpetuals = ctx.accounts.perpetuals.as_mut();
@@ -94,14 +90,8 @@ pub fn init<'info>(ctx: Context<'_, '_, '_, 'info, Init<'info>>, params: &InitPa
     perpetuals.permissions.allow_pnl_withdrawal = params.allow_pnl_withdrawal;
     perpetuals.permissions.allow_collateral_withdrawal = params.allow_collateral_withdrawal;
     perpetuals.permissions.allow_size_change = params.allow_size_change;
-    perpetuals.transfer_authority_bump = *ctx
-        .bumps
-        .get("transfer_authority")
-        .ok_or(ProgramError::InvalidSeeds)?;
-    perpetuals.perpetuals_bump = *ctx
-        .bumps
-        .get("perpetuals")
-        .ok_or(ProgramError::InvalidSeeds)?;
+    perpetuals.transfer_authority_bump = ctx.bumps.transfer_authority;
+    perpetuals.perpetuals_bump = ctx.bumps.perpetuals;
     perpetuals.inception_time = perpetuals.get_time()?;
 
     if !perpetuals.validate() {

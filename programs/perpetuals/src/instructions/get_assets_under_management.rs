@@ -30,7 +30,7 @@ pub struct GetAssetsUnderManagement<'info> {
 pub struct GetAssetsUnderManagementParams {}
 
 pub fn get_assets_under_management<'info>(
-    ctx: Context<'_, '_, '_, 'info, GetAssetsUnderManagement<'info>>,
+    ctx: Context<'_, '_, 'info, 'info, GetAssetsUnderManagement<'info>>,
     _params: &GetAssetsUnderManagementParams,
 ) -> Result<u128> {
     ctx.accounts.pool.get_assets_under_management_usd(

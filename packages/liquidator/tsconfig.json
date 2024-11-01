@@ -3,13 +3,14 @@
   "_version": "20.1.0",
 
   "compilerOptions": {
+    "esModuleInterop": true,
     "lib": ["es2023"],
     "module": "node16",
-    "target": "es2022",
+    "moduleResolution": "node16",
     "outDir": "out",
-    "strict": true,
-    "esModuleInterop": true,
+    "resolveJsonModule": true,
     "skipLibCheck": true,
-    "moduleResolution": "node16"
+    "strict": true,
+    "target": "es2022"
   }
 }

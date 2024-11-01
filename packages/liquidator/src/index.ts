@@ -20,7 +20,9 @@ import { memoize } from "lodash-es";
 import { setIntervalAsync } from "set-interval-async/dynamic";
 
 import { env } from "./env.js";
-import { IDL, Perpetuals } from "./target/perpetuals.js";
+import { Perpetuals } from "./target/perpetuals.js";
+// @ts-ignore 
+import IDL from "./target/perpetuals.json" with { type: "json" }
 import { getProgramIdFromUrl, notify, sleep } from "./utils.js";
 
 // Related to https://github.com/jhurliman/node-rate-limiter/issues/80
@@ -257,9 +259,8 @@ const loadWallet = () => {
 
 async function main() {
   const programId = env.PERPETUALS_IDL_URL
-    ? ((await getProgramIdFromUrl(env.PERPETUALS_IDL_URL)) ??
-      IDL.metadata.address)
-    : IDL.metadata.address;
+    ? ((await getProgramIdFromUrl(env.PERPETUALS_IDL_URL)) ?? IDL.address)
+    : IDL.address;
 
   // Pool IDL Endpoint to see if program address has changed
   if (env.PERPETUALS_IDL_URL) {
@@ -286,7 +287,7 @@ async function main() {
 
   const wallet = loadWallet();
   const provider = new AnchorProvider(connection, wallet, {});
-  const program = new Program<Perpetuals>(IDL, programId, provider);
+  const program = new Program<Perpetuals>(IDL as Perpetuals, provider);
 
   // https://solana.com/docs/core/clusters#devnet-rate-limits
   const limiter = new RateLimiter({

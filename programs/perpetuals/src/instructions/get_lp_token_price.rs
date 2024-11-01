@@ -41,7 +41,7 @@ pub struct GetLpTokenPrice<'info> {
 pub struct GetLpTokenPriceParams {}
 
 pub fn get_lp_token_price<'info>(
-    ctx: Context<'_, '_, '_, 'info, GetLpTokenPrice<'info>>,
+    ctx: Context<'_, '_, 'info, 'info, GetLpTokenPrice<'info>>,
     _params: &GetLpTokenPriceParams,
 ) -> Result<u64> {
     let aum_usd = math::checked_as_u64(ctx.accounts.pool.get_assets_under_management_usd(

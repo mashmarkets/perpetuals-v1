@@ -71,7 +71,7 @@ pub struct RemoveLiquidity<'info> {
     #[account(
         constraint = custody_oracle_account.key() == custody.oracle.oracle_account
     )]
-    pub custody_oracle_account: AccountInfo<'info>,
+    pub custody_oracle_account: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -104,7 +104,7 @@ pub struct RemoveLiquidityParams {
 }
 
 pub fn remove_liquidity<'info>(
-    ctx: Context<'_, '_, '_, 'info, RemoveLiquidity<'info>>,
+    ctx: Context<'_, '_, 'info, 'info, RemoveLiquidity<'info>>,
     params: &RemoveLiquidityParams,
 ) -> Result<()> {
     // check permissions

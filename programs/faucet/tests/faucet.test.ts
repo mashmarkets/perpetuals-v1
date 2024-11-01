@@ -17,8 +17,8 @@ import { BankrunProvider } from "anchor-bankrun";
 import { startAnchor } from "solana-bankrun";
 import { getAccount, getMint } from "spl-token-bankrun";
 
-import { sleep } from "../../../packages/liquidator/src/utils";
-import { Faucet, IDL } from "../../../target/types/faucet";
+import IDL from "../../../target/idl/faucet.json";
+import { Faucet } from "../../../target/types/faucet";
 
 describe("Token Faucet", async () => {
   const context = await startAnchor(".", [], []);
@@ -26,11 +26,7 @@ describe("Token Faucet", async () => {
 
   setProvider(provider);
   const payer = provider.wallet as Wallet;
-  const program = new Program<Faucet>(
-    IDL as Faucet,
-    IDL.metadata.address,
-    provider,
-  );
+  const program = new Program<Faucet>(IDL, provider);
 
   const findFaucetAddressSync = (...seeds) =>
     PublicKey.findProgramAddressSync(
@@ -46,7 +42,7 @@ describe("Token Faucet", async () => {
         }
         return x;
       }),
-      new PublicKey(IDL.metadata.address),
+      new PublicKey(IDL.address),
     )[0];
 
   const epoch = new BN(0);
@@ -256,7 +252,6 @@ describe("Token Faucet", async () => {
       payer.publicKey,
     );
     const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
-    console.log(await getMint(context.banksClient, mintUsdc));
     const initialUsdc = (await getAccount(context.banksClient, ataUsdc)).amount;
 
     await program.methods
@@ -355,6 +350,6 @@ describe("Token Faucet", async () => {
           ),
         ])
         .rpc(),
-    ).rejects.toThrow("Unknown action"); // Not parsing anchor errors correctly
+    ).rejects.toThrow("InvalidEntryAmount"); // Not parsing anchor errors correctly
   });
 });

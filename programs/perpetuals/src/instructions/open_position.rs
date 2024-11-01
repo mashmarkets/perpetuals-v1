@@ -80,7 +80,7 @@ pub struct OpenPosition<'info> {
     #[account(
         constraint = custody_oracle_account.key() == custody.oracle.oracle_account
     )]
-    pub custody_oracle_account: AccountInfo<'info>,
+    pub custody_oracle_account: UncheckedAccount<'info>,
 
     #[account(
         mut,
@@ -202,10 +202,7 @@ pub fn open_position<'info>(
     position.cumulative_interest_snapshot = custody.get_cumulative_interest(curtime)?;
     position.locked_amount = locked_amount;
     position.collateral_amount = params.collateral;
-    position.bump = *ctx
-        .bumps
-        .get("position")
-        .ok_or(ProgramError::InvalidSeeds)?;
+    position.bump = ctx.bumps.position;
 
     // check position risk
     msg!("Check position risks");

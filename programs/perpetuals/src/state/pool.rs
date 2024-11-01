@@ -475,10 +475,10 @@ impl Pool {
         }
     }
 
-    pub fn get_assets_under_management_usd(
+    pub fn get_assets_under_management_usd<'info>(
         &self,
         aum_calc_mode: AumCalcMode,
-        accounts: &[AccountInfo],
+        accounts: &'info [AccountInfo<'info>],
         curtime: i64,
     ) -> Result<u128> {
         let mut pool_amount_usd: u128 = 0;

@@ -1,257 +1,364 @@
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/faucet.json`.
+ */
 export type Faucet = {
+  "address": "7TfpKdoDVa58JpZpMX3Tq8gYT9RcSr7XKqimYnGLrGQP",
   "metadata": {
-    "address": "BPXsk7o3PWaXMNJRyUk7m7VogYZQYAVXeNgPd5j1Dq9S"
+    "name": "faucet",
+    "version": "0.1.0",
+    "spec": "0.1.0",
+    "description": "Created with Anchor"
   },
-  "version": "0.1.0",
-  "name": "faucet",
   "instructions": [
     {
       "name": "competitionEnter",
+      "discriminator": [
+        73,
+        206,
+        144,
+        92,
+        200,
+        255,
+        246,
+        160
+      ],
       "accounts": [
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
           "name": "mintIn",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "tokenAccountIn",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "vault",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "mintOut",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "tokenAccountOut",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "tokenProgram"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "systemProgram"
         }
       ],
       "args": [
         {
           "name": "params",
           "type": {
-            "defined": "CompetitionEnterParams"
+            "defined": {
+              "name": "competitionEnterParams"
+            }
           }
         }
       ]
     },
     {
       "name": "mintCreate",
+      "discriminator": [
+        173,
+        240,
+        176,
+        171,
+        204,
+        187,
+        95,
+        84
+      ],
       "accounts": [
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
           "name": "mint",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "associatedTokenAccount",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "tokenProgram"
         },
         {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "associatedTokenProgram"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "systemProgram"
         }
       ],
       "args": [
         {
           "name": "params",
           "type": {
-            "defined": "MintCreateParams"
+            "defined": {
+              "name": "mintCreateParams"
+            }
           }
         }
       ]
     },
     {
       "name": "oracleAdd",
+      "discriminator": [
+        57,
+        113,
+        255,
+        83,
+        43,
+        42,
+        17,
+        20
+      ],
       "accounts": [
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
           "name": "oracle",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
-          "name": "priceUpdate",
-          "isMut": false,
-          "isSigner": false
+          "name": "priceUpdate"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "systemProgram"
         }
       ],
       "args": [
         {
           "name": "params",
           "type": {
-            "defined": "OracleAddParams"
+            "defined": {
+              "name": "oracleAddParams"
+            }
           }
         }
       ]
     },
     {
       "name": "swapBuy",
+      "discriminator": [
+        76,
+        98,
+        154,
+        93,
+        42,
+        113,
+        62,
+        139
+      ],
       "accounts": [
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "oracle",
-          "isMut": false,
-          "isSigner": false
+          "name": "oracle"
         },
         {
-          "name": "priceUpdate",
-          "isMut": false,
-          "isSigner": false
+          "name": "priceUpdate"
         },
         {
           "name": "mintIn",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "tokenAccountIn",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "mintOut",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "tokenAccountOut",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "tokenProgram"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "systemProgram"
         }
       ],
       "args": [
         {
           "name": "params",
           "type": {
-            "defined": "SwapBuyParams"
+            "defined": {
+              "name": "swapBuyParams"
+            }
           }
         }
       ]
     },
     {
       "name": "swapSell",
+      "discriminator": [
+        176,
+        40,
+        55,
+        165,
+        110,
+        62,
+        84,
+        97
+      ],
       "accounts": [
         {
           "name": "payer",
-          "isMut": true,
-          "isSigner": true
+          "writable": true,
+          "signer": true
         },
         {
-          "name": "oracle",
-          "isMut": false,
-          "isSigner": false
+          "name": "oracle"
         },
         {
-          "name": "priceUpdate",
-          "isMut": false,
-          "isSigner": false
+          "name": "priceUpdate"
         },
         {
           "name": "mintIn",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "tokenAccountIn",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "mintOut",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
           "name": "tokenAccountOut",
-          "isMut": true,
-          "isSigner": false
+          "writable": true
         },
         {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "tokenProgram"
         },
         {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
+          "name": "systemProgram"
         }
       ],
       "args": [
         {
           "name": "params",
           "type": {
-            "defined": "SwapSellParams"
+            "defined": {
+              "name": "swapSellParams"
+            }
           }
         }
       ]
     }
   ],
   "accounts": [
+    {
+      "name": "oracle",
+      "discriminator": [
+        139,
+        194,
+        131,
+        179,
+        140,
+        179,
+        229,
+        244
+      ]
+    },
+    {
+      "name": "priceUpdateV2",
+      "discriminator": [
+        34,
+        241,
+        35,
+        99,
+        157,
+        126,
+        244,
+        205
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "insufficientFunds",
+      "msg": "An account's balance was too small to complete the instruction"
+    },
+    {
+      "code": 6001,
+      "name": "invalidQuoteMint",
+      "msg": "Invalid Quote Mint"
+    },
+    {
+      "code": 6002,
+      "name": "invalidEntryAmount",
+      "msg": "Invalid Entry Amount"
+    }
+  ],
+  "types": [
+    {
+      "name": "competitionEnterParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "epoch",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "mintCreateParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "amount",
+            "type": "u64"
+          },
+          {
+            "name": "canonical",
+            "type": "pubkey"
+          },
+          {
+            "name": "decimals",
+            "type": "u8"
+          },
+          {
+            "name": "epoch",
+            "type": "i64"
+          }
+        ]
+      }
+    },
     {
       "name": "oracle",
       "type": {
@@ -276,57 +383,15 @@ export type Faucet = {
           }
         ]
       }
-    }
-  ],
-  "types": [
-    {
-      "name": "CompetitionEnterParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "epoch",
-            "type": "i64"
-          }
-        ]
-      }
     },
     {
-      "name": "MintCreateParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
-            "type": "u64"
-          },
-          {
-            "name": "canonical",
-            "type": "publicKey"
-          },
-          {
-            "name": "decimals",
-            "type": "u8"
-          },
-          {
-            "name": "epoch",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "OracleAddParams",
+      "name": "oracleAddParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
             "name": "canonical",
-            "type": "publicKey"
+            "type": "pubkey"
           },
           {
             "name": "feedId",
@@ -340,329 +405,10 @@ export type Faucet = {
       }
     },
     {
-      "name": "SwapBuyParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amountOut",
-            "type": "u64"
-          },
-          {
-            "name": "canonicalIn",
-            "type": "publicKey"
-          },
-          {
-            "name": "canonicalOut",
-            "type": "publicKey"
-          },
-          {
-            "name": "epoch",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "SwapSellParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amountIn",
-            "type": "u64"
-          },
-          {
-            "name": "canonicalIn",
-            "type": "publicKey"
-          },
-          {
-            "name": "canonicalOut",
-            "type": "publicKey"
-          },
-          {
-            "name": "epoch",
-            "type": "i64"
-          }
-        ]
-      }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "InsufficientFunds",
-      "msg": "An account's balance was too small to complete the instruction"
-    },
-    {
-      "code": 6001,
-      "name": "InvalidQuoteMint",
-      "msg": "Invalid Quote Mint"
-    },
-    {
-      "code": 6002,
-      "name": "InvalidEntryAmount",
-      "msg": "Invalid Entry Amount"
-    }
-  ]
-};
-
-export const IDL: Faucet = {
-  "metadata": {
-    "address": "BPXsk7o3PWaXMNJRyUk7m7VogYZQYAVXeNgPd5j1Dq9S"
-  },
-  "version": "0.1.0",
-  "name": "faucet",
-  "instructions": [
-    {
-      "name": "competitionEnter",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "mintIn",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccountIn",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "vault",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintOut",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccountOut",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "CompetitionEnterParams"
-          }
-        }
-      ]
-    },
-    {
-      "name": "mintCreate",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "mint",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenAccount",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "associatedTokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "MintCreateParams"
-          }
-        }
-      ]
-    },
-    {
-      "name": "oracleAdd",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "oracle",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "priceUpdate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "OracleAddParams"
-          }
-        }
-      ]
-    },
-    {
-      "name": "swapBuy",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "oracle",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "priceUpdate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "mintIn",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccountIn",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintOut",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccountOut",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "SwapBuyParams"
-          }
-        }
-      ]
-    },
-    {
-      "name": "swapSell",
-      "accounts": [
-        {
-          "name": "payer",
-          "isMut": true,
-          "isSigner": true
-        },
-        {
-          "name": "oracle",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "priceUpdate",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "mintIn",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccountIn",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "mintOut",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenAccountOut",
-          "isMut": true,
-          "isSigner": false
-        },
-        {
-          "name": "tokenProgram",
-          "isMut": false,
-          "isSigner": false
-        },
-        {
-          "name": "systemProgram",
-          "isMut": false,
-          "isSigner": false
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": "SwapSellParams"
-          }
-        }
-      ]
-    }
-  ],
-  "accounts": [
-    {
-      "name": "oracle",
+      "name": "priceFeedMessage",
+      "repr": {
+        "kind": "c"
+      },
       "type": {
         "kind": "struct",
         "fields": [
@@ -676,80 +422,95 @@ export const IDL: Faucet = {
             }
           },
           {
-            "name": "maxPriceAgeSec",
-            "type": "u32"
+            "name": "price",
+            "type": "i64"
           },
           {
-            "name": "bump",
-            "type": "u8"
-          }
-        ]
-      }
-    }
-  ],
-  "types": [
-    {
-      "name": "CompetitionEnterParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "amount",
+            "name": "conf",
             "type": "u64"
           },
           {
-            "name": "epoch",
-            "type": "i64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "MintCreateParams",
-      "type": {
-        "kind": "struct",
-        "fields": [
+            "name": "exponent",
+            "type": "i32"
+          },
           {
-            "name": "amount",
+            "name": "publishTime",
+            "docs": [
+              "The timestamp of this price update in seconds"
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "prevPublishTime",
+            "docs": [
+              "The timestamp of the previous price update. This field is intended to allow users to",
+              "identify the single unique price update for any moment in time:",
+              "for any time t, the unique update is the one such that prev_publish_time < t <= publish_time.",
+              "",
+              "Note that there may not be such an update while we are migrating to the new message-sending logic,",
+              "as some price updates on pythnet may not be sent to other chains (because the message-sending",
+              "logic may not have triggered). We can solve this problem by making the message-sending mandatory",
+              "(which we can do once publishers have migrated over).",
+              "",
+              "Additionally, this field may be equal to publish_time if the message is sent on a slot where",
+              "where the aggregation was unsuccesful. This problem will go away once all publishers have",
+              "migrated over to a recent version of pyth-agent."
+            ],
+            "type": "i64"
+          },
+          {
+            "name": "emaPrice",
+            "type": "i64"
+          },
+          {
+            "name": "emaConf",
             "type": "u64"
-          },
-          {
-            "name": "canonical",
-            "type": "publicKey"
-          },
-          {
-            "name": "decimals",
-            "type": "u8"
-          },
-          {
-            "name": "epoch",
-            "type": "i64"
           }
         ]
       }
     },
     {
-      "name": "OracleAddParams",
+      "name": "priceUpdateV2",
+      "docs": [
+        "A price update account. This account is used by the Pyth Receiver program to store a verified price update from a Pyth price feed.",
+        "It contains:",
+        "- `write_authority`: The write authority for this account. This authority can close this account to reclaim rent or update the account to contain a different price update.",
+        "- `verification_level`: The [`VerificationLevel`] of this price update. This represents how many Wormhole guardian signatures have been verified for this price update.",
+        "- `price_message`: The actual price update.",
+        "- `posted_slot`: The slot at which this price update was posted."
+      ],
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "canonical",
-            "type": "publicKey"
+            "name": "writeAuthority",
+            "type": "pubkey"
           },
           {
-            "name": "feedId",
-            "type": "string"
+            "name": "verificationLevel",
+            "type": {
+              "defined": {
+                "name": "verificationLevel"
+              }
+            }
           },
           {
-            "name": "maxPriceAgeSec",
-            "type": "u32"
+            "name": "priceMessage",
+            "type": {
+              "defined": {
+                "name": "priceFeedMessage"
+              }
+            }
+          },
+          {
+            "name": "postedSlot",
+            "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "SwapBuyParams",
+      "name": "swapBuyParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -759,11 +520,11 @@ export const IDL: Faucet = {
           },
           {
             "name": "canonicalIn",
-            "type": "publicKey"
+            "type": "pubkey"
           },
           {
             "name": "canonicalOut",
-            "type": "publicKey"
+            "type": "pubkey"
           },
           {
             "name": "epoch",
@@ -773,7 +534,7 @@ export const IDL: Faucet = {
       }
     },
     {
-      "name": "SwapSellParams",
+      "name": "swapSellParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -783,11 +544,11 @@ export const IDL: Faucet = {
           },
           {
             "name": "canonicalIn",
-            "type": "publicKey"
+            "type": "pubkey"
           },
           {
             "name": "canonicalOut",
-            "type": "publicKey"
+            "type": "pubkey"
           },
           {
             "name": "epoch",
@@ -795,23 +556,39 @@ export const IDL: Faucet = {
           }
         ]
       }
-    }
-  ],
-  "errors": [
-    {
-      "code": 6000,
-      "name": "InsufficientFunds",
-      "msg": "An account's balance was too small to complete the instruction"
     },
     {
-      "code": 6001,
-      "name": "InvalidQuoteMint",
-      "msg": "Invalid Quote Mint"
-    },
-    {
-      "code": 6002,
-      "name": "InvalidEntryAmount",
-      "msg": "Invalid Entry Amount"
+      "name": "verificationLevel",
+      "docs": [
+        "Pyth price updates are bridged to all blockchains via Wormhole.",
+        "Using the price updates on another chain requires verifying the signatures of the Wormhole guardians.",
+        "The usual process is to check the signatures for two thirds of the total number of guardians, but this can be cumbersome on Solana because of the transaction size limits,",
+        "so we also allow for partial verification.",
+        "",
+        "This enum represents how much a price update has been verified:",
+        "- If `Full`, we have verified the signatures for two thirds of the current guardians.",
+        "- If `Partial`, only `num_signatures` guardian signatures have been checked.",
+        "",
+        "# Warning",
+        "Using partially verified price updates is dangerous, as it lowers the threshold of guardians that need to collude to produce a malicious price update."
+      ],
+      "type": {
+        "kind": "enum",
+        "variants": [
+          {
+            "name": "partial",
+            "fields": [
+              {
+                "name": "numSignatures",
+                "type": "u8"
+              }
+            ]
+          },
+          {
+            "name": "full"
+          }
+        ]
+      }
     }
   ]
 };

@@ -30,7 +30,9 @@ pub struct UpdatePoolAum<'info> {
     //   pool.tokens.len() custody oracles (read-only, unsigned)
 }
 
-pub fn update_pool_aum<'info>(ctx: Context<'_, '_, '_, 'info, UpdatePoolAum<'info>>) -> Result<u128> {
+pub fn update_pool_aum<'info>(
+    ctx: Context<'_, '_, 'info, 'info, UpdatePoolAum<'info>>,
+) -> Result<u128> {
     let perpetuals: &Account<'_, Perpetuals> = ctx.accounts.perpetuals.as_ref();
     let pool = ctx.accounts.pool.as_mut();
 

@@ -170,6 +170,10 @@ async function main() {
   const faucet = createFaucetProgram(provider);
   const perpetuals = new PerpetualsClient("https://api.devnet.solana.com", KEY);
 
+  const USDC = Object.values(tokens).find(
+    (x) => x.address === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  )!;
+
   // Initialize the protocol
   await perpetuals
     .init([perpetuals.program.provider.publicKey], {
@@ -184,9 +188,6 @@ async function main() {
     })
     .then((sig) => console.log("Protocol initialized: ", sig));
 
-  const USDC = Object.values(tokens).find(
-    (x) => x.address === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  )!;
   // Mint usdc to me
   await mintCreate(faucet, {
     canonical: USDC.address,

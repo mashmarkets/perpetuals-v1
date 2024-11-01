@@ -21,15 +21,16 @@ function close {
 # Named after anchor types options, but supports multiple destinations
 function types {
   pnpm exec tsx ./scripts/patch.js
+
   rm -rf packages/ui/src/target/*
-  cp -rf target/types/ packages/ui/src/target
+  cp -rf target/types/ target/idl/ packages//ui/src/target
   cp -rf target/idl/perpetuals.json packages/ui/public/static/idl
 
   rm -rf packages/liquidator/src/target/*
-  cp -rf target/types/perpetuals.ts packages/liquidator/src/target
+  cp -rf target/idl/perpetuals.json target/types/perpetuals.ts packages/liquidator/src/target
 
   rm -rf packages/cli/src/target/*
-  cp -rf target/types/ packages/cli/src/target
+  cp -rf target/types/ target/idl/ packages/cli/src/target
 }
 
 function deploy {
@@ -68,13 +69,14 @@ function redeploy {
 
 
 function test-perpetuals-native {
-  RUST_BACKTRACE=1 RUST_LOG= cargo test-bpf -- --nocapture
+  RUST_BACKTRACE=1 RUST_LOG= cargo test-sbf -- --nocapture
 }
 
 function test-perpetuals-anchor {
   # We don't want the validator as we using bankrun
-  command anchor build -p perpetuals -- --features test
-  RUST_LOG= command npm run test -- --run --dir "./programs/perpetuals/tests/anchor"
+  command anchor build -p perpetuals 
+  types
+  RUST_LOG= command npm run test -- --run --dir "./programs/perpetuals/tests/"
 }
 
 function test-perpetuals {
@@ -86,7 +88,7 @@ function test-faucet {
   # We don't want the validator as we using bankrun
   command anchor build -p faucet 
   types
-  command npm run test -- --run --dir "./programs/faucet/tests"
+  RUST_LOG= command npm run test -- --run --dir "./programs/faucet/tests"
 }
 
 function test {

@@ -9,8 +9,11 @@ importers:
   .:
     dependencies:
       '@coral-xyz/anchor':
-        specifier: 0.28.0
-        version: 0.28.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+        specifier: 0.30.1
+        version: 0.30.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      '@pythnetwork/price-service-client':
+        specifier: ^1.9.0
+        version: 1.9.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       '@solana/spl-token':
         specifier: 0.3.11
         version: 0.3.11(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
@@ -31,8 +34,8 @@ importers:
         specifier: 2.0.0-experimental.5e8ac8d
         version: 2.0.0-experimental.5e8ac8d
       anchor-bankrun:
-        specifier: 0.3.0
-        version: 0.3.0(@coral-xyz/anchor@0.28.0(bufferutil@4.0.8)(utf-8-validate@5.0.10))(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))(solana-bankrun@0.3.0(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+        specifier: 0.5.0
+        version: 0.5.0(@coral-xyz/anchor@0.30.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))(solana-bankrun@0.4.0(bufferutil@4.0.8)(utf-8-validate@5.0.10))
       prettier:
         specifier: 3.3.3
         version: 3.3.3
@@ -43,8 +46,8 @@ importers:
         specifier: 7.11.0
         version: 7.11.0
       solana-bankrun:
-        specifier: 0.3.0
-        version: 0.3.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+        specifier: 0.4.0
+        version: 0.4.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       spl-token-bankrun:
         specifier: 0.2.6
         version: 0.2.6(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))(bufferutil@4.0.8)(fastestsmallesttextencoderdecoder@1.0.22)(typescript@5.6.3)(utf-8-validate@5.0.10)
@@ -142,22 +145,26 @@ packages:
     resolution: {integrity: sha512-OwS2CM5KocvQ/k7dFJa8i5bNGJP0hXWfVCfDkqRFP1IreH1JDC7wG6eCYCi0+McbfT8OR/kNqsI0UU0xP9H6PQ==}
     engines: {node: '>=6.9.0'}
 
-  '@coral-xyz/anchor@0.28.0':
-    resolution: {integrity: sha512-kQ02Hv2ZqxtWP30WN1d4xxT4QqlOXYDxmEd3k/bbneqhV3X5QMO4LAtoUFs7otxyivOgoqam5Il5qx81FuI4vw==}
-    engines: {node: '>=11'}
+  '@coral-xyz/anchor-errors@0.30.1':
+    resolution: {integrity: sha512-9Mkradf5yS5xiLWrl9WrpjqOrAV+/W2RQHDlbnAZBivoGpOs1ECjoDCkVk4aRG8ZdiFiB8zQEVlxf+8fKkmSfQ==}
+    engines: {node: '>=10'}
 
   '@coral-xyz/anchor@0.29.0':
     resolution: {integrity: sha512-eny6QNG0WOwqV0zQ7cs/b1tIuzZGmP7U7EcH+ogt4Gdbl8HDmIYVMh/9aTmYZPaFWjtUaI8qSn73uYEXWfATdA==}
     engines: {node: '>=11'}
 
-  '@coral-xyz/borsh@0.28.0':
-    resolution: {integrity: sha512-/u1VTzw7XooK7rqeD7JLUSwOyRSesPUk0U37BV9zK0axJc1q0nRbKFGFLYCQ16OtdOJTTwGfGp11Lx9B45bRCQ==}
+  '@coral-xyz/anchor@0.30.1':
+    resolution: {integrity: sha512-gDXFoF5oHgpriXAaLpxyWBHdCs8Awgf/gLHIo6crv7Aqm937CNdY+x+6hoj7QR5vaJV7MxWSQ0NGFzL3kPbWEQ==}
+    engines: {node: '>=11'}
+
+  '@coral-xyz/borsh@0.29.0':
+    resolution: {integrity: sha512-s7VFVa3a0oqpkuRloWVPdCK7hMbAMY270geZOGfCnaqexrP5dTIpbEHL33req6IYPPJ0hYa71cdvJ1h6V55/oQ==}
     engines: {node: '>=10'}
     peerDependencies:
       '@solana/web3.js': ^1.68.0
 
-  '@coral-xyz/borsh@0.29.0':
-    resolution: {integrity: sha512-s7VFVa3a0oqpkuRloWVPdCK7hMbAMY270geZOGfCnaqexrP5dTIpbEHL33req6IYPPJ0hYa71cdvJ1h6V55/oQ==}
+  '@coral-xyz/borsh@0.30.1':
+    resolution: {integrity: sha512-aaxswpPrCFKl8vZTbxLssA2RvwX2zmKLlRCIktJOwW+VpVwYtXRtlWiIP+c2pPRKneiTiWCN2GEMSH9j1zTlWQ==}
     engines: {node: '>=10'}
     peerDependencies:
       '@solana/web3.js': ^1.68.0
@@ -527,6 +534,10 @@ packages:
   '@protobufjs/utf8@1.1.0':
     resolution: {integrity: sha512-Vvn3zZrhQZkkBE8LSuW3em98c0FwgO4nxzv6OdSxPKJIEKY2bGbHn+mhGIPerzI4twdxaP8/0+06HBpwf345Lw==}
 
+  '@pythnetwork/price-service-client@1.9.0':
+    resolution: {integrity: sha512-SLm3IFcfmy9iMqHeT4Ih6qMNZhJEefY14T9yTlpsH2D/FE5+BaGGnfcexUifVlfH6M7mwRC4hEFdNvZ6ebZjJg==}
+    deprecated: This package is deprecated and is no longer maintained. Please use @pythnetwork/hermes-client instead.
+
   '@pythnetwork/price-service-sdk@1.7.1':
     resolution: {integrity: sha512-xr2boVXTyv1KUt/c6llUTfbv2jpud99pWlMJbFaHGUBoygQsByuy7WbjIJKZ+0Blg1itLZl0Lp/pJGGg8SdJoQ==}
 
@@ -756,13 +767,13 @@ packages:
     resolution: {integrity: sha512-5GG/5IbQQpC9FpkRGsSvZI5QYeSCzlJHdpBQntCsuTOxhKD8lqKhrleg2Yi7yvMIf82Ycmmqln9U8V9qwEiJew==}
     engines: {node: '>= 8.0.0'}
 
-  anchor-bankrun@0.3.0:
-    resolution: {integrity: sha512-PYBW5fWX+iGicIS5MIM/omhk1tQPUc0ELAnI/IkLKQJ6d75De/CQRh8MF2bU/TgGyFi6zEel80wUe3uRol9RrQ==}
+  anchor-bankrun@0.5.0:
+    resolution: {integrity: sha512-cNTRv7pN9dy+kiyJ3UlNVTg9hAXhY2HtNVNXJbP/2BkS9nOdLV0qKWhgW8UR9Go0gYuEOLKuPzrGL4HFAZPsVw==}
     engines: {node: '>= 10'}
     peerDependencies:
-      '@coral-xyz/anchor': ^0.28.0
-      '@solana/web3.js': ^1.78.4
-      solana-bankrun: ^0.2.0
+      '@coral-xyz/anchor': ^0.30.0
+      '@solana/web3.js': '>1.92.0'
+      solana-bankrun: '>=0.2.0 <0.5.0'
 
   ansi-regex@5.0.1:
     resolution: {integrity: sha512-quJQXlTSUGL2LH9SUXo8VwsY4soanhgo6LNSm84E1LBcE8s3O0wpdiRzyR9z/ZZJMlMWv37qOOb9pdJlMUEKFQ==}
@@ -782,6 +793,9 @@ packages:
 
   asynckit@0.4.0:
     resolution: {integrity: sha512-Oei9OH4tRh0YqU3GxhX79dM/mwVgvbZJaSNaRk+bshkj0S5cfHcgYakreBjrHwatXKbz+IoIdYLxrKim2MjW0Q==}
+
+  axios-retry@3.9.1:
+    resolution: {integrity: sha512-8PJDLJv7qTTMMwdnbMvrLYuvB47M81wRtxQmEdV5w4rgbTXTt+vtPkXwajOfOdSyv/wZICJOC+/UhXH4aQ/R+w==}
 
   axios@1.7.7:
     resolution: {integrity: sha512-S4kL7XrjgBmvdGut0sN3yJxqYzrDOnivkBiN0OFs6hLiUam3UPvswUo0kqGyhqUZGEOytHyumEdXsAkgCOUf3Q==}
@@ -1028,6 +1042,10 @@ packages:
     resolution: {integrity: sha512-zymm5+u+sCsSWyD9qNaejV3DFvhCKclKdizYaJUuHA83RLjb7nSuGnddCHGv0hk+KY7BMAlsWeK4Ueg6EV6XQg==}
     engines: {node: '>=8'}
 
+  is-retry-allowed@2.2.0:
+    resolution: {integrity: sha512-XVm7LOeLpTW4jV19QSH38vkswxoLud8sQ57YwJVTPWdiaI9I8keEhGFpBlslyVsgdQy4Opg8QOLb8YRgsyZiQg==}
+    engines: {node: '>=10'}
+
   isomorphic-ws@4.0.1:
     resolution: {integrity: sha512-BhBvN2MBpWTaSHdWRb/bwdZJ1WaehQ2L1KngkCkfLUGF0mAWAT1sQUQacEmQ0jXkFw/czDXPNQSL5u2/Krsz1w==}
     peerDependencies:
@@ -1040,9 +1058,6 @@ packages:
 
   jito-ts@3.0.1:
     resolution: {integrity: sha512-TSofF7KqcwyaWGjPaSYC8RDoNBY1TPRNBHdrw24bdIi7mQ5bFEDdYK3D//llw/ml8YDvcZlgd644WxhjLTS9yg==}
-
-  js-sha256@0.9.0:
-    resolution: {integrity: sha512-sga3MHh9sgQN2+pJ9VYZ+1LPwXOxuBJBA5nrR5/ofPfuiJBE2hnjsaN8se8JznOmGLN2p49Pe5U/ttafcs/apA==}
 
   js-tokens@4.0.0:
     resolution: {integrity: sha512-RdJUflcE3cUzKiMqQgsCu06FPu9UdIJO0beYbPhHN4k6apgJtifcoCtT9bcxOpYBtpD2kCM6Sbzg4CausW/PKQ==}
@@ -1247,13 +1262,30 @@ packages:
     cpu: [arm64]
     os: [darwin]
 
+  solana-bankrun-darwin-arm64@0.4.0:
+    resolution: {integrity: sha512-6dz78Teoz7ez/3lpRLDjktYLJb79FcmJk2me4/YaB8WiO6W43OdExU4h+d2FyuAryO2DgBPXaBoBNY/8J1HJmw==}
+    engines: {node: '>= 10'}
+    cpu: [arm64]
+    os: [darwin]
+
   solana-bankrun-darwin-universal@0.3.0:
     resolution: {integrity: sha512-1/F0xdMa4qvc5o6z16FCCbZ5jbdvKvxpx5kyPcMWRiRPwyvi+zltMxciPAYMlg3wslQqGz88uFhrBEzq2eTumQ==}
     engines: {node: '>= 10'}
     os: [darwin]
 
+  solana-bankrun-darwin-universal@0.4.0:
+    resolution: {integrity: sha512-zSSw/Jx3KNU42pPMmrEWABd0nOwGJfsj7nm9chVZ3ae7WQg3Uty0hHAkn5NSDCj3OOiN0py9Dr1l9vmRJpOOxg==}
+    engines: {node: '>= 10'}
+    os: [darwin]
+
   solana-bankrun-darwin-x64@0.3.0:
     resolution: {integrity: sha512-U6CANjkmMl+lgNA7UH0GKs5V7LtVIUDzJBZefGGqLfqUNv3EjA/PrrToM0hAOWJgkxSwdz6zW+p5sw5FmnbXtg==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [darwin]
+
+  solana-bankrun-darwin-x64@0.4.0:
+    resolution: {integrity: sha512-LWjs5fsgHFtyr7YdJR6r0Ho5zrtzI6CY4wvwPXr8H2m3b4pZe6RLIZjQtabCav4cguc14G0K8yQB2PTMuGub8w==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [darwin]
@@ -1264,14 +1296,30 @@ packages:
     cpu: [x64]
     os: [linux]
 
+  solana-bankrun-linux-x64-gnu@0.4.0:
+    resolution: {integrity: sha512-SrlVrb82UIxt21Zr/XZFHVV/h9zd2/nP25PMpLJVLD7Pgl2yhkhfi82xj3OjxoQqWe+zkBJ+uszA0EEKr67yNw==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
   solana-bankrun-linux-x64-musl@0.3.0:
     resolution: {integrity: sha512-xsS2CS2xb1Sw4ivNXM0gPz/qpW9BX0neSvt/pnok5L330Nu9xlTnKAY8FhzzqOP9P9sJlGRM787Y6d0yYwt6xQ==}
     engines: {node: '>= 10'}
     cpu: [x64]
     os: [linux]
 
+  solana-bankrun-linux-x64-musl@0.4.0:
+    resolution: {integrity: sha512-Nv328ZanmURdYfcLL+jwB1oMzX4ZzK57NwIcuJjGlf0XSNLq96EoaO5buEiUTo4Ls7MqqMyLbClHcrPE7/aKyA==}
+    engines: {node: '>= 10'}
+    cpu: [x64]
+    os: [linux]
+
   solana-bankrun@0.3.0:
     resolution: {integrity: sha512-YkH7sa8TB/AoRPzG17CXJtYsRIQHEkEqGLz1Vwc13taXhDBkjO7z6NI5JYw7n0ybRymDHwMYTc7sd+5J40TyVQ==}
+    engines: {node: '>= 10'}
+
+  solana-bankrun@0.4.0:
+    resolution: {integrity: sha512-NMmXUipPBkt8NgnyNO3SCnPERP6xT/AMNMBooljGA3+rG6NN8lmXJsKeLqQTiFsDeWD74U++QM/DgcueSWvrIg==}
     engines: {node: '>= 10'}
 
   source-map-js@1.2.1:
@@ -1354,6 +1402,9 @@ packages:
 
   tr46@0.0.3:
     resolution: {integrity: sha512-N3WMsuqV66lT30CrXNbEjx4GEwlow3v6rr4mCcv6prnfwhS01rkgyFdjPNBYd9br7LpXV1+Emh01fHnq2Gdgrw==}
+
+  ts-log@2.2.7:
+    resolution: {integrity: sha512-320x5Ggei84AxzlXp91QkIGSw5wgaLT6GeAH0KsqDmRZdVWW2OiSeVvElVoatk3f7nicwXlElXsoFkARiGE2yg==}
 
   tslib@2.7.0:
     resolution: {integrity: sha512-gLXCKdN1/j47AiHiOkJN69hJmcbGTHI0ImLmbYLHykhgeN0jVGola9yVjFgzCUklsZQMW55o+dW7IXv3RCXDzA==}
@@ -1625,27 +1676,7 @@ snapshots:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
 
-  '@coral-xyz/anchor@0.28.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
-    dependencies:
-      '@coral-xyz/borsh': 0.28.0(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))
-      '@solana/web3.js': 1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      base64-js: 1.5.1
-      bn.js: 5.2.1
-      bs58: 4.0.1
-      buffer-layout: 1.2.2
-      camelcase: 6.3.0
-      cross-fetch: 3.1.8
-      crypto-hash: 1.3.0
-      eventemitter3: 4.0.7
-      js-sha256: 0.9.0
-      pako: 2.1.0
-      snake-case: 3.0.4
-      superstruct: 0.15.5
-      toml: 3.0.0
-    transitivePeerDependencies:
-      - bufferutil
-      - encoding
-      - utf-8-validate
+  '@coral-xyz/anchor-errors@0.30.1': {}
 
   '@coral-xyz/anchor@0.29.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
     dependencies:
@@ -1668,13 +1699,35 @@ snapshots:
       - encoding
       - utf-8-validate
 
-  '@coral-xyz/borsh@0.28.0(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))':
+  '@coral-xyz/anchor@0.30.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@coral-xyz/anchor-errors': 0.30.1
+      '@coral-xyz/borsh': 0.30.1(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+      '@noble/hashes': 1.5.0
+      '@solana/web3.js': 1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      bn.js: 5.2.1
+      bs58: 4.0.1
+      buffer-layout: 1.2.2
+      camelcase: 6.3.0
+      cross-fetch: 3.1.8
+      crypto-hash: 1.3.0
+      eventemitter3: 4.0.7
+      pako: 2.1.0
+      snake-case: 3.0.4
+      superstruct: 0.15.5
+      toml: 3.0.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  '@coral-xyz/borsh@0.29.0(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       bn.js: 5.2.1
       buffer-layout: 1.2.2
 
-  '@coral-xyz/borsh@0.29.0(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))':
+  '@coral-xyz/borsh@0.30.1(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))':
     dependencies:
       '@solana/web3.js': 1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       bn.js: 5.2.1
@@ -1900,6 +1953,20 @@ snapshots:
   '@protobufjs/pool@1.1.0': {}
 
   '@protobufjs/utf8@1.1.0': {}
+
+  '@pythnetwork/price-service-client@1.9.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)':
+    dependencies:
+      '@pythnetwork/price-service-sdk': 1.7.1
+      '@types/ws': 8.5.12
+      axios: 1.7.7
+      axios-retry: 3.9.1
+      isomorphic-ws: 4.0.1(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10))
+      ts-log: 2.2.7
+      ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+    transitivePeerDependencies:
+      - bufferutil
+      - debug
+      - utf-8-validate
 
   '@pythnetwork/price-service-sdk@1.7.1':
     dependencies:
@@ -2200,11 +2267,11 @@ snapshots:
     dependencies:
       humanize-ms: 1.2.1
 
-  anchor-bankrun@0.3.0(@coral-xyz/anchor@0.28.0(bufferutil@4.0.8)(utf-8-validate@5.0.10))(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))(solana-bankrun@0.3.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
+  anchor-bankrun@0.5.0(@coral-xyz/anchor@0.30.1(bufferutil@4.0.8)(utf-8-validate@5.0.10))(@solana/web3.js@1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10))(solana-bankrun@0.4.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
     dependencies:
-      '@coral-xyz/anchor': 0.28.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      '@coral-xyz/anchor': 0.30.1(bufferutil@4.0.8)(utf-8-validate@5.0.10)
       '@solana/web3.js': 1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
-      solana-bankrun: 0.3.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      solana-bankrun: 0.4.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
 
   ansi-regex@5.0.1: {}
 
@@ -2219,6 +2286,11 @@ snapshots:
   assertion-error@2.0.1: {}
 
   asynckit@0.4.0: {}
+
+  axios-retry@3.9.1:
+    dependencies:
+      '@babel/runtime': 7.25.7
+      is-retry-allowed: 2.2.0
 
   axios@1.7.7:
     dependencies:
@@ -2475,9 +2547,15 @@ snapshots:
 
   is-fullwidth-code-point@3.0.0: {}
 
+  is-retry-allowed@2.2.0: {}
+
   isomorphic-ws@4.0.1(ws@7.5.10(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
     dependencies:
       ws: 7.5.10(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+
+  isomorphic-ws@4.0.1(ws@8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)):
+    dependencies:
+      ws: 8.18.0(bufferutil@4.0.8)(utf-8-validate@5.0.10)
 
   jayson@4.1.2(bufferutil@4.0.8)(utf-8-validate@5.0.10):
     dependencies:
@@ -2511,8 +2589,6 @@ snapshots:
       - bufferutil
       - encoding
       - utf-8-validate
-
-  js-sha256@0.9.0: {}
 
   js-tokens@4.0.0: {}
 
@@ -2671,16 +2747,31 @@ snapshots:
   solana-bankrun-darwin-arm64@0.3.0:
     optional: true
 
+  solana-bankrun-darwin-arm64@0.4.0:
+    optional: true
+
   solana-bankrun-darwin-universal@0.3.0:
+    optional: true
+
+  solana-bankrun-darwin-universal@0.4.0:
     optional: true
 
   solana-bankrun-darwin-x64@0.3.0:
     optional: true
 
+  solana-bankrun-darwin-x64@0.4.0:
+    optional: true
+
   solana-bankrun-linux-x64-gnu@0.3.0:
     optional: true
 
+  solana-bankrun-linux-x64-gnu@0.4.0:
+    optional: true
+
   solana-bankrun-linux-x64-musl@0.3.0:
+    optional: true
+
+  solana-bankrun-linux-x64-musl@0.4.0:
     optional: true
 
   solana-bankrun@0.3.0(bufferutil@4.0.8)(utf-8-validate@5.0.10):
@@ -2693,6 +2784,21 @@ snapshots:
       solana-bankrun-darwin-x64: 0.3.0
       solana-bankrun-linux-x64-gnu: 0.3.0
       solana-bankrun-linux-x64-musl: 0.3.0
+    transitivePeerDependencies:
+      - bufferutil
+      - encoding
+      - utf-8-validate
+
+  solana-bankrun@0.4.0(bufferutil@4.0.8)(utf-8-validate@5.0.10):
+    dependencies:
+      '@solana/web3.js': 1.95.3(bufferutil@4.0.8)(utf-8-validate@5.0.10)
+      bs58: 4.0.1
+    optionalDependencies:
+      solana-bankrun-darwin-arm64: 0.4.0
+      solana-bankrun-darwin-universal: 0.4.0
+      solana-bankrun-darwin-x64: 0.4.0
+      solana-bankrun-linux-x64-gnu: 0.4.0
+      solana-bankrun-linux-x64-musl: 0.4.0
     transitivePeerDependencies:
       - bufferutil
       - encoding
@@ -2772,6 +2878,8 @@ snapshots:
   toml@3.0.0: {}
 
   tr46@0.0.3: {}
+
+  ts-log@2.2.7: {}
 
   tslib@2.7.0: {}
 

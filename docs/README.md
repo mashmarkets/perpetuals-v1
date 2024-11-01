@@ -16,8 +16,8 @@ Mash Markets is a decentralized derivatives exchange built on Solana. Unlike tra
 
 2. Install required tools:
 
-   - Solana tools v1.17.7
-   - Anchor framework v0.28.0 from <https://www.anchor-lang.com/docs/installation>
+   - Solana tools v1.18.22
+   - Anchor framework v0.30.1 from <https://www.anchor-lang.com/docs/installation>
    - Latest stable Rust from <https://rustup.rs/>
      - Existing Rust installation? Run `rustup update`
 
@@ -30,7 +30,7 @@ Mash Markets is a decentralized derivatives exchange built on Solana. Unlike tra
 
 #### [Optional] Vscode setup
 
-1. Install `rust-analyzer` extension - You will need version v0.3.2029
+1. Install `rust-analyzer` extension
 
 ### Build
 

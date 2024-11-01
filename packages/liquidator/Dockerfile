@@ -23,5 +23,6 @@ COPY --from=build /app/out /app/out
 
 WORKDIR /app
 
-
+# For json import
+ENV NODE_OPTIONS='--no-warnings'
 CMD [ "out/index.js"]

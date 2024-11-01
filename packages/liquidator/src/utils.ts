@@ -35,7 +35,7 @@ export const notify = throttle(sendNotification, 1000 * 40, { leading: true });
 export const getProgramIdFromUrl = async (url: string) => {
   try {
     const { data } = await axios.get(url);
-    const address = data?.metadata?.address;
+    const address = data?.address;
     return new PublicKey(address);
   } catch {
     return undefined;

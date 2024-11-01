@@ -51,14 +51,13 @@ pub struct AddCustody<'info> {
     pub pool: Box<Account<'info, Pool>>,
 
     #[account(
-        init_if_needed,
-        payer = admin,
-        space = Custody::LEN,
-        seeds = [b"custody",
+        mut,
+        seeds = [
+            b"custody",
             pool.key().as_ref(),
             custody_token_mint.key().as_ref()
         ],
-        bump
+        bump,
     )]
     pub custody: Box<Account<'info, Custody>>,
 
@@ -138,11 +137,8 @@ pub fn add_custody<'info>(
     custody.borrow_rate = params.borrow_rate;
     custody.borrow_rate_state.current_rate = params.borrow_rate.base_rate;
     custody.borrow_rate_state.last_update = ctx.accounts.perpetuals.get_time()?;
-    custody.bump = *ctx.bumps.get("custody").ok_or(ProgramError::InvalidSeeds)?;
-    custody.token_account_bump = *ctx
-        .bumps
-        .get("custody_token_account")
-        .ok_or(ProgramError::InvalidSeeds)?;
+    custody.bump = ctx.bumps.custody;
+    custody.token_account_bump = ctx.bumps.custody_token_account;
 
     if !custody.validate() {
         err!(PerpetualsError::InvalidCustodyConfig)

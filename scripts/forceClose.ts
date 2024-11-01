@@ -13,7 +13,8 @@ import {
 } from "@solana/spl-token";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 
-import { IDL, Perpetuals } from "../target/types/perpetuals.js";
+import IDL from "../target/idl/perpetuals.json";
+import { Perpetuals } from "../target/types/perpetuals.js";
 
 type Position = ProgramAccount<IdlAccounts<Perpetuals>["position"]>;
 type Custody = ProgramAccount<IdlAccounts<Perpetuals>["custody"]>;
@@ -122,15 +123,13 @@ async function main() {
     disableRetryOnRateLimit: true,
   });
 
-  const programId = IDL.metadata.address;
-
   const wallet = new Wallet(
     Keypair.fromSecretKey(
       Uint8Array.from(JSON.parse(process.env.PRIVATE_KEY as string)),
     ),
   );
   const provider = new AnchorProvider(connection, wallet, {});
-  const program = new Program<Perpetuals>(IDL, programId, provider);
+  const program = new Program<Perpetuals>(IDL as Perpetuals, provider);
   await forceCloseAllPositions(program);
 }
 

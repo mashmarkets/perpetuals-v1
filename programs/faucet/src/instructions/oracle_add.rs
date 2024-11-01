@@ -35,7 +35,7 @@ pub struct OracleAdd<'info> {
 }
 
 pub fn oracle_add(ctx: Context<OracleAdd>, params: OracleAddParams) -> Result<()> {
-    let bump = *ctx.bumps.get("oracle").ok_or(ProgramError::InvalidSeeds)?;
+    let bump = ctx.bumps.oracle;
 
     ctx.accounts.oracle.set_inner(Oracle {
         feed_id: get_feed_id_from_hex(&params.feed_id)?,

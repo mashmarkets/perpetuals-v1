@@ -1,20 +1,25 @@
+[toolchain]
+anchor_version = "0.30.1"
+solana_version = "1.18.22"
+
 [features]
-seeds = false
+resolution = false
 skip-lint = false
+
 [programs.devnet]
-faucet = "BPXsk7o3PWaXMNJRyUk7m7VogYZQYAVXeNgPd5j1Dq9S"
-perpetuals = "3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr"
+faucet = "7TfpKdoDVa58JpZpMX3Tq8gYT9RcSr7XKqimYnGLrGQP"
+perpetuals = "Af8eHTdgfsgCk4Z5GViFEBPCkL5fKpE4N6V8G8qwgGnd"
 
 [programs.localnet]
-faucet = "BPXsk7o3PWaXMNJRyUk7m7VogYZQYAVXeNgPd5j1Dq9S"
-perpetuals = "3y8uRqmgteNMQYUGiMZPCkr585Lmen8mLq1hp2N7auJr"
+faucet = "7TfpKdoDVa58JpZpMX3Tq8gYT9RcSr7XKqimYnGLrGQP"
+perpetuals = "Af8eHTdgfsgCk4Z5GViFEBPCkL5fKpE4N6V8G8qwgGnd"
 
 [registry]
 url = "https://api.apr.dev"
 
 [provider]
 cluster = "Devnet"
-wallet = "/Users/user/.config/solana/id.json"
+wallet = "~/.config/solana/id.json"
 
 [workspace]
 members = ["programs/perpetuals", "programs/faucet"]

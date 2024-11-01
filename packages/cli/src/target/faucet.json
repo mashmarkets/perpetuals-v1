@@ -1,10 +1,4 @@
-/**
- * Program IDL in camelCase format in order to be used in JS/TS.
- *
- * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/faucet.json`.
- */
-export type Faucet = {
+{
   "address": "7TfpKdoDVa58JpZpMX3Tq8gYT9RcSr7XKqimYnGLrGQP",
   "metadata": {
     "name": "faucet",
@@ -14,7 +8,7 @@ export type Faucet = {
   },
   "instructions": [
     {
-      "name": "competitionEnter",
+      "name": "competition_enter",
       "discriminator": [
         73,
         206,
@@ -32,11 +26,11 @@ export type Faucet = {
           "signer": true
         },
         {
-          "name": "mintIn",
+          "name": "mint_in",
           "writable": true
         },
         {
-          "name": "tokenAccountIn",
+          "name": "token_account_in",
           "writable": true
         },
         {
@@ -44,18 +38,18 @@ export type Faucet = {
           "writable": true
         },
         {
-          "name": "mintOut",
+          "name": "mint_out",
           "writable": true
         },
         {
-          "name": "tokenAccountOut",
+          "name": "token_account_out",
           "writable": true
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "systemProgram"
+          "name": "system_program"
         }
       ],
       "args": [
@@ -63,14 +57,14 @@ export type Faucet = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "competitionEnterParams"
+              "name": "CompetitionEnterParams"
             }
           }
         }
       ]
     },
     {
-      "name": "mintCreate",
+      "name": "mint_create",
       "discriminator": [
         173,
         240,
@@ -92,17 +86,17 @@ export type Faucet = {
           "writable": true
         },
         {
-          "name": "associatedTokenAccount",
+          "name": "associated_token_account",
           "writable": true
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "associatedTokenProgram"
+          "name": "associated_token_program"
         },
         {
-          "name": "systemProgram"
+          "name": "system_program"
         }
       ],
       "args": [
@@ -110,14 +104,14 @@ export type Faucet = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "mintCreateParams"
+              "name": "MintCreateParams"
             }
           }
         }
       ]
     },
     {
-      "name": "oracleAdd",
+      "name": "oracle_add",
       "discriminator": [
         57,
         113,
@@ -139,10 +133,10 @@ export type Faucet = {
           "writable": true
         },
         {
-          "name": "priceUpdate"
+          "name": "price_update"
         },
         {
-          "name": "systemProgram"
+          "name": "system_program"
         }
       ],
       "args": [
@@ -150,14 +144,14 @@ export type Faucet = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "oracleAddParams"
+              "name": "OracleAddParams"
             }
           }
         }
       ]
     },
     {
-      "name": "swapBuy",
+      "name": "swap_buy",
       "discriminator": [
         76,
         98,
@@ -178,29 +172,29 @@ export type Faucet = {
           "name": "oracle"
         },
         {
-          "name": "priceUpdate"
+          "name": "price_update"
         },
         {
-          "name": "mintIn",
+          "name": "mint_in",
           "writable": true
         },
         {
-          "name": "tokenAccountIn",
+          "name": "token_account_in",
           "writable": true
         },
         {
-          "name": "mintOut",
+          "name": "mint_out",
           "writable": true
         },
         {
-          "name": "tokenAccountOut",
+          "name": "token_account_out",
           "writable": true
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "systemProgram"
+          "name": "system_program"
         }
       ],
       "args": [
@@ -208,14 +202,14 @@ export type Faucet = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "swapBuyParams"
+              "name": "SwapBuyParams"
             }
           }
         }
       ]
     },
     {
-      "name": "swapSell",
+      "name": "swap_sell",
       "discriminator": [
         176,
         40,
@@ -236,29 +230,29 @@ export type Faucet = {
           "name": "oracle"
         },
         {
-          "name": "priceUpdate"
+          "name": "price_update"
         },
         {
-          "name": "mintIn",
+          "name": "mint_in",
           "writable": true
         },
         {
-          "name": "tokenAccountIn",
+          "name": "token_account_in",
           "writable": true
         },
         {
-          "name": "mintOut",
+          "name": "mint_out",
           "writable": true
         },
         {
-          "name": "tokenAccountOut",
+          "name": "token_account_out",
           "writable": true
         },
         {
-          "name": "tokenProgram"
+          "name": "token_program"
         },
         {
-          "name": "systemProgram"
+          "name": "system_program"
         }
       ],
       "args": [
@@ -266,7 +260,7 @@ export type Faucet = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "swapSellParams"
+              "name": "SwapSellParams"
             }
           }
         }
@@ -275,7 +269,7 @@ export type Faucet = {
   ],
   "accounts": [
     {
-      "name": "oracle",
+      "name": "Oracle",
       "discriminator": [
         139,
         194,
@@ -288,7 +282,7 @@ export type Faucet = {
       ]
     },
     {
-      "name": "priceUpdateV2",
+      "name": "PriceUpdateV2",
       "discriminator": [
         34,
         241,
@@ -304,23 +298,23 @@ export type Faucet = {
   "errors": [
     {
       "code": 6000,
-      "name": "insufficientFunds",
+      "name": "InsufficientFunds",
       "msg": "An account's balance was too small to complete the instruction"
     },
     {
       "code": 6001,
-      "name": "invalidQuoteMint",
+      "name": "InvalidQuoteMint",
       "msg": "Invalid Quote Mint"
     },
     {
       "code": 6002,
-      "name": "invalidEntryAmount",
+      "name": "InvalidEntryAmount",
       "msg": "Invalid Entry Amount"
     }
   ],
   "types": [
     {
-      "name": "competitionEnterParams",
+      "name": "CompetitionEnterParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -336,7 +330,7 @@ export type Faucet = {
       }
     },
     {
-      "name": "mintCreateParams",
+      "name": "MintCreateParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -360,12 +354,12 @@ export type Faucet = {
       }
     },
     {
-      "name": "oracle",
+      "name": "Oracle",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "feedId",
+            "name": "feed_id",
             "type": {
               "array": [
                 "u8",
@@ -374,7 +368,7 @@ export type Faucet = {
             }
           },
           {
-            "name": "maxPriceAgeSec",
+            "name": "max_price_age_sec",
             "type": "u32"
           },
           {
@@ -385,7 +379,7 @@ export type Faucet = {
       }
     },
     {
-      "name": "oracleAddParams",
+      "name": "OracleAddParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -394,18 +388,18 @@ export type Faucet = {
             "type": "pubkey"
           },
           {
-            "name": "feedId",
+            "name": "feed_id",
             "type": "string"
           },
           {
-            "name": "maxPriceAgeSec",
+            "name": "max_price_age_sec",
             "type": "u32"
           }
         ]
       }
     },
     {
-      "name": "priceFeedMessage",
+      "name": "PriceFeedMessage",
       "repr": {
         "kind": "c"
       },
@@ -413,7 +407,7 @@ export type Faucet = {
         "kind": "struct",
         "fields": [
           {
-            "name": "feedId",
+            "name": "feed_id",
             "type": {
               "array": [
                 "u8",
@@ -434,14 +428,14 @@ export type Faucet = {
             "type": "i32"
           },
           {
-            "name": "publishTime",
+            "name": "publish_time",
             "docs": [
               "The timestamp of this price update in seconds"
             ],
             "type": "i64"
           },
           {
-            "name": "prevPublishTime",
+            "name": "prev_publish_time",
             "docs": [
               "The timestamp of the previous price update. This field is intended to allow users to",
               "identify the single unique price update for any moment in time:",
@@ -459,18 +453,18 @@ export type Faucet = {
             "type": "i64"
           },
           {
-            "name": "emaPrice",
+            "name": "ema_price",
             "type": "i64"
           },
           {
-            "name": "emaConf",
+            "name": "ema_conf",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "priceUpdateV2",
+      "name": "PriceUpdateV2",
       "docs": [
         "A price update account. This account is used by the Pyth Receiver program to store a verified price update from a Pyth price feed.",
         "It contains:",
@@ -483,47 +477,47 @@ export type Faucet = {
         "kind": "struct",
         "fields": [
           {
-            "name": "writeAuthority",
+            "name": "write_authority",
             "type": "pubkey"
           },
           {
-            "name": "verificationLevel",
+            "name": "verification_level",
             "type": {
               "defined": {
-                "name": "verificationLevel"
+                "name": "VerificationLevel"
               }
             }
           },
           {
-            "name": "priceMessage",
+            "name": "price_message",
             "type": {
               "defined": {
-                "name": "priceFeedMessage"
+                "name": "PriceFeedMessage"
               }
             }
           },
           {
-            "name": "postedSlot",
+            "name": "posted_slot",
             "type": "u64"
           }
         ]
       }
     },
     {
-      "name": "swapBuyParams",
+      "name": "SwapBuyParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "amountOut",
+            "name": "amount_out",
             "type": "u64"
           },
           {
-            "name": "canonicalIn",
+            "name": "canonical_in",
             "type": "pubkey"
           },
           {
-            "name": "canonicalOut",
+            "name": "canonical_out",
             "type": "pubkey"
           },
           {
@@ -534,20 +528,20 @@ export type Faucet = {
       }
     },
     {
-      "name": "swapSellParams",
+      "name": "SwapSellParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "amountIn",
+            "name": "amount_in",
             "type": "u64"
           },
           {
-            "name": "canonicalIn",
+            "name": "canonical_in",
             "type": "pubkey"
           },
           {
-            "name": "canonicalOut",
+            "name": "canonical_out",
             "type": "pubkey"
           },
           {
@@ -558,7 +552,7 @@ export type Faucet = {
       }
     },
     {
-      "name": "verificationLevel",
+      "name": "VerificationLevel",
       "docs": [
         "Pyth price updates are bridged to all blockchains via Wormhole.",
         "Using the price updates on another chain requires verifying the signatures of the Wormhole guardians.",
@@ -576,19 +570,19 @@ export type Faucet = {
         "kind": "enum",
         "variants": [
           {
-            "name": "partial",
+            "name": "Partial",
             "fields": [
               {
-                "name": "numSignatures",
+                "name": "num_signatures",
                 "type": "u8"
               }
             ]
           },
           {
-            "name": "full"
+            "name": "Full"
           }
         ]
       }
     }
   ]
-};
+}

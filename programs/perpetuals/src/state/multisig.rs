@@ -3,7 +3,7 @@
 use {
     crate::{error::PerpetualsError, math},
     ahash::AHasher,
-    anchor_lang::prelude::*,
+    anchor_lang::{prelude::*, Bumps},
     std::hash::Hasher,
 };
 
@@ -34,7 +34,6 @@ pub enum AdminInstruction {
     WithdrawFees,
     WithdrawSolFees,
     SetCustomOraclePrice,
-    SetTestTime,
     UpgradeCustody,
 }
 
@@ -60,7 +59,7 @@ impl Multisig {
     }
 
     /// Returns all accounts for the given context
-    pub fn get_account_infos<'info, T: ToAccountInfos<'info>>(
+    pub fn get_account_infos<'info, T: ToAccountInfos<'info> + Bumps>(
         ctx: &Context<'_, '_, '_, 'info, T>,
     ) -> Vec<AccountInfo<'info>> {
         let mut infos = ctx.accounts.to_account_infos();
