@@ -1,5 +1,8 @@
 use {
-    crate::error::ErrorCode,
+    crate::{
+        constants::{NATIVE_MINT, USDC},
+        error::ErrorCode,
+    },
     anchor_lang::prelude::*,
     anchor_spl::token::{
         mint_to, transfer_checked, Mint, MintTo, Token, TokenAccount, TransferChecked,
@@ -25,7 +28,7 @@ pub struct CompetitionEnter<'info> {
 
     #[account(
         mut,
-        token::mint = mint_in,
+        token::mint = NATIVE_MINT,
         token::authority = payer,
         constraint = token_account_in.amount >= params.amount,
     )]
@@ -36,12 +39,12 @@ pub struct CompetitionEnter<'info> {
         payer=payer,
         seeds = [
             b"vault",
-            Pubkey::from_str("So11111111111111111111111111111111111111112").unwrap().key().as_ref(),
+            NATIVE_MINT.as_ref(),
             params.epoch.to_le_bytes().as_ref()
         ],
         bump,
         token::mint = mint_in,
-        token::authority = payer,
+        token::authority = vault,
     )]
     pub vault: Account<'info, TokenAccount>,
 
@@ -49,7 +52,7 @@ pub struct CompetitionEnter<'info> {
         mut,
         seeds = [
             b"mint",
-            Pubkey::from_str("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v").unwrap().key().as_ref(),
+            USDC.as_ref(),
             params.epoch.to_le_bytes().as_ref()
         ],
         bump,
@@ -70,6 +73,10 @@ pub fn competition_enter(
     ctx: Context<CompetitionEnter>,
     params: CompetitionEnterParams,
 ) -> Result<()> {
+    require!(
+        ctx.accounts.mint_in.key() == NATIVE_MINT,
+        ErrorCode::InvalidPaymentMint,
+    );
     // Transfer fee to vault
     transfer_checked(
         CpiContext::new(

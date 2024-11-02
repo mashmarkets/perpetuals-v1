@@ -1,9 +1,8 @@
 use {
-    crate::{error::ErrorCode, state::Oracle},
+    crate::{constants::USDC, error::ErrorCode, state::Oracle},
     anchor_lang::prelude::*,
     anchor_spl::token::{burn, mint_to, Burn, Mint, MintTo, Token, TokenAccount},
     pyth_solana_receiver_sdk::price_update::PriceUpdateV2,
-    std::str::FromStr,
 };
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
@@ -72,8 +71,7 @@ pub struct SwapBuy<'info> {
 
 pub fn swap_buy(ctx: Context<SwapBuy>, params: SwapBuyParams) -> Result<()> {
     require!(
-        params.canonical_in.key()
-            == Pubkey::from_str("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v").unwrap(),
+        params.canonical_in.key() == USDC,
         ErrorCode::InvalidQuoteMint
     );
 

@@ -14,6 +14,111 @@ export type Faucet = {
   },
   "instructions": [
     {
+      "name": "competitionClaim",
+      "discriminator": [
+        174,
+        69,
+        167,
+        136,
+        92,
+        29,
+        3,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mintIn",
+          "writable": true
+        },
+        {
+          "name": "tokenAccountIn",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "competition"
+        },
+        {
+          "name": "mintOut"
+        },
+        {
+          "name": "tokenAccountOut",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "competitionClaimParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "competitionEnd",
+      "discriminator": [
+        254,
+        251,
+        99,
+        115,
+        99,
+        142,
+        17,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "competition",
+          "writable": true
+        },
+        {
+          "name": "tokenProgram"
+        },
+        {
+          "name": "systemProgram"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "competitionEndParams"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "competitionEnter",
       "discriminator": [
         73,
@@ -275,6 +380,19 @@ export type Faucet = {
   ],
   "accounts": [
     {
+      "name": "competition",
+      "discriminator": [
+        193,
+        49,
+        76,
+        118,
+        106,
+        22,
+        221,
+        106
+      ]
+    },
+    {
       "name": "oracle",
       "discriminator": [
         139,
@@ -314,11 +432,66 @@ export type Faucet = {
     },
     {
       "code": 6002,
-      "name": "invalidEntryAmount",
+      "name": "invalidPaymentMint",
       "msg": "Invalid Entry Amount"
+    },
+    {
+      "code": 6003,
+      "name": "invalidEntryAmount",
+      "msg": "Invalid Payment Mint"
+    },
+    {
+      "code": 6004,
+      "name": "competitionNotEnded",
+      "msg": "Competition has not ended yet"
+    },
+    {
+      "code": 6005,
+      "name": "alreadyClaimed",
+      "msg": "Already claimed"
     }
   ],
   "types": [
+    {
+      "name": "competition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "total",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "competitionClaimParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "epoch",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "competitionEndParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "epoch",
+            "type": "i64"
+          }
+        ]
+      }
+    },
     {
       "name": "competitionEnterParams",
       "type": {

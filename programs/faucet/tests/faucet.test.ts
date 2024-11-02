@@ -57,6 +57,8 @@ describe("Token Faucet", async () => {
   );
   const mintBonk = findFaucetAddressSync("mint", canonicalBonk, epoch);
   const ataBonk = getAssociatedTokenAddressSync(mintBonk, payer.publicKey);
+  const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
+  const competition = findFaucetAddressSync("competition", epoch);
 
   const feedId =
     "72b021217ca3fe68922a19aaf990109cb9d84e9ad004b4d2025ad6f529314419";
@@ -130,7 +132,7 @@ describe("Token Faucet", async () => {
 
     expect(await getMint(context.banksClient, mintBonk)).toMatchObject({
       decimals: 5,
-      freezeAuthority: null,
+      freezeAuthority: mintBonk,
       isInitialized: true,
       mintAuthority: mintBonk,
       supply: BigInt(0),
@@ -160,15 +162,8 @@ describe("Token Faucet", async () => {
       })
       .rpc();
 
-    expect(await getMint(context.banksClient, mintUsdc)).toMatchObject({
-      decimals: 6,
-      freezeAuthority: null,
-      isInitialized: true,
-      mintAuthority: mintUsdc,
-      supply: BigInt(10_000_000_000),
-    });
-
     expect(await getAccount(context.banksClient, ataUsdc)).toMatchObject({
+      isFrozen: false,
       amount: BigInt(10_000_000_000),
       mint: mintUsdc,
       owner: payer.publicKey,
@@ -198,6 +193,7 @@ describe("Token Faucet", async () => {
 
     // Amount in = 50000 000 00000 / 10 **5 * 208900 * 10 ** -10 * 10 ** 6
     expect(await getAccount(context.banksClient, ataUsdc)).toMatchObject({
+      isFrozen: false,
       amount: BigInt(10_000_000_000 - 1_044_500_000), // Costs 10044.50
       mint: mintUsdc,
       owner: payer.publicKey,
@@ -234,6 +230,7 @@ describe("Token Faucet", async () => {
 
     // Amount out = amount in / 10 ** 5 / (price * 10 ** - 1) * 10 ** 6
     expect(await getAccount(context.banksClient, ataUsdc)).toMatchObject({
+      isFrozen: false,
       amount: BigInt(10_000_000_000), // Costs 10044.50
       mint: mintUsdc,
       owner: payer.publicKey,
@@ -251,7 +248,6 @@ describe("Token Faucet", async () => {
       NATIVE_MINT,
       payer.publicKey,
     );
-    const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
     const initialUsdc = (await getAccount(context.banksClient, ataUsdc)).amount;
 
     await program.methods
@@ -294,6 +290,7 @@ describe("Token Faucet", async () => {
 
     // Check amount has been transferred
     expect(await getAccount(context.banksClient, ataUsdc)).toMatchObject({
+      isFrozen: false,
       amount: BigInt(10_000 * 10 ** 6) + initialUsdc,
       mint: mintUsdc,
     });
@@ -310,7 +307,6 @@ describe("Token Faucet", async () => {
       NATIVE_MINT,
       payer.publicKey,
     );
-    const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
 
     await expect(
       program.methods
@@ -351,5 +347,82 @@ describe("Token Faucet", async () => {
         ])
         .rpc(),
     ).rejects.toThrow("InvalidEntryAmount"); // Not parsing anchor errors correctly
+  });
+
+  it("Can end competition", async () => {
+    await program.methods
+      .competitionEnd({
+        epoch,
+      })
+      .accounts({
+        competition,
+        vault,
+        payer: payer.publicKey,
+        mint: mintUsdc,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    expect(
+      await program.account.competition.fetch(competition).then((x) => ({
+        total: BigInt(x.total.toString()),
+      })),
+    ).toStrictEqual({
+      total: BigInt(0.05 * LAMPORTS_PER_SOL),
+    });
+    expect(await getMint(context.banksClient, mintUsdc)).toMatchObject({
+      decimals: 6,
+      freezeAuthority: mintUsdc,
+      isInitialized: true,
+      mintAuthority: null,
+    });
+  });
+
+  it("Can claim", async () => {
+    const tokenAccountOut = getAssociatedTokenAddressSync(
+      NATIVE_MINT,
+      payer.publicKey,
+    );
+
+    await program.methods
+      .competitionClaim({
+        epoch,
+      })
+      .preInstructions([
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer.publicKey, // payer
+          tokenAccountOut, // associatedToken
+          payer.publicKey, // owner
+          NATIVE_MINT, // mint
+        ),
+      ])
+      .accounts({
+        payer: payer.publicKey,
+        mintIn: mintUsdc,
+        tokenAccountIn: ataUsdc,
+        vault,
+        competition,
+        mintOut: NATIVE_MINT,
+        tokenAccountOut,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .rpc();
+
+    // Account has been frozen
+    expect(await getAccount(context.banksClient, ataUsdc)).toMatchObject({
+      isFrozen: true,
+      amount: BigInt(20_000 * 10 ** 6),
+      mint: mintUsdc,
+    });
+
+    // Check amount has been transferred
+    expect(
+      await getAccount(context.banksClient, tokenAccountOut),
+    ).toMatchObject({
+      amount: BigInt(0.05 * LAMPORTS_PER_SOL),
+      mint: NATIVE_MINT,
+    });
   });
 });

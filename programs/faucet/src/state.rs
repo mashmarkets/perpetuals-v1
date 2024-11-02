@@ -7,3 +7,10 @@ pub struct Oracle {
     pub max_price_age_sec: u32,
     pub bump: u8,
 }
+
+#[account]
+#[derive(InitSpace)]
+pub struct Competition {
+    pub total: u64,
+    pub bump: u8,
+}

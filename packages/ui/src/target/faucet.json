@@ -8,6 +8,111 @@
   },
   "instructions": [
     {
+      "name": "competition_claim",
+      "discriminator": [
+        174,
+        69,
+        167,
+        136,
+        92,
+        29,
+        3,
+        242
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint_in",
+          "writable": true
+        },
+        {
+          "name": "token_account_in",
+          "writable": true
+        },
+        {
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "competition"
+        },
+        {
+          "name": "mint_out"
+        },
+        {
+          "name": "token_account_out",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "CompetitionClaimParams"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "name": "competition_end",
+      "discriminator": [
+        254,
+        251,
+        99,
+        115,
+        99,
+        142,
+        17,
+        52
+      ],
+      "accounts": [
+        {
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "vault"
+        },
+        {
+          "name": "competition",
+          "writable": true
+        },
+        {
+          "name": "token_program"
+        },
+        {
+          "name": "system_program"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "CompetitionEndParams"
+            }
+          }
+        }
+      ]
+    },
+    {
       "name": "competition_enter",
       "discriminator": [
         73,
@@ -269,6 +374,19 @@
   ],
   "accounts": [
     {
+      "name": "Competition",
+      "discriminator": [
+        193,
+        49,
+        76,
+        118,
+        106,
+        22,
+        221,
+        106
+      ]
+    },
+    {
       "name": "Oracle",
       "discriminator": [
         139,
@@ -308,11 +426,66 @@
     },
     {
       "code": 6002,
-      "name": "InvalidEntryAmount",
+      "name": "InvalidPaymentMint",
       "msg": "Invalid Entry Amount"
+    },
+    {
+      "code": 6003,
+      "name": "InvalidEntryAmount",
+      "msg": "Invalid Payment Mint"
+    },
+    {
+      "code": 6004,
+      "name": "CompetitionNotEnded",
+      "msg": "Competition has not ended yet"
+    },
+    {
+      "code": 6005,
+      "name": "AlreadyClaimed",
+      "msg": "Already claimed"
     }
   ],
   "types": [
+    {
+      "name": "Competition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "total",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CompetitionClaimParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "epoch",
+            "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "CompetitionEndParams",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "epoch",
+            "type": "i64"
+          }
+        ]
+      }
+    },
     {
       "name": "CompetitionEnterParams",
       "type": {

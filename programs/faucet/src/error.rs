@@ -7,5 +7,11 @@ pub enum ErrorCode {
     #[msg("Invalid Quote Mint")]
     InvalidQuoteMint,
     #[msg("Invalid Entry Amount")]
+    InvalidPaymentMint,
+    #[msg("Invalid Payment Mint")]
     InvalidEntryAmount,
+    #[msg("Competition has not ended yet")]
+    CompetitionNotEnded,
+    #[msg("Already claimed")]
+    AlreadyClaimed,
 }

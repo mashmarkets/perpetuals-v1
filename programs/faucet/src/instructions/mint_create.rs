@@ -33,6 +33,7 @@ pub struct MintCreate<'info> {
         payer = payer,
         mint::decimals = params.decimals,
         mint::authority = mint.key(),
+        mint::freeze_authority = mint.key(),
     )]
     pub mint: Account<'info, Mint>,
 
