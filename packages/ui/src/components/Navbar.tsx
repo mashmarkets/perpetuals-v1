@@ -15,7 +15,7 @@ import { getTokenIcon, USDC_MINT } from "@/lib/Token";
 import { formatNumber } from "@/utils/formatters";
 
 import AirdropButton from "./AirdropButton";
-import { BuyInModal } from "./BuyInModal";
+import { BuyInModal } from "./CompetitionEnter";
 
 function NavbarLink(
   props: {

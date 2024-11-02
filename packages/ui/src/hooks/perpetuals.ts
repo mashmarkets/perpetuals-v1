@@ -400,7 +400,7 @@ export const usePositions = (positions: Address[]) => {
     combine: (results) => {
       return results.reduce(
         (acc, v) => {
-          if (v.data === undefined) {
+          if (v.data === undefined || v.data === null) {
             return acc;
           }
           acc[v.data.address] = v.data!;

@@ -1,17 +1,12 @@
 import * as Dialog from "@radix-ui/react-dialog";
 import { Address } from "@solana/addresses";
-import {
-  createAssociatedTokenAccountIdempotentInstruction,
-  createTransferInstruction,
-  getAssociatedTokenAddressSync,
-  NATIVE_MINT,
-} from "@solana/spl-token";
+import { NATIVE_MINT } from "@solana/spl-token";
 import { useWallet } from "@solana/wallet-adapter-react";
-import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
+import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { enterCompetition, findFaucetAddressSync } from "@/actions/faucet";
+import { competitionEnter, findFaucetAddressSync } from "@/actions/faucet";
 import { TokenSelector } from "@/components/TokenSelector";
 import { SolidButton } from "@/components/ui/SolidButton";
 import { useBalance } from "@/hooks/token";
@@ -65,7 +60,7 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
 
       return await wrapTransactionWithNotification(
         program.provider.connection,
-        enterCompetition(program, {
+        competitionEnter(program, {
           amount: BigInt(Math.round(depositAmount * LAMPORTS_PER_SOL)),
           epoch: EPOCH,
         }),

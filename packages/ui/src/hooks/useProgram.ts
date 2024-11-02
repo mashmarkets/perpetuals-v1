@@ -39,6 +39,14 @@ export const useWritePerpetualsProgram = () => {
   }, [wallet, connection]);
 };
 
+export const useReadFaucetProgram = () => {
+  const { connection } = useConnection();
+
+  return useMemo(() => {
+    return new Program<Faucet>(FaucetIDL as Faucet, { connection });
+  }, [connection]);
+};
+
 export const useWriteFaucetProgram = () => {
   const wallet = useAnchorWallet();
   const { connection } = useConnection();

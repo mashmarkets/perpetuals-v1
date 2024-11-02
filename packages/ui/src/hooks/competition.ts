@@ -1,12 +1,17 @@
+import { BN } from "@coral-xyz/anchor";
 import { Address } from "@solana/addresses";
 import { NATIVE_MINT } from "@solana/spl-token";
+import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
+import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { findFaucetAddressSync } from "@/actions/faucet";
-import { EPOCH } from "@/lib/Token";
+import { EPOCH, EPOCH_DATE } from "@/lib/Token";
 
+import { connectionBatcher } from "./accounts";
 import { useBalance } from "./token";
+import { useReadFaucetProgram } from "./useProgram";
 
 function parseFutureDate(futureDate: Date) {
   const now = Date.now();
@@ -36,12 +41,13 @@ function parseFutureDate(futureDate: Date) {
   return `${days}D ${h}:${m}:${s}`;
 }
 
-const epoch = new Date(1730527200000);
 export const useEpochCountdown = () => {
-  const [counter, setCounter] = useState(parseFutureDate(epoch));
+  const [counter, setCounter] = useState(
+    parseFutureDate(new Date(Number(EPOCH) * 1000)),
+  );
   useEffect(() => {
     const id = setInterval(() => {
-      setCounter(parseFutureDate(epoch));
+      setCounter(parseFutureDate(new Date(Number(EPOCH) * 1000)));
     }, 1000);
 
     return () => clearInterval(id);
@@ -50,14 +56,47 @@ export const useEpochCountdown = () => {
   return counter;
 };
 
+export const useCompetitionAccount = (epoch: Date) => {
+  const { connection } = useConnection();
+  const program = useReadFaucetProgram();
+
+  const competition = findFaucetAddressSync(
+    "competition",
+    new BN(Math.round(epoch.getTime() / 1000)),
+  );
+
+  return useQuery({
+    queryKey: ["competition", epoch.toISOString()],
+    enabled: !!program,
+    queryFn: () =>
+      connectionBatcher(connection)
+        .fetch(competition)
+        .then((info) => {
+          if (info === null) {
+            return null;
+          }
+          const coder = program!.account.competition.coder;
+          const account = coder.accounts.decode("competition", info!.data);
+          return {
+            address: competition,
+            total: BigInt(account.total.toString()),
+            bump: account.bump,
+          };
+        }),
+  });
+};
+
 export const usePrizePool = () => {
+  const epoch = EPOCH_DATE;
   const tokenAccount = findFaucetAddressSync(
     "vault",
     NATIVE_MINT,
-    Number(EPOCH),
+    new BN(Math.round(epoch.getTime() / 1000)),
   );
-  return useBalance(
+  const { data: balance } = useBalance(
     NATIVE_MINT.toString() as Address,
     new PublicKey(tokenAccount),
   );
+  const { data: competition } = useCompetitionAccount(epoch);
+  return { data: competition ? competition.total : balance };
 };

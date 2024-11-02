@@ -1,5 +1,6 @@
-import { address, Address } from "@solana/addresses";
+import { Address } from "@solana/addresses";
 import {
+  Account,
   getAssociatedTokenAddressSync,
   NATIVE_MINT,
   TOKEN_PROGRAM_ID,
@@ -7,7 +8,7 @@ import {
   unpackMint,
 } from "@solana/spl-token";
 import { useConnection } from "@solana/wallet-adapter-react";
-import { PublicKey } from "@solana/web3.js";
+import { AccountInfo, PublicKey } from "@solana/web3.js";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { connectionBatcher } from "./accounts";
@@ -28,61 +29,126 @@ export const useMint = (mint: Address | undefined) => {
   });
 };
 
-export const useBalance = (
+// Like getAssociatedTokenAddressSync, but for handles NATIVE_MINT
+const getTokenPublicKey = (
+  mint: Address | undefined,
+  user: Address | undefined,
+) => {
+  if (mint === undefined || user === undefined) {
+    return undefined;
+  }
+  // For Solana balance, just look up the user's account
+  if (mint === NATIVE_MINT.toString()) {
+    return user;
+  }
+  // Otherwise the user's associated token account
+
+  return getAssociatedTokenAddressSync(
+    new PublicKey(mint),
+    new PublicKey(user),
+  ).toString() as Address;
+};
+
+export const useAccount = (
   mint: Address | undefined,
   user: PublicKey | undefined | null, // null cause thats what useWallet returns
 ) => {
   const { connection } = useConnection();
+
+  const publicKey = getTokenPublicKey(
+    mint,
+    user?.toString() as Address | undefined,
+  );
+
   return useQuery({
-    queryKey: ["balance", user?.toString(), mint],
-    enabled: mint !== undefined && user !== undefined && user !== null,
-    queryFn: () => {
-      if (mint === NATIVE_MINT.toString()) {
-        return connection.getBalance(user!).then((x) => BigInt(x.toString()));
-      }
-      const ata = getAssociatedTokenAddressSync(new PublicKey(mint!), user!);
-      return connectionBatcher(connection)
-        .fetch(address(ata.toString()))
+    queryKey: ["account", user?.toString(), mint],
+    enabled: publicKey !== undefined,
+    queryFn: () =>
+      connectionBatcher(connection)
+        .fetch(publicKey!)
         .then((info) => {
-          return unpackAccount(new PublicKey(mint!), info).amount;
-        });
+          if (info !== null && mint !== NATIVE_MINT.toString()) {
+            return unpackAccount(new PublicKey(publicKey!), info);
+          }
+          return info;
+        }),
+  });
+};
+
+const useAccounts = (mints: Address[], users: Address[]) => {
+  const { connection } = useConnection();
+  const pairs = mints.flatMap((mint) => users.map((user) => [mint, user]));
+  return useQueries({
+    queries: pairs.map(([mint, user]) => {
+      const publicKey = getTokenPublicKey(mint, user)!;
+      return {
+        queryKey: ["account", user, mint],
+        queryFn: () =>
+          connectionBatcher(connection)
+            .fetch(publicKey)
+            .then((info) => {
+              if (info !== null && mint !== NATIVE_MINT.toString()) {
+                return unpackAccount(new PublicKey(publicKey!), info);
+              }
+              return info;
+            }),
+      };
+    }),
+    combine: (results) => {
+      return results.reduce(
+        (acc, v, i) => {
+          const [mint, user] = pairs[i];
+          if (acc[mint] === undefined) {
+            acc[mint] = {};
+          }
+          acc[mint][user] = v.data as AccountInfo<Buffer> | Account | null;
+          return acc;
+        },
+        {} as Record<
+          Address,
+          Record<Address, AccountInfo<Buffer> | Account | null>
+        >,
+      );
     },
   });
 };
 
+export const useBalance = (
+  mint: Address | undefined,
+  user: PublicKey | undefined | null, // null cause thats what useWallet returns
+) => {
+  const { data, ...rest } = useAccount(mint, user);
+  if (data === undefined || mint === undefined) {
+    return { ...rest, data: undefined };
+  }
+  return {
+    ...rest,
+    data:
+      mint === NATIVE_MINT.toString()
+        ? (data as AccountInfo<Buffer>).lamports
+        : (data as Account).amount,
+  };
+};
+
 export const useBalances = (mint: Address | undefined, users: Address[]) => {
-  const { connection } = useConnection();
-  return useQueries({
-    queries: users.map((user) => ({
-      queryKey: ["balance", user?.toString(), mint],
-      enabled: mint !== undefined,
-      queryFn: () => {
-        if (mint?.toString() === NATIVE_MINT.toString()) {
-          return connection
-            .getBalance(new PublicKey(user!))
-            .then((x) => BigInt(x.toString()));
-        }
-        const ata = getAssociatedTokenAddressSync(
-          new PublicKey(mint!),
-          new PublicKey(user!),
-        );
-        return connectionBatcher(connection)
-          .fetch(address(ata.toString()))
-          .then((info) => {
-            return unpackAccount(new PublicKey(mint!), info).amount;
-          });
-      },
-    })),
-    combine: (results) => {
-      return results.reduce(
-        (acc, v, i) => {
-          acc[users[i]] = v.data!;
-          return acc;
-        },
-        {} as Record<string, bigint>,
-      );
+  const accounts = useAccounts(mint ? [mint] : [], users);
+
+  if (mint === undefined) {
+    return {};
+  }
+  return Object.entries(accounts?.[mint] ?? {}).reduce(
+    (acc, [user, account]) => {
+      if (account === null || account === undefined) {
+        return acc;
+      }
+      acc[user as Address] =
+        mint === NATIVE_MINT.toString()
+          ? BigInt((account as AccountInfo<Buffer>).lamports)
+          : (account as Account).amount;
+      return acc;
     },
-  });
+    {} as Record<Address, bigint>,
+  );
 };
 
 export const useAllMintHolders = (mint: Address | undefined) => {
@@ -108,15 +174,17 @@ export const useAllMintHolders = (mint: Address | undefined) => {
         ],
       });
 
-      const accounts = data.map((x) =>
-        unpackAccount(new PublicKey(mint!), x.account),
-      );
+      const accounts = data.map((x) => {
+        if (mint === NATIVE_MINT.toString()) {
+          return x.account;
+        }
+        return unpackAccount(new PublicKey(mint!), x.account);
+      });
 
-      console.log("Accounts: ", accounts);
       accounts.forEach((account) => {
         queryClient.setQueryData(
-          ["balance", account.owner.toString(), mint],
-          account.amount,
+          ["account", account.owner.toString(), mint],
+          account,
         );
       });
 

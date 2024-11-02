@@ -41,7 +41,7 @@ export const getFaucetMint = (canonical: Address, epoch: bigint) =>
     new BN(epoch.toString()),
   );
 
-export const enterCompetition = async (
+export const competitionEnter = async (
   program: Program<Faucet>,
   params: {
     amount: bigint;
@@ -102,6 +102,65 @@ export const enterCompetition = async (
 
     createCloseAccountInstruction(
       tokenAccountIn, // account
+      publicKey, // destination
+      publicKey, // authority
+    ),
+  ];
+
+  return sendInstructions(program.provider, instructions);
+};
+
+export const competitionClaim = async (
+  program: Program<Faucet>,
+  params: {
+    epoch: bigint;
+  },
+) => {
+  const USDC_MINT = getFaucetMint(
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
+    params.epoch,
+  );
+
+  const epoch = new BN(params.epoch.toString());
+
+  const publicKey = program.provider.publicKey!;
+  const tokenAccountIn = getAssociatedTokenAddressSync(
+    new PublicKey(USDC_MINT),
+    publicKey,
+  );
+  const tokenAccountOut = getAssociatedTokenAddressSync(
+    new PublicKey(NATIVE_MINT),
+    publicKey,
+  );
+  const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
+
+  const instructions = [
+    createAssociatedTokenAccountIdempotentInstruction(
+      publicKey, // payer
+      tokenAccountOut, // associatedToken
+      publicKey, // owner
+      NATIVE_MINT, // mint
+    ),
+
+    await program.methods
+      .competitionClaim({
+        epoch,
+      })
+      .accounts({
+        payer: publicKey,
+        mintIn: USDC_MINT,
+        tokenAccountIn,
+        vault,
+        competition: findFaucetAddressSync("competition", epoch),
+        mintOut: NATIVE_MINT,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenAccountOut,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
+
+    createCloseAccountInstruction(
+      tokenAccountOut, // account
       publicKey, // destination
       publicKey, // authority
     ),

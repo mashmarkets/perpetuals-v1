@@ -5,6 +5,8 @@ import { useWallet } from "@solana/wallet-adapter-react";
 import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
+import { CompetitionClaim } from "@/components/CompetitionClaim";
+import { usePrizePool } from "@/hooks/competition";
 import {
   useAllPositions,
   useCustodies,
@@ -80,6 +82,7 @@ export default function Leaderboard() {
 
   const { publicKey } = useWallet();
   const leaderboard = useLeaderboardData();
+  const { data: prize } = usePrizePool();
 
   const toggleUser = (userId: string) => {
     const newExpanded = new Set(expandedUsers);
@@ -94,8 +97,15 @@ export default function Leaderboard() {
   const { symbol, decimals } = getTokenInfo(USDC_MINT);
   return (
     <div className="container mx-auto px-4 py-8">
-      <h1 className="mb-6 text-3xl font-bold">Leaderboard</h1>
+      <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
+      <p className="text-lg font-bold text-gray-200">
+        Prize Pool:
+        {(Number(prize) / 10 ** 9).toFixed(2)} SOL
+      </p>
 
+      <div className="mx-auto max-w-lg py-6">
+        <CompetitionClaim />
+      </div>
       <div className="shadow">
         {leaderboard.map(
           ({ user, balance, equity, positions, equityFromPositions }, i) => (

@@ -23,7 +23,9 @@ import {
 } from "../packages/cli/src/types.js";
 import { universe } from "../packages/ui/src/lib/universe";
 
-const epoch = BigInt(0);
+const epoch = BigInt(
+  new Date("2024-11-02T18:55:00.000+08:00").getTime() / 1000,
+);
 interface Token {
   address: string;
   symbol: string;
@@ -189,6 +191,7 @@ async function main() {
     .then((sig) => console.log("Protocol initialized: ", sig));
 
   // Mint usdc to me
+  // TODO:- Close the account so it doesn't show up in the leaderboard
   await mintCreate(faucet, {
     canonical: USDC.address,
     epoch,

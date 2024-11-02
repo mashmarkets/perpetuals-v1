@@ -20,7 +20,8 @@ interface Token {
   };
 }
 
-export const EPOCH = BigInt(0);
+export const EPOCH_DATE = new Date("2024-11-02T18:55:00.000+08:00");
+export const EPOCH = BigInt(EPOCH_DATE.getTime() / 1000);
 // Asset for our credits
 export const USDC_MINT = getFaucetMint(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
