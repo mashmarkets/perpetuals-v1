@@ -1,10 +1,4 @@
-import {
-  AnchorProvider,
-  BN,
-  Program,
-  Provider,
-  utils,
-} from "@coral-xyz/anchor";
+import { BN, Program, utils } from "@coral-xyz/anchor";
 import { Address, isAddress } from "@solana/addresses";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -32,6 +26,7 @@ import { Faucet } from "@/target/faucet";
 import { Perpetuals } from "@/target/perpetuals";
 import IDL from "@/target/perpetuals.json";
 
+import { sendInstructions } from "./connection";
 import { findFaucetAddressSync } from "./faucet";
 
 // HACK: While we fix permissions in contract, add the admin key as signer
@@ -123,38 +118,6 @@ const addWrappedSolInstructions = (
 
   // Its a promise, incase in future we want to be smart about opening accounts
   return Promise.resolve(instructions);
-};
-
-export const sendInstructions = async (
-  provider: Provider,
-  instructions: TransactionInstruction[],
-  signers: Keypair[] = [],
-) => {
-  const wallet = (provider as AnchorProvider).wallet;
-  const { connection, publicKey } = provider;
-
-  const { blockhash, lastValidBlockHeight } =
-    await connection.getLatestBlockhash();
-
-  const transaction = new VersionedTransaction(
-    new TransactionMessage({
-      payerKey: publicKey!,
-      recentBlockhash: blockhash,
-      instructions,
-    }).compileToV0Message(),
-  );
-
-  transaction.sign(signers);
-
-  const signedTx = await wallet.signTransaction(transaction);
-  const signature = await connection.sendTransaction(signedTx);
-
-  // Return this format as its best for waiting for confirmation
-  return {
-    signature: signature!,
-    blockhash,
-    lastValidBlockHeight,
-  };
 };
 
 export async function addCollateral(

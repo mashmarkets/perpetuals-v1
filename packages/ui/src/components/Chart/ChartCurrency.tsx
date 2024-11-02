@@ -1,3 +1,4 @@
+import { get } from "http";
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
 import { Address } from "@solana/addresses";
 import { useRouter } from "next/router";
@@ -6,6 +7,7 @@ import { twMerge } from "tailwind-merge";
 
 import { findPerpetualsAddressSync } from "@/actions/perpetuals";
 import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
+import { getTradeRouteFromSymbol } from "@/utils/routes";
 
 import { TokenSelectorList } from "../TokenSelectorList";
 
@@ -65,9 +67,7 @@ export function ChartCurrency({
         <TokenSelectorList
           onClose={() => setSelectorOpen(false)}
           onSelectToken={(token) => {
-            router.push(
-              `/trade/${findPerpetualsAddressSync("pool", getTokenSymbol(token))}`,
-            );
+            router.push(getTradeRouteFromSymbol(getTokenSymbol(token)));
           }}
         />
       )}

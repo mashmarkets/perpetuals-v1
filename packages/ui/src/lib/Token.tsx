@@ -24,6 +24,7 @@ export const EPOCH = BigInt(0);
 // Asset for our credits
 export const USDC_MINT = getFaucetMint(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
+  EPOCH,
 );
 
 const SOL = universe.find((x) => x.symbol === "SOL")!;
@@ -46,7 +47,10 @@ const tokenList: Token[] = [
           canonical: x.address,
         },
         // Note: For simulation trading we also mock WSOL. Otherwise we should leave native mint intact
-        address: getFaucetMint(x.address as Address).toString() as Address,
+        address: getFaucetMint(
+          x.address as Address,
+          EPOCH,
+        ).toString() as Address,
       }) as Token,
   ),
 ];
@@ -126,3 +130,12 @@ export function getTradingViewSymbol(mint: Address) {
   const { symbol } = getTokenInfo(mint);
   return `PYTH:${symbol}USD`;
 }
+
+export const isValidSymbol = (symbol: unknown): boolean => {
+  if (typeof symbol !== "string") {
+    return false;
+  }
+  return Object.values(tokensByMint).some(
+    (x) => x.symbol.toUpperCase() === symbol.toUpperCase(),
+  );
+};

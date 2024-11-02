@@ -76,7 +76,7 @@ async function createPool(
   token: Token,
   amount: BigInt,
 ) {
-  const poolName = token.symbol;
+  const poolName = token.symbol.toUpperCase();
   await client
     .addPool(poolName)
     .then((sig) => console.log(`Pool ${poolName} added: `, sig));
@@ -193,7 +193,7 @@ async function main() {
     canonical: USDC.address,
     epoch,
     decimals: USDC.decimals,
-    amount: BigInt(1_000_000_000 * 10 ** 6),
+    amount: BigInt(0),
   }).then((sig) =>
     console.log(`Created mint for ${USDC.symbol} in faucet: ${sig}`),
   );

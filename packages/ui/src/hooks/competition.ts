@@ -1,4 +1,12 @@
+import { Address } from "@solana/addresses";
+import { NATIVE_MINT } from "@solana/spl-token";
+import { PublicKey } from "@solana/web3.js";
 import { useEffect, useState } from "react";
+
+import { findFaucetAddressSync } from "@/actions/faucet";
+import { EPOCH } from "@/lib/Token";
+
+import { useBalance } from "./token";
 
 function parseFutureDate(futureDate: Date) {
   const now = Date.now();
@@ -43,5 +51,13 @@ export const useEpochCountdown = () => {
 };
 
 export const usePrizePool = () => {
-  return BigInt(10 * 10 ** 9);
+  const tokenAccount = findFaucetAddressSync(
+    "vault",
+    NATIVE_MINT,
+    Number(EPOCH),
+  );
+  return useBalance(
+    NATIVE_MINT.toString() as Address,
+    new PublicKey(tokenAccount),
+  );
 };

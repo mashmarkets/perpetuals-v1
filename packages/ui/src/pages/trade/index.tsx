@@ -3,13 +3,13 @@
 import Router from "next/router";
 import React, { useEffect } from "react";
 
-import { findPerpetualsAddressSync } from "@/actions/perpetuals";
+import { getTradeRouteFromSymbol } from "@/utils/routes";
 
 const IndexPage = () => {
   useEffect(() => {
     const { pathname } = Router;
     if (pathname == "/trade") {
-      Router.push(`/trade/${findPerpetualsAddressSync("pool", "SOL")}`);
+      Router.push(getTradeRouteFromSymbol("SOL"));
     }
   });
 

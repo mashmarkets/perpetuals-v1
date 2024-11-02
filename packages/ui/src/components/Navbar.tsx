@@ -71,7 +71,7 @@ const WalletMultiButtonDynamic = dynamic(
 export const Navbar = () => {
   const { publicKey } = useWallet();
   const countdown = useEpochCountdown();
-  const prize = usePrizePool();
+  const { data: prize } = usePrizePool();
 
   const { data: usdc } = useBalance(USDC_MINT, publicKey);
   const { data: sol } = useBalance(

@@ -11,12 +11,12 @@ import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 
-import { ADMIN_KEY, sendInstructions } from "@/actions/perpetuals";
+import { enterCompetition, findFaucetAddressSync } from "@/actions/faucet";
 import { TokenSelector } from "@/components/TokenSelector";
 import { SolidButton } from "@/components/ui/SolidButton";
 import { useBalance } from "@/hooks/token";
 import { useWriteFaucetProgram } from "@/hooks/useProgram";
-import { getTokenSymbol, USDC_MINT } from "@/lib/Token";
+import { EPOCH, getTokenSymbol, USDC_MINT } from "@/lib/Token";
 import { SOL_RESERVE_AMOUNT } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
@@ -47,40 +47,28 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
       queryClient.invalidateQueries({
         queryKey: ["balance", publicKey?.toString(), payToken],
       });
+
+      const vault = findFaucetAddressSync(
+        "vault",
+        new PublicKey(payToken),
+        Number(EPOCH),
+      );
+
+      queryClient.invalidateQueries({
+        queryKey: ["balance", vault, payToken],
+      });
     },
     mutationFn: async () => {
       if (!program || !publicKey) {
         return;
       }
-      const ataUser = getAssociatedTokenAddressSync(
-        new PublicKey(USDC_MINT),
-        publicKey,
-      );
-      const instructions = [
-        SystemProgram.transfer({
-          fromPubkey: publicKey,
-          toPubkey: ADMIN_KEY.publicKey,
-          lamports: depositAmount * LAMPORTS_PER_SOL,
-        }),
-        createAssociatedTokenAccountIdempotentInstruction(
-          publicKey, // payer
-          ataUser, // associatedToken
-          publicKey, // owner
-          new PublicKey(USDC_MINT), // PublicKey
-        ),
-        createTransferInstruction(
-          getAssociatedTokenAddressSync(
-            new PublicKey(USDC_MINT),
-            ADMIN_KEY.publicKey,
-          ), // source
-          ataUser, // destination
-          ADMIN_KEY.publicKey, // owner
-          depositAmount * rate * 10 ** 6, //amount
-        ),
-      ];
+
       return await wrapTransactionWithNotification(
         program.provider.connection,
-        sendInstructions(program.provider, instructions, [ADMIN_KEY]),
+        enterCompetition(program, {
+          amount: BigInt(Math.round(depositAmount * LAMPORTS_PER_SOL)),
+          epoch: EPOCH,
+        }),
       );
     },
   });

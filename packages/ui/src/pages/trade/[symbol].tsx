@@ -4,13 +4,13 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { useRouter } from "next/router";
 
+import { findPerpetualsAddressSync } from "@/actions/perpetuals";
 import { ChartCurrency } from "@/components/Chart/ChartCurrency";
 import { DailyStats } from "@/components/Chart/DailyStats";
 import { ExistingPositions } from "@/components/Positions/ExistingPositions";
 import { TradeSidebar } from "@/components/TradeSidebar";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
-import { getTradingViewSymbol } from "@/lib/Token";
-import { safeAddress } from "@/utils/utils";
+import { getTradingViewSymbol, isValidSymbol } from "@/lib/Token";
 
 const TradingViewWidget = dynamic(
   () =>
@@ -22,7 +22,9 @@ const TradingViewWidget = dynamic(
 
 export default function Page() {
   const router = useRouter();
-  const poolAddress = safeAddress(router.query.poolAddress);
+  const poolAddress = isValidSymbol(router.query.symbol)
+    ? findPerpetualsAddressSync("pool", router.query.symbol as string)
+    : undefined;
 
   const pool = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);

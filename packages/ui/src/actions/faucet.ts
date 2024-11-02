@@ -1,9 +1,19 @@
-import { BN, utils } from "@coral-xyz/anchor";
+import { BN, Program, utils } from "@coral-xyz/anchor";
 import { Address } from "@solana/addresses";
-import { PublicKey } from "@solana/web3.js";
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  createCloseAccountInstruction,
+  createSyncNativeInstruction,
+  getAssociatedTokenAddressSync,
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { PublicKey, SystemProgram } from "@solana/web3.js";
 
-import { EPOCH } from "@/lib/Token";
+import { Faucet } from "@/target/faucet";
 import IDL from "@/target/faucet.json";
+
+import { sendInstructions } from "./connection";
 
 export const findFaucetAddressSync = (...seeds: unknown[]) => {
   const publicKey = PublicKey.findProgramAddressSync(
@@ -14,7 +24,7 @@ export const findFaucetAddressSync = (...seeds: unknown[]) => {
       if (typeof x === "string") {
         return utils.bytes.utf8.encode(x);
       }
-      if (typeof x === "number" || x instanceof BN) {
+      if (typeof x === "number" || x instanceof BN || x instanceof BigInt) {
         return new BN((x as number).toString()).toArrayLike(Buffer, "le", 8);
       }
       return x;
@@ -24,51 +34,78 @@ export const findFaucetAddressSync = (...seeds: unknown[]) => {
 
   return publicKey.toString() as Address;
 };
-export const getFaucetMint = (canonical: Address) =>
+export const getFaucetMint = (canonical: Address, epoch: bigint) =>
   findFaucetAddressSync(
     "mint",
     new PublicKey(canonical),
-    new BN(EPOCH.toString()),
+    new BN(epoch.toString()),
   );
 
-// export function createMintToInstruction({
-//   payer,
-//   seed,
-//   amount,
-// }: {
-//   payer: PublicKey;
-//   seed: Address;
-//   amount: bigint;
-// }) {
-//   const mint = getFaucetMint(seed);
-//   const ata = getAssociatedTokenAddressSync(new PublicKey(mint), payer);
+export const enterCompetition = async (
+  program: Program<Faucet>,
+  params: {
+    amount: bigint;
+    epoch: bigint;
+  },
+) => {
+  const USDC_MINT = getFaucetMint(
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
+    params.epoch,
+  );
+  const epoch = new BN(params.epoch.toString());
+  console.log("Entering competition with params", params);
 
-//   const keys = [
-//     { pubkey: payer, isWritable: true, isSigner: true },
-//     { pubkey: mint, isWritable: true, isSigner: false },
-//     { pubkey: ata, isWritable: true, isSigner: false },
-//     {
-//       pubkey: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
-//       isWritable: false,
-//       isSigner: false,
-//     },
-//     {
-//       pubkey: new PublicKey("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"),
-//       isWritable: false,
-//       isSigner: false,
-//     },
-//     {
-//       pubkey: new PublicKey("11111111111111111111111111111111"),
-//       isWritable: false,
-//       isSigner: false,
-//     },
-//   ];
+  const publicKey = program.provider.publicKey!;
+  const tokenAccountIn = getAssociatedTokenAddressSync(NATIVE_MINT, publicKey);
+  const tokenAccountOut = getAssociatedTokenAddressSync(
+    new PublicKey(USDC_MINT),
+    publicKey,
+  );
+  const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
 
-//   const data = Buffer.concat([
-//     new Uint8Array([0xac, 0x89, 0xb7, 0x0e, 0xcf, 0x6e, 0xea, 0x38]),
-//     new PublicKey(seed).toBuffer(),
-//     new BN(amount.toString()).toArrayLike(Buffer, "le", 8),
-//   ]);
+  const instructions = [
+    createAssociatedTokenAccountIdempotentInstruction(
+      publicKey, // payer
+      tokenAccountOut, // associatedToken
+      publicKey, // owner
+      new PublicKey(USDC_MINT), // mint
+    ),
+    createAssociatedTokenAccountIdempotentInstruction(
+      publicKey, // payer
+      tokenAccountIn, // associatedToken
+      publicKey, // owner
+      NATIVE_MINT, // mint
+    ),
+    SystemProgram.transfer({
+      fromPubkey: publicKey,
+      toPubkey: tokenAccountIn,
+      lamports: params.amount,
+    }),
+    createSyncNativeInstruction(tokenAccountIn),
 
-//   return new TransactionInstruction({ keys, programId, data });
-// }
+    await program.methods
+      .competitionEnter({
+        amount: new BN(params.amount.toString()),
+        epoch,
+      })
+      .accounts({
+        payer: publicKey,
+        mintIn: NATIVE_MINT,
+        tokenAccountIn,
+        vault,
+        mintOut: USDC_MINT,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        tokenAccountOut,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction(),
+
+    createCloseAccountInstruction(
+      tokenAccountIn, // account
+      publicKey, // destination
+      publicKey, // authority
+    ),
+  ];
+
+  return sendInstructions(program.provider, instructions);
+};
