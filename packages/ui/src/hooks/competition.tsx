@@ -1,4 +1,3 @@
-import { BN } from "@coral-xyz/anchor";
 import { Address } from "@solana/addresses";
 import { NATIVE_MINT } from "@solana/spl-token";
 import { useConnection } from "@solana/wallet-adapter-react";
@@ -7,7 +6,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 
 import { findFaucetAddressSync } from "@/actions/faucet";
-import { EPOCH, EPOCH_DATE } from "@/lib/Token";
+import { getCurrentEpoch } from "@/lib/Token";
 
 import { connectionBatcher } from "./accounts";
 import { useBalance } from "./token";
@@ -42,12 +41,10 @@ function parseFutureDate(futureDate: Date) {
 }
 
 export const useEpochCountdown = () => {
-  const [counter, setCounter] = useState(
-    parseFutureDate(new Date(Number(EPOCH) * 1000)),
-  );
+  const [counter, setCounter] = useState(parseFutureDate(getCurrentEpoch()));
   useEffect(() => {
     const id = setInterval(() => {
-      setCounter(parseFutureDate(new Date(Number(EPOCH) * 1000)));
+      setCounter(parseFutureDate(getCurrentEpoch()));
     }, 1000);
 
     return () => clearInterval(id);
@@ -60,10 +57,7 @@ export const useCompetitionAccount = (epoch: Date) => {
   const { connection } = useConnection();
   const program = useReadFaucetProgram();
 
-  const competition = findFaucetAddressSync(
-    "competition",
-    new BN(Math.round(epoch.getTime() / 1000)),
-  );
+  const competition = findFaucetAddressSync("competition", epoch);
 
   return useQuery({
     queryKey: ["competition", epoch.toISOString()],
@@ -86,13 +80,8 @@ export const useCompetitionAccount = (epoch: Date) => {
   });
 };
 
-export const usePrizePool = () => {
-  const epoch = EPOCH_DATE;
-  const tokenAccount = findFaucetAddressSync(
-    "vault",
-    NATIVE_MINT,
-    new BN(Math.round(epoch.getTime() / 1000)),
-  );
+export const usePrizePool = (epoch: Date) => {
+  const tokenAccount = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
   const { data: balance } = useBalance(
     NATIVE_MINT.toString() as Address,
     new PublicKey(tokenAccount),

@@ -18,7 +18,7 @@ import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
 } from "@/hooks/useProgram";
-import { USDC_MINT } from "@/lib/Token";
+import { getCurrentEpoch, USDC_MINT } from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -49,11 +49,11 @@ export function PositionAdditionalInfo({
     onSuccess: () => {
       // Receive Balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), receiveMint],
+        queryKey: ["account", publicKey?.toString(), receiveMint],
       });
       // Collateral Balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), mint],
+        queryKey: ["account", publicKey?.toString(), mint],
       });
       // Pool
       queryClient.invalidateQueries({
@@ -77,17 +77,18 @@ export function PositionAdditionalInfo({
         return;
       }
 
-      const params = {
-        position,
-        custody,
-        price: BigInt(Math.round(price.currentPrice * PRICE_POWER * 0.95)), // Slippage
-        receiveMint,
-      };
-
-      console.log("Closing position with params", params);
       return await wrapTransactionWithNotification(
         perpetuals.provider.connection,
-        closePositionWithSwap({ perpetuals, faucet }, params),
+        closePositionWithSwap(
+          { perpetuals, faucet },
+          {
+            position,
+            custody,
+            price: BigInt(Math.round(price.currentPrice * PRICE_POWER * 0.95)), // Slippage
+            receiveMint,
+            epoch: getCurrentEpoch(),
+          },
+        ),
         {
           pending: "Closing Position",
           success: "Position Closed",

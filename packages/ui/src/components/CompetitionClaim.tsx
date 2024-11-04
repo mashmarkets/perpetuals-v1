@@ -6,19 +6,20 @@ import { competitionClaim } from "@/actions/faucet";
 import { SolidButton } from "@/components/ui/SolidButton";
 import { useAccount } from "@/hooks/token";
 import { useWriteFaucetProgram } from "@/hooks/useProgram";
-import { EPOCH, USDC_MINT } from "@/lib/Token";
+import { getCompetitionMint } from "@/lib/Token";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
-export function CompetitionClaim() {
+export function CompetitionClaim({ epoch }: { epoch: Date }) {
+  const mint = getCompetitionMint(epoch);
   const { publicKey } = useWallet();
   const queryClient = useQueryClient();
-  const { data: account } = useAccount(USDC_MINT, publicKey);
+  const { data: account } = useAccount(mint, publicKey);
 
   const program = useWriteFaucetProgram();
   const claim = useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), NATIVE_MINT.toString()],
+        queryKey: ["account", publicKey?.toString(), NATIVE_MINT.toString()],
       });
     },
     mutationFn: async () => {
@@ -29,13 +30,18 @@ export function CompetitionClaim() {
       return await wrapTransactionWithNotification(
         program.provider.connection,
         competitionClaim(program, {
-          epoch: EPOCH,
+          epoch,
         }),
       );
     },
   });
 
-  if ((account as Account)?.isFrozen) {
+  if (
+    account === undefined ||
+    account === null ||
+    (account as Account)?.amount === BigInt(0) ||
+    (account as Account)?.isFrozen
+  ) {
     return null;
   }
 

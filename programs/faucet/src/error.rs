@@ -12,6 +12,10 @@ pub enum ErrorCode {
     InvalidEntryAmount,
     #[msg("Competition has not ended yet")]
     CompetitionNotEnded,
+    #[msg("Competition has already ended")]
+    CompetitionEnded,
     #[msg("Already claimed")]
     AlreadyClaimed,
+    #[msg("The arguments provided to a program instruction were invalid")]
+    InvalidArgument,
 }

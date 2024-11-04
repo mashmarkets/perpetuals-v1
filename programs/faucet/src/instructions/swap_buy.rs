@@ -8,7 +8,6 @@ use {
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct SwapBuyParams {
     amount_out: u64,
-    canonical_in: Pubkey,
     canonical_out: Pubkey,
     epoch: i64,
 }
@@ -21,8 +20,8 @@ pub struct SwapBuy<'info> {
 
     #[account(
         seeds = [
-        b"oracle",
-        params.canonical_out.key().as_ref()
+            b"oracle",
+            params.canonical_out.key().as_ref()
         ],
         bump = oracle.bump
     )]
@@ -35,7 +34,7 @@ pub struct SwapBuy<'info> {
         mut,
         seeds = [
             b"mint",
-            params.canonical_in.key().as_ref(),
+            USDC.as_ref(),
             params.epoch.to_le_bytes().as_ref()
         ],
         bump,
@@ -53,7 +52,7 @@ pub struct SwapBuy<'info> {
         seeds = [
             b"mint",
             params.canonical_out.key().as_ref(),
-            params.epoch.to_le_bytes().as_ref()
+            0_i64.to_le_bytes().as_ref()
         ],
         bump,
     )]
@@ -70,9 +69,10 @@ pub struct SwapBuy<'info> {
 }
 
 pub fn swap_buy(ctx: Context<SwapBuy>, params: SwapBuyParams) -> Result<()> {
+    // Ensure epoch hasn't ended. We don't check on sell so it can always be closed
     require!(
-        params.canonical_in.key() == USDC,
-        ErrorCode::InvalidQuoteMint
+        Clock::get()?.unix_timestamp <= params.epoch,
+        ErrorCode::CompetitionEnded,
     );
 
     let price_update = &mut ctx.accounts.price_update;
@@ -126,7 +126,7 @@ pub fn swap_buy(ctx: Context<SwapBuy>, params: SwapBuyParams) -> Result<()> {
         .with_signer(&[&[
             b"mint",
             params.canonical_out.as_ref(),
-            params.epoch.to_le_bytes().as_ref(),
+            0_i64.to_le_bytes().as_ref(),
             &[bump],
         ]]),
         params.amount_out,

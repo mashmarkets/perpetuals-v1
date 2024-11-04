@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/faucet.json`.
  */
 export type Faucet = {
-  "address": "96eTnVz9eKNRPHAzngUVYde7JMjZkD5vyJcRnPL2wRCH",
+  "address": "5g5d84Tbp4qqHDUZ7UrCU7t8pgNnxmdhhfAKiqBaHMkS",
   "metadata": {
     "name": "faucet",
     "version": "0.1.0",
@@ -94,7 +94,11 @@ export type Faucet = {
           "writable": true
         },
         {
-          "name": "vault"
+          "name": "vault",
+          "writable": true
+        },
+        {
+          "name": "vaultMint"
         },
         {
           "name": "competition",
@@ -447,8 +451,18 @@ export type Faucet = {
     },
     {
       "code": 6005,
+      "name": "competitionEnded",
+      "msg": "Competition has already ended"
+    },
+    {
+      "code": 6006,
       "name": "alreadyClaimed",
       "msg": "Already claimed"
+    },
+    {
+      "code": 6007,
+      "name": "invalidArgument",
+      "msg": "The arguments provided to a program instruction were invalid"
     }
   ],
   "types": [
@@ -692,10 +706,6 @@ export type Faucet = {
             "type": "u64"
           },
           {
-            "name": "canonicalIn",
-            "type": "pubkey"
-          },
-          {
             "name": "canonicalOut",
             "type": "pubkey"
           },
@@ -717,10 +727,6 @@ export type Faucet = {
           },
           {
             "name": "canonicalIn",
-            "type": "pubkey"
-          },
-          {
-            "name": "canonicalOut",
             "type": "pubkey"
           },
           {

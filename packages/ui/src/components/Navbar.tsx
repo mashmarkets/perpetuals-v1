@@ -11,7 +11,7 @@ import { twMerge } from "tailwind-merge";
 
 import { useEpochCountdown, usePrizePool } from "@/hooks/competition";
 import { useBalance } from "@/hooks/token";
-import { getTokenIcon, USDC_MINT } from "@/lib/Token";
+import { getCurrentEpoch, getTokenIcon, USDC_MINT } from "@/lib/Token";
 import { formatNumber } from "@/utils/formatters";
 
 import AirdropButton from "./AirdropButton";
@@ -71,7 +71,7 @@ const WalletMultiButtonDynamic = dynamic(
 export const Navbar = () => {
   const { publicKey } = useWallet();
   const countdown = useEpochCountdown();
-  const { data: prize } = usePrizePool();
+  const { data: prize } = usePrizePool(getCurrentEpoch());
 
   const { data: usdc } = useBalance(USDC_MINT, publicKey);
   const { data: sol } = useBalance(
@@ -125,7 +125,9 @@ export const Navbar = () => {
         <p className="text-white" suppressHydrationWarning>
           {countdown} •{" "}
         </p>
-        <p className="text-white">{(Number(prize) / 10 ** 9).toFixed(2)} SOL</p>
+        <p className="text-white">
+          {(Number(prize ?? 0) / 10 ** 9).toFixed(2)} SOL
+        </p>
         <span className="text-sm text-gray-400"> Prize Pool</span>
       </div>
       <div className="flex flex-row items-center gap-4">

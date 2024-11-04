@@ -20,14 +20,14 @@ import {
 
 import { AddCustodyParams } from "@/components/FormListAsset";
 import { Custody, Pool, Position } from "@/hooks/perpetuals";
-import { EPOCH, getTokenInfo } from "@/lib/Token";
+import { getTokenInfo } from "@/lib/Token";
 import { MAX_U64 } from "@/lib/types";
 import { Faucet } from "@/target/faucet";
 import { Perpetuals } from "@/target/perpetuals";
 import IDL from "@/target/perpetuals.json";
 
 import { sendInstructions } from "./connection";
-import { findFaucetAddressSync } from "./faucet";
+import { epochToBN, findFaucetAddressSync } from "./faucet";
 
 // HACK: While we fix permissions in contract, add the admin key as signer
 export const ADMIN_KEY = Keypair.fromSecretKey(
@@ -130,6 +130,7 @@ export async function addCollateral(
     custody: Custody;
     collateral: bigint;
     payMint: Address;
+    epoch: Date;
   },
 ) {
   console.log("Adding collateral with params: ", params);
@@ -167,7 +168,7 @@ export async function addCollateral(
         amountOut: new BN(params.collateral.toString()),
         canonicalIn: canonicalIn,
         canonicalOut: canonicalOut,
-        epoch: new BN(EPOCH.toString()),
+        epoch: epochToBN(params.epoch),
       })
       .accounts({
         payer: publicKey,
@@ -352,19 +353,19 @@ export async function closePositionWithSwap(
     perpetuals: Program<Perpetuals>;
     faucet: Program<Faucet>;
   },
-  {
-    receiveMint,
-    position,
-    custody,
-    price,
-  }: {
+  params: {
     custody: Custody;
     position: Position;
     price: bigint;
     receiveMint: Address;
+    epoch: Date;
   },
 ) {
   const { perpetuals: program, faucet } = programs;
+  const { receiveMint, position, custody, price, epoch } = params;
+
+  console.log("Closing position with params", params);
+
   if (position.custody.toString() != custody.address.toString()) {
     throw new Error("Position and Custody do not match");
   }
@@ -373,9 +374,6 @@ export async function closePositionWithSwap(
   // Precompute for swap
   const canonicalIn = new PublicKey(
     getTokenInfo(custody.mint).extensions.canonical,
-  );
-  const canonicalOut = new PublicKey(
-    getTokenInfo(receiveMint).extensions.canonical,
   );
 
   const mintIn = new PublicKey(custody.mint);
@@ -422,8 +420,7 @@ export async function closePositionWithSwap(
       .swapSell({
         amountIn: new BN(MAX_U64.toString()),
         canonicalIn,
-        canonicalOut,
-        epoch: new BN(EPOCH.toString()),
+        epoch: epochToBN(epoch),
       })
       .accounts({
         payer: publicKey,
@@ -622,6 +619,7 @@ export async function openPositionWithSwap(
     poolAddress: Address;
     price: bigint;
     size: bigint;
+    epoch: Date;
   },
 ) {
   const { perpetuals: program, faucet } = programs;
@@ -672,7 +670,7 @@ export async function openPositionWithSwap(
         amountOut: new BN(params.collateral.toString()),
         canonicalIn: canonicalIn,
         canonicalOut: canonicalOut,
-        epoch: new BN(EPOCH.toString()),
+        epoch: epochToBN(params.epoch),
       })
       .accounts({
         payer: publicKey,
@@ -744,6 +742,7 @@ async function getSimulationResult(
   );
 
   if (!data.value.returnData?.data[0]) {
+    console.log("No simulation return data found");
     return undefined;
   }
 
@@ -783,7 +782,7 @@ async function getParsedSimulationResult<T>(
   }
 
   return program.coder.types.decode(
-    typeName.name,
+    typeName.name.charAt(0).toLowerCase() + typeName.name.slice(1),
     Buffer.from(result, "base64"),
   );
 }
@@ -1004,6 +1003,7 @@ export async function removeCollateral(
     custody: Custody;
     collateralUsd: bigint;
     receiveMint: Address;
+    epoch: Date;
   },
 ) {
   const { perpetuals: program, faucet } = programs;
@@ -1018,10 +1018,6 @@ export async function removeCollateral(
   const canonicalIn = new PublicKey(
     getTokenInfo(custody.mint).extensions.canonical,
   );
-  const canonicalOut = new PublicKey(
-    getTokenInfo(receiveMint).extensions.canonical,
-  );
-
   const mintIn = new PublicKey(custody.mint);
   const mintOut = new PublicKey(receiveMint);
   const tokenAccountIn = getAssociatedTokenAddressSync(mintIn, publicKey);
@@ -1065,8 +1061,7 @@ export async function removeCollateral(
       .swapSell({
         amountIn: new BN(MAX_U64.toString()),
         canonicalIn,
-        canonicalOut,
-        epoch: new BN(EPOCH.toString()),
+        epoch: epochToBN(params.epoch),
       })
       .accounts({
         payer: publicKey,

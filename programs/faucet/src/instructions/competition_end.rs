@@ -34,16 +34,20 @@ pub struct CompetitionEnd<'info> {
     pub mint: Account<'info, Mint>,
 
     #[account(
+        init_if_needed, // Need to init if no one entered
+        payer = payer,
         seeds = [
             b"vault",
             NATIVE_MINT.as_ref(),
             params.epoch.to_le_bytes().as_ref()
         ],
         bump,
-        token::mint = NATIVE_MINT,
+        token::mint = vault_mint,
         token::authority = vault,
     )]
     pub vault: Account<'info, TokenAccount>,
+
+    pub vault_mint: Account<'info, Mint>,
 
     #[account(
         init,
@@ -62,6 +66,11 @@ pub struct CompetitionEnd<'info> {
 }
 
 pub fn competition_end(ctx: Context<CompetitionEnd>, params: CompetitionEndParams) -> Result<()> {
+    require!(
+        ctx.accounts.vault_mint.key() == NATIVE_MINT,
+        ErrorCode::InvalidArgument
+    );
+
     // Check epoch has ended
     require!(
         Clock::get()?.unix_timestamp >= params.epoch,

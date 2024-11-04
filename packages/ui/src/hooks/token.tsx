@@ -121,13 +121,15 @@ export const useBalance = (
   if (data === undefined || mint === undefined) {
     return { ...rest, data: undefined };
   }
-  return {
-    ...rest,
-    data:
-      mint === NATIVE_MINT.toString()
-        ? (data as AccountInfo<Buffer>).lamports
-        : (data as Account).amount,
-  };
+
+  const balance =
+    mint === NATIVE_MINT.toString()
+      ? (data as AccountInfo<Buffer>)?.lamports
+        ? BigInt((data as AccountInfo<Buffer>).lamports)
+        : undefined
+      : (data as Account)?.amount;
+
+  return { ...rest, data: balance };
 };
 
 export const useBalances = (mint: Address | undefined, users: Address[]) => {
@@ -156,6 +158,7 @@ export const useAllMintHolders = (mint: Address | undefined) => {
   const queryClient = useQueryClient();
   return useQuery({
     queryKey: ["holders", mint?.toString()],
+    staleTime: ONE_MINUTE,
     enabled: mint !== undefined,
     // staleTime: ONE_MINUTE,
     queryFn: async () => {

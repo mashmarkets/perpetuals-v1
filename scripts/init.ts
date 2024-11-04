@@ -21,11 +21,10 @@ import {
   Permissions,
   PricingParams,
 } from "../packages/cli/src/types.js";
-import { universe } from "../packages/ui/src/lib/universe";
+import { sleep } from "../packages/liquidator/src/utils.js";
+import { universe } from "../packages/ui/src/lib/universe.js";
 
-const epoch = BigInt(
-  new Date("2024-11-02T18:55:00.000+08:00").getTime() / 1000,
-);
+const epoch = BigInt(0);
 interface Token {
   address: string;
   symbol: string;
@@ -188,30 +187,26 @@ async function main() {
       allowCollateralWithdrawal: true,
       allowSizeChange: true,
     })
-    .then((sig) => console.log("Protocol initialized: ", sig));
-
-  // Mint usdc to me
-  // TODO:- Close the account so it doesn't show up in the leaderboard
-  await mintCreate(faucet, {
-    canonical: USDC.address,
-    epoch,
-    decimals: USDC.decimals,
-    amount: BigInt(0),
-  }).then((sig) =>
-    console.log(`Created mint for ${USDC.symbol} in faucet: ${sig}`),
-  );
+    .then((sig) => console.log("Protocol initialized: ", sig))
+    .catch((err) => {
+      console.log(err);
+      console.log("Failed to initialize protocol. Is is already initialized?");
+    });
 
   const prices = await getPrices();
+
   // Create pools
   const pools = Object.values(tokens)
-    .filter((x) => ![USDC.symbol, "USDT"].includes(x.symbol))
+    .filter((x) => !x.symbol.startsWith("US"))
     .sort((a, b) => a.address.localeCompare(b.address));
 
-  for (const token of pools) {
-    console.log(`\n [${token.symbol}] Setting up trading`);
+  for (let i = 0; i < pools.length; i++) {
+    const token = pools[i];
+    await sleep(1000); // Avoid 429
+    console.log(`\n [${i} ${token.symbol}] Setting up trading`);
     const amount = BigInt(
       roundToOneSignificantFigure(
-        (5_000_000 * 10 ** token.decimals) / prices[token.address],
+        (100_000_000 * 10 ** token.decimals) / prices[token.address],
       ),
     );
 

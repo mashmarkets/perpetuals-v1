@@ -1,5 +1,5 @@
 use {
-    crate::{constants::USDC, error::ErrorCode, state::Oracle},
+    crate::{constants::USDC, state::Oracle},
     anchor_lang::prelude::*,
     anchor_spl::token::{burn, mint_to, Burn, Mint, MintTo, Token, TokenAccount},
     pyth_solana_receiver_sdk::price_update::PriceUpdateV2,
@@ -9,7 +9,6 @@ use {
 pub struct SwapSellParams {
     amount_in: u64,
     canonical_in: Pubkey,
-    canonical_out: Pubkey,
     epoch: i64,
 }
 
@@ -20,11 +19,11 @@ pub struct SwapSell<'info> {
     pub payer: Signer<'info>,
 
     #[account(
-      seeds = [
-        b"oracle",
-        params.canonical_in.key().as_ref()
-      ],
-      bump = oracle.bump
+        seeds = [
+            b"oracle",
+            params.canonical_in.key().as_ref()
+        ],
+        bump = oracle.bump
     )]
     pub oracle: Account<'info, Oracle>,
 
@@ -32,37 +31,36 @@ pub struct SwapSell<'info> {
     pub price_update: Account<'info, PriceUpdateV2>,
 
     #[account(
-      mut,
-      seeds = [
-        b"mint",
-        params.canonical_in.key().as_ref(),
-        params.epoch.to_le_bytes().as_ref()
-      ],
-      bump,
+        mut,
+        seeds = [
+            b"mint",
+            params.canonical_in.key().as_ref(),
+            0_i64.to_le_bytes().as_ref()
+        ],
+        bump,
     )]
     pub mint_in: Account<'info, Mint>,
     #[account(
-      mut,
-      token::mint = mint_in,
-      token::authority = payer,
+        mut,
+        token::mint = mint_in,
+        token::authority = payer,
     )]
     pub token_account_in: Account<'info, TokenAccount>,
 
     #[account(
-      mut,
-      seeds = [
-        b"mint",
-        params.canonical_out.key().as_ref(),
-        params.epoch.to_le_bytes().as_ref()
-      ],
-      bump,
+        mut,
+        seeds = [
+            b"mint",
+            USDC.as_ref(),
+            params.epoch.to_le_bytes().as_ref()
+        ],
+        bump,
     )]
     pub mint_out: Account<'info, Mint>,
 
     #[account(
-      mut,
-      token::mint = mint_out,
-      token::authority = payer,
+        mut,
+        token::mint = mint_out,
     )]
     pub token_account_out: Account<'info, TokenAccount>,
     pub token_program: Program<'info, Token>,
@@ -70,11 +68,6 @@ pub struct SwapSell<'info> {
 }
 
 pub fn swap_sell(ctx: Context<SwapSell>, params: SwapSellParams) -> Result<()> {
-    require!(
-        params.canonical_out.key() == USDC,
-        ErrorCode::InvalidQuoteMint
-    );
-
     msg!("{}", u64::MAX);
 
     let amount_in = if params.amount_in == u64::MAX {
@@ -129,7 +122,7 @@ pub fn swap_sell(ctx: Context<SwapSell>, params: SwapSellParams) -> Result<()> {
         )
         .with_signer(&[&[
             b"mint",
-            params.canonical_out.as_ref(),
+            USDC.as_ref(),
             params.epoch.to_le_bytes().as_ref(),
             &[bump],
         ]]),

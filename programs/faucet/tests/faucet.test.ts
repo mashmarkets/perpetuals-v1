@@ -14,7 +14,7 @@ import {
 } from "@solana/spl-token";
 import { LAMPORTS_PER_SOL, PublicKey, SystemProgram } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
-import { startAnchor } from "solana-bankrun";
+import { Clock, startAnchor } from "solana-bankrun";
 import { getAccount, getMint } from "spl-token-bankrun";
 
 import IDL from "../../../target/idl/faucet.json";
@@ -26,7 +26,7 @@ describe("Token Faucet", async () => {
 
   setProvider(provider);
   const payer = provider.wallet as Wallet;
-  const program = new Program<Faucet>(IDL, provider);
+  const program = new Program<Faucet>(IDL as Faucet, provider);
 
   const findFaucetAddressSync = (...seeds) =>
     PublicKey.findProgramAddressSync(
@@ -45,7 +45,7 @@ describe("Token Faucet", async () => {
       new PublicKey(IDL.address),
     )[0];
 
-  const epoch = new BN(0);
+  const epoch = new BN(Math.round(Date.now() / 1000 + 60));
   const canonicalUsdc = new PublicKey(
     "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
   );
@@ -55,7 +55,7 @@ describe("Token Faucet", async () => {
   const canonicalBonk = new PublicKey(
     "DezXAZ8z7PnrnRJjz3wXBoRgixCa6xjnB7YaB1pPB263",
   );
-  const mintBonk = findFaucetAddressSync("mint", canonicalBonk, epoch);
+  const mintBonk = findFaucetAddressSync("mint", canonicalBonk, new BN(0));
   const ataBonk = getAssociatedTokenAddressSync(mintBonk, payer.publicKey);
   const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
   const competition = findFaucetAddressSync("competition", epoch);
@@ -119,7 +119,7 @@ describe("Token Faucet", async () => {
         canonical: canonicalBonk,
         decimals: 5,
         amount: new BN(0),
-        epoch,
+        epoch: new BN(0),
       })
       .accounts({
         mint: mintBonk,
@@ -212,7 +212,6 @@ describe("Token Faucet", async () => {
       .swapSell({
         amountIn: new BN(MAX_U64),
         canonicalIn: canonicalBonk,
-        canonicalOut: canonicalUsdc,
         epoch,
       })
       .accounts({
@@ -253,7 +252,7 @@ describe("Token Faucet", async () => {
     await program.methods
       .competitionEnter({
         amount: new BN(0.05 * LAMPORTS_PER_SOL),
-        epoch: new BN(0),
+        epoch,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
@@ -312,7 +311,7 @@ describe("Token Faucet", async () => {
       program.methods
         .competitionEnter({
           amount: new BN(amount),
-          epoch: new BN(0),
+          epoch,
         })
         .preInstructions([
           createAssociatedTokenAccountIdempotentInstruction(
@@ -350,6 +349,18 @@ describe("Token Faucet", async () => {
   });
 
   it("Can end competition", async () => {
+    // Warp past end of competition
+    const currentClock = await context.banksClient.getClock();
+    context.setClock(
+      new Clock(
+        currentClock.slot,
+        currentClock.epochStartTimestamp,
+        currentClock.epoch,
+        currentClock.leaderScheduleEpoch,
+        BigInt(epoch.toNumber() + 10),
+      ),
+    );
+
     await program.methods
       .competitionEnd({
         epoch,

@@ -28,7 +28,7 @@ import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
 } from "@/hooks/useProgram";
-import { getTokenInfo, USDC_MINT } from "@/lib/Token";
+import { getCurrentEpoch, getTokenInfo, USDC_MINT } from "@/lib/Token";
 import { BPS_POWER, PRICE_POWER, RATE_POWER, Side } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
@@ -103,6 +103,7 @@ export function TradePosition({
     poolAddress,
     price: BigInt(Math.round((price?.currentPrice ?? 0) * PRICE_POWER * 1.05)),
     size: BigInt(Math.round(positionAmount * 10 ** decimals)),
+    epoch: getCurrentEpoch(),
   };
   const { data: estimate } = useEntryEstimate(params);
 
@@ -122,7 +123,7 @@ export function TradePosition({
     onSuccess: () => {
       // Collateral Balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), payToken.toString()],
+        queryKey: ["account", publicKey?.toString(), payToken.toString()],
       });
       // Pool
       queryClient.invalidateQueries({

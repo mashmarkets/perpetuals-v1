@@ -1,6 +1,9 @@
-const fs = require("fs");
-const path = require("path");
-const { Keypair } = require("@solana/web3.js");
+import fs from "node:fs";
+import path, { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { Keypair } from "@solana/web3.js";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
 
 // Inject into the IDL ourselves (doesn't seem to work for perpetuals)
 function patch(program: string, instance: "types" | "idl") {

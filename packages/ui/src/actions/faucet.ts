@@ -15,44 +15,49 @@ import IDL from "@/target/faucet.json";
 
 import { sendInstructions } from "./connection";
 
+export const epochToBN = (epoch: Date) =>
+  new BN(Math.floor(epoch.getTime() / 1000));
+
+const convertToSeed = (x: unknown): Buffer | Uint8Array => {
+  if (x instanceof Date) {
+    return epochToBN(x).toArrayLike(Buffer, "le", 8);
+  }
+  if (x instanceof PublicKey) {
+    return x.toBuffer();
+  }
+  if (typeof x === "string") {
+    return utils.bytes.utf8.encode(x);
+  }
+  if (typeof x === "number" || x instanceof BN || x instanceof BigInt) {
+    return new BN((x as number).toString()).toArrayLike(Buffer, "le", 8);
+  }
+
+  return x as Buffer | Uint8Array;
+};
+
 export const findFaucetAddressSync = (...seeds: unknown[]) => {
   const publicKey = PublicKey.findProgramAddressSync(
-    seeds.map((x) => {
-      if (x instanceof PublicKey) {
-        return x.toBuffer();
-      }
-      if (typeof x === "string") {
-        return utils.bytes.utf8.encode(x);
-      }
-      if (typeof x === "number" || x instanceof BN || x instanceof BigInt) {
-        return new BN((x as number).toString()).toArrayLike(Buffer, "le", 8);
-      }
-      return x;
-    }),
+    seeds.map(convertToSeed),
     new PublicKey(IDL.address),
   )[0];
 
   return publicKey.toString() as Address;
 };
-export const getFaucetMint = (canonical: Address, epoch: bigint) =>
-  findFaucetAddressSync(
-    "mint",
-    new PublicKey(canonical),
-    new BN(epoch.toString()),
-  );
+
+export const getFaucetMint = (canonical: Address, epoch: Date) =>
+  findFaucetAddressSync("mint", new PublicKey(canonical), epochToBN(epoch));
 
 export const competitionEnter = async (
   program: Program<Faucet>,
   params: {
     amount: bigint;
-    epoch: bigint;
+    epoch: Date;
   },
 ) => {
   const USDC_MINT = getFaucetMint(
     "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
     params.epoch,
   );
-  const epoch = new BN(params.epoch.toString());
   console.log("Entering competition with params", params);
 
   const publicKey = program.provider.publicKey!;
@@ -61,7 +66,7 @@ export const competitionEnter = async (
     new PublicKey(USDC_MINT),
     publicKey,
   );
-  const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
+  const vault = findFaucetAddressSync("vault", NATIVE_MINT, params.epoch);
 
   const instructions = [
     createAssociatedTokenAccountIdempotentInstruction(
@@ -86,7 +91,7 @@ export const competitionEnter = async (
     await program.methods
       .competitionEnter({
         amount: new BN(params.amount.toString()),
-        epoch,
+        epoch: epochToBN(params.epoch),
       })
       .accounts({
         payer: publicKey,
@@ -113,15 +118,13 @@ export const competitionEnter = async (
 export const competitionClaim = async (
   program: Program<Faucet>,
   params: {
-    epoch: bigint;
+    epoch: Date;
   },
 ) => {
   const USDC_MINT = getFaucetMint(
     "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
     params.epoch,
   );
-
-  const epoch = new BN(params.epoch.toString());
 
   const publicKey = program.provider.publicKey!;
   const tokenAccountIn = getAssociatedTokenAddressSync(
@@ -132,7 +135,7 @@ export const competitionClaim = async (
     new PublicKey(NATIVE_MINT),
     publicKey,
   );
-  const vault = findFaucetAddressSync("vault", NATIVE_MINT, epoch);
+  const vault = findFaucetAddressSync("vault", NATIVE_MINT, params.epoch);
 
   const instructions = [
     createAssociatedTokenAccountIdempotentInstruction(
@@ -144,14 +147,14 @@ export const competitionClaim = async (
 
     await program.methods
       .competitionClaim({
-        epoch,
+        epoch: epochToBN(params.epoch),
       })
       .accounts({
         payer: publicKey,
         mintIn: USDC_MINT,
         tokenAccountIn,
         vault,
-        competition: findFaucetAddressSync("competition", epoch),
+        competition: findFaucetAddressSync("competition", params.epoch),
         mintOut: NATIVE_MINT,
         tokenProgram: TOKEN_PROGRAM_ID,
         tokenAccountOut,

@@ -28,7 +28,7 @@ describe("perpetuals", () => {
     const context = await startAnchor(".", [], []);
     const provider = new BankrunProvider(context);
 
-    const program = new Program<Perpetuals>(IDL, provider);
+    const program = new Program<Perpetuals>(IDL as Perpetuals, provider);
 
     tc = new TestClient(context, program);
     tc.printErrors = true;

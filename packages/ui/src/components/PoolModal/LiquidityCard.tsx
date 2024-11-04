@@ -86,11 +86,11 @@ export default function LiquidityCard({
       }
       // LP Balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), lpMintAddress],
+        queryKey: ["account", publicKey?.toString(), lpMintAddress],
       });
       // Collateral balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), custody?.mint],
+        queryKey: ["account", publicKey?.toString(), custody?.mint],
       });
       // LP Shares
       queryClient.invalidateQueries({

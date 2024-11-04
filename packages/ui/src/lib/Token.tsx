@@ -20,12 +20,38 @@ interface Token {
   };
 }
 
-export const EPOCH_DATE = new Date("2024-11-02T18:55:00.000+08:00");
-export const EPOCH = BigInt(EPOCH_DATE.getTime() / 1000);
+const delta = 1000 * 60 * 10; // Every 10 minutes
+
+export const getCurrentEpoch = () => {
+  const epoch = new Date();
+  let minutes = epoch.getUTCMinutes();
+  minutes = minutes - (minutes % 10);
+  epoch.setMinutes(minutes, 0, 0);
+  return new Date(epoch.getTime() + delta);
+};
+
+export const getPreviousEpoch = (epoch: Date): Date | undefined => {
+  return new Date(epoch.getTime() - delta);
+};
+
+export const getNextEpoch = (epoch: Date): Date | undefined => {
+  const next = new Date(epoch.getTime() + delta);
+  if (next.getTime() > getCurrentEpoch().getTime()) {
+    return undefined;
+  }
+  return next;
+};
+
 // Asset for our credits
+export const getCompetitionMint = (epoch: Date) =>
+  getFaucetMint(
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
+    epoch,
+  );
+
 export const USDC_MINT = getFaucetMint(
   "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v" as Address,
-  EPOCH,
+  getCurrentEpoch(),
 );
 
 const SOL = universe.find((x) => x.symbol === "SOL")!;
@@ -50,7 +76,9 @@ const tokenList: Token[] = [
         // Note: For simulation trading we also mock WSOL. Otherwise we should leave native mint intact
         address: getFaucetMint(
           x.address as Address,
-          EPOCH,
+          x.address === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+            ? getCurrentEpoch()
+            : new Date(0),
         ).toString() as Address,
       }) as Token,
   ),

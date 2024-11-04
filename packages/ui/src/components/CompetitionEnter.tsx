@@ -11,7 +11,7 @@ import { TokenSelector } from "@/components/TokenSelector";
 import { SolidButton } from "@/components/ui/SolidButton";
 import { useBalance } from "@/hooks/token";
 import { useWriteFaucetProgram } from "@/hooks/useProgram";
-import { EPOCH, getTokenSymbol, USDC_MINT } from "@/lib/Token";
+import { getCurrentEpoch, getTokenSymbol, USDC_MINT } from "@/lib/Token";
 import { SOL_RESERVE_AMOUNT } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
@@ -34,23 +34,24 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
     : 0;
 
   const program = useWriteFaucetProgram();
+  // NOTE:- If epoch changes during mutation, the invalidate queries will be for the wrong tokens
   const buyIn = useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), USDC_MINT],
+        queryKey: ["account", publicKey?.toString(), USDC_MINT],
       });
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), payToken],
+        queryKey: ["account", publicKey?.toString(), payToken],
       });
 
       const vault = findFaucetAddressSync(
         "vault",
         new PublicKey(payToken),
-        Number(EPOCH),
+        getCurrentEpoch(),
       );
 
       queryClient.invalidateQueries({
-        queryKey: ["balance", vault, payToken],
+        queryKey: ["account", vault, payToken],
       });
     },
     mutationFn: async () => {
@@ -62,7 +63,7 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
         program.provider.connection,
         competitionEnter(program, {
           amount: BigInt(Math.round(depositAmount * LAMPORTS_PER_SOL)),
-          epoch: EPOCH,
+          epoch: getCurrentEpoch(),
         }),
       );
     },

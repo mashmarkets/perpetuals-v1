@@ -1,4 +1,7 @@
+import { get } from "http";
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
+import ChevronLeft from "@carbon/icons-react/lib/ChevronLeft";
+import ChevronRight from "@carbon/icons-react/lib/ChevronRight";
 import ChevronUpIcon from "@carbon/icons-react/lib/ChevronUp";
 import { Address } from "@solana/addresses";
 import { useWallet } from "@solana/wallet-adapter-react";
@@ -14,22 +17,35 @@ import {
 } from "@/hooks/perpetuals";
 import { usePrices } from "@/hooks/price";
 import { useAllMintHolders, useBalances } from "@/hooks/token";
-import { getTokenInfo, getTokenSymbol, USDC_MINT } from "@/lib/Token";
+import {
+  getCompetitionMint,
+  getCurrentEpoch,
+  getNextEpoch,
+  getPreviousEpoch,
+  getTokenInfo,
+  getTokenSymbol,
+  USDC_MINT,
+} from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatNumber, formatPrice } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
 
-const useLeaderboardData = () => {
-  const { data: positionsMapping } = useAllPositions();
-  const { data: holders } = useAllMintHolders(USDC_MINT);
+const useLeaderboardData = (epoch: Date) => {
+  const { data: currentPositionsMapping } = useAllPositions();
+  const mint = getCompetitionMint(epoch);
+  const { data: holders } = useAllMintHolders(mint);
+
+  // Positions only apply to current epoch
+  const positionsMapping =
+    epoch === getCurrentEpoch() ? currentPositionsMapping : {};
 
   const users = dedupe([
     ...(holders ?? []),
     ...Object.keys(positionsMapping ?? {}),
   ]) as Address[];
 
-  const balances = useBalances(USDC_MINT, users);
+  const balances = useBalances(mint, users);
   const allPositions = usePositions(
     Object.values(positionsMapping ?? {}).flat(),
   );
@@ -77,12 +93,37 @@ const useLeaderboardData = () => {
     })
     .sort((a, b) => Number(b.equity) - Number(a.equity));
 };
-export default function Leaderboard() {
+
+function EpochSelector({
+  epoch,
+  onChange,
+}: {
+  epoch: Date;
+  onChange: (epoch: Date) => void;
+}) {
+  const previous = getPreviousEpoch(epoch);
+  const next = getNextEpoch(epoch);
+  return (
+    <div className="flex items-center space-x-2">
+      <button
+        disabled={previous === undefined}
+        onClick={() => onChange(previous!)}
+      >
+        <ChevronLeft className="h-5 w-5 text-gray-400" />
+      </button>
+      <button disabled={next === undefined} onClick={() => onChange(next!)}>
+        <ChevronRight className="h-5 w-5 text-gray-400" />
+      </button>
+    </div>
+  );
+}
+
+function Leaderboard({ epoch }: { epoch: Date }) {
   const [expandedUsers, setExpandedUsers] = useState<Set<string>>(new Set());
 
   const { publicKey } = useWallet();
-  const leaderboard = useLeaderboardData();
-  const { data: prize } = usePrizePool();
+  const leaderboard = useLeaderboardData(epoch);
+  const { data: prize } = usePrizePool(epoch);
 
   const toggleUser = (userId: string) => {
     const newExpanded = new Set(expandedUsers);
@@ -96,15 +137,14 @@ export default function Leaderboard() {
 
   const { symbol, decimals } = getTokenInfo(USDC_MINT);
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
+    <div className="">
       <p className="text-lg font-bold text-gray-200">
         Prize Pool:
-        {(Number(prize) / 10 ** 9).toFixed(2)} SOL
+        {(Number(prize ?? 0) / 10 ** 9).toFixed(2)} SOL
       </p>
 
       <div className="mx-auto max-w-lg py-6">
-        <CompetitionClaim />
+        <CompetitionClaim epoch={epoch} />
       </div>
       <div className="shadow">
         {leaderboard.map(
@@ -220,6 +260,29 @@ export default function Leaderboard() {
           ),
         )}
       </div>
+    </div>
+  );
+}
+
+export default function Page() {
+  const [epoch, setEpoch] = useState(getCurrentEpoch());
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-white">Leaderboard</h1>
+          <p
+            className="text-xl font-bold text-gray-400"
+            suppressHydrationWarning
+          >
+            {epoch.toLocaleString()}
+          </p>
+        </div>
+
+        <EpochSelector epoch={epoch} onChange={setEpoch} />
+      </div>
+      <Leaderboard epoch={epoch} />;
     </div>
   );
 }

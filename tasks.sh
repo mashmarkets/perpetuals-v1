@@ -22,15 +22,18 @@ function close {
 function types {
   pnpm exec tsx ./scripts/patch.js
 
-  rm -rf packages/ui/src/target/*
-  cp -rf target/types/ target/idl/ packages//ui/src/target
-  cp -rf target/idl/perpetuals.json packages/ui/public/static/idl
+  rm -rf packages/cli/src/target/*
+  cp -rf target/types/ target/idl/ packages/cli/src/target
+
+  rm -rf packages/competition-ops/src/target/*
+  cp -rf target/types/ target/idl/ packages/competition-ops/src/target
 
   rm -rf packages/liquidator/src/target/*
   cp -rf target/idl/perpetuals.json target/types/perpetuals.ts packages/liquidator/src/target
 
-  rm -rf packages/cli/src/target/*
-  cp -rf target/types/ target/idl/ packages/cli/src/target
+  rm -rf packages/ui/src/target/*
+  cp -rf target/types/ target/idl/ packages/ui/src/target
+  cp -rf target/idl/perpetuals.json packages/ui/public/static/idl
 }
 
 function deploy {
@@ -46,13 +49,13 @@ function deploy {
 }
 
 
-function setup {
+function init {
   if [ -z "$1" ]; then
     echo "Error: KEY parameter is required"
-    echo "Usage: ./tasks.sh setup <key_path>"
+    echo "Usage: ./tasks.sh init <key_path>"
     return 1
   fi
-  PRIVATE_KEY="$1" pnpm exec tsx ./scripts/setup.ts
+  PRIVATE_KEY="$1" pnpm exec tsx ./scripts/init.ts
 }
 
 function redeploy {
@@ -64,7 +67,7 @@ function redeploy {
   close "$1"
   deploy "$1"
   types
-  setup "$1"
+  init "$1"
 }
 
 

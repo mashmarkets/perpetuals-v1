@@ -25,7 +25,7 @@ import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
 } from "@/hooks/useProgram";
-import { USDC_MINT } from "@/lib/Token";
+import { getCurrentEpoch, USDC_MINT } from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -105,7 +105,7 @@ export function CollateralModal({
 
       // Collateral Balance
       queryClient.invalidateQueries({
-        queryKey: ["balance", publicKey?.toString(), custody?.mint.toString()],
+        queryKey: ["account", publicKey?.toString(), custody?.mint.toString()],
       });
       // Position
       queryClient.invalidateQueries({
@@ -136,6 +136,7 @@ export function CollateralModal({
                   Math.round(collateralAmount * CUSTODY_POWER),
                 ),
                 payMint: payToken,
+                epoch: getCurrentEpoch(),
               },
             )
           : removeCollateral(
@@ -145,6 +146,7 @@ export function CollateralModal({
                 custody,
                 collateralUsd: BigInt(Math.round(withdrawAmount * USD_POWER)),
                 receiveMint: USDC_MINT,
+                epoch: getCurrentEpoch(),
               },
             );
       //receive

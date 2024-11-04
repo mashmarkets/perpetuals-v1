@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/perpetuals.json`.
  */
 export type Perpetuals = {
-  "address": "91r7D9FMPWy7E7Q8WEqVBRDDXBUscVdsKCnDcTdZwgTc",
+  "address": "GmU79uB4Z78rZEooejYtJWgQr28wWCoAcaf9Uc7cyWfw",
   "metadata": {
     "name": "perpetuals",
     "version": "0.1.0",

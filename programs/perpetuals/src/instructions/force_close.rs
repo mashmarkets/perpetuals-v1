@@ -32,7 +32,8 @@ pub struct ForceClose<'info> {
     #[account(
         mut,
         constraint = receiving_account.mint == custody.mint,
-        constraint = receiving_account.owner == position.owner
+        // Allow the tokens for force close to go anywhere
+        // constraint = receiving_account.owner == position.owner
     )]
     pub receiving_account: Box<Account<'info, TokenAccount>>,
 
