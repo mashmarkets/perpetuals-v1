@@ -4,12 +4,7 @@ import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
 import { usePrices } from "@/hooks/price";
-import {
-  getTokenIcon,
-  getTokenLabel,
-  getTokenSymbol,
-  TRADEABLE_MINTS,
-} from "@/lib/Token";
+import { useGetTokenInfo, useTradeableMints } from "@/hooks/token";
 import { formatPrice } from "@/utils/formatters";
 
 interface Props {
@@ -20,7 +15,9 @@ interface Props {
 }
 
 export function TokenSelectorList(props: Props) {
-  const list = props.tokenList ? props.tokenList : TRADEABLE_MINTS;
+  const { getTokenLabel, getTokenSymbol, getTokenIcon } = useGetTokenInfo();
+  const tradeableMints = useTradeableMints();
+  const list = props.tokenList ? props.tokenList : tradeableMints;
 
   const prices = usePrices(list);
 

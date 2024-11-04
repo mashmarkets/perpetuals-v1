@@ -14,6 +14,7 @@ import { LpSelector } from "@/components/PoolModal/LpSelector";
 import { TokenSelector } from "@/components/TokenSelector";
 import { SidebarTab } from "@/components/ui/SidebarTab";
 import { SolidButton } from "@/components/ui/SolidButton";
+import { useCompetitionMint, useCurrentEpoch } from "@/hooks/competition";
 import {
   useCustody,
   useGetLiquidationPrice,
@@ -25,7 +26,6 @@ import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
 } from "@/hooks/useProgram";
-import { getCurrentEpoch, USDC_MINT } from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -39,6 +39,8 @@ export function CollateralModal({
   children?: React.ReactNode;
   positionAddress: Address;
 }) {
+  const epoch = useCurrentEpoch();
+  const competitionMint = useCompetitionMint();
   const [withdrawAmount, setWithdrawAmount] = useState(0);
   const [depositAmount, setDepositAmount] = useState(0);
   const [open, setOpen] = useState(false);
@@ -75,7 +77,7 @@ export function CollateralModal({
   });
 
   // const payToken = custody ? custody.mint : undefined;
-  const payToken = USDC_MINT;
+  const payToken = competitionMint;
 
   const payTokenBalance = Number(collateralBalance) / CUSTODY_POWER;
   const collateralAmount = price
@@ -136,7 +138,7 @@ export function CollateralModal({
                   Math.round(collateralAmount * CUSTODY_POWER),
                 ),
                 payMint: payToken,
-                epoch: getCurrentEpoch(),
+                epoch,
               },
             )
           : removeCollateral(
@@ -145,8 +147,8 @@ export function CollateralModal({
                 position,
                 custody,
                 collateralUsd: BigInt(Math.round(withdrawAmount * USD_POWER)),
-                receiveMint: USDC_MINT,
-                epoch: getCurrentEpoch(),
+                receiveMint: competitionMint,
+                epoch,
               },
             );
       //receive

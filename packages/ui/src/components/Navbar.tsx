@@ -9,9 +9,13 @@ import { useRouter } from "next/router";
 import React, { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { useEpochCountdown, usePrizePool } from "@/hooks/competition";
-import { useBalance } from "@/hooks/token";
-import { getCurrentEpoch, getTokenIcon, USDC_MINT } from "@/lib/Token";
+import {
+  useCompetitionMint,
+  useCurrentEpoch,
+  useEpochCountdown,
+  usePrizePool,
+} from "@/hooks/competition";
+import { useBalance, useGetTokenInfo } from "@/hooks/token";
 import { formatNumber } from "@/utils/formatters";
 
 import AirdropButton from "./AirdropButton";
@@ -70,10 +74,14 @@ const WalletMultiButtonDynamic = dynamic(
 
 export const Navbar = () => {
   const { publicKey } = useWallet();
-  const countdown = useEpochCountdown();
-  const { data: prize } = usePrizePool(getCurrentEpoch());
+  const { getTokenIcon } = useGetTokenInfo();
 
-  const { data: usdc } = useBalance(USDC_MINT, publicKey);
+  const epoch = useCurrentEpoch();
+  const { data: prize } = usePrizePool(epoch);
+  const countdown = useEpochCountdown();
+
+  const competitionMint = useCompetitionMint();
+  const { data: usdc } = useBalance(competitionMint, publicKey);
   const { data: sol } = useBalance(
     NATIVE_MINT.toString() as Address,
     publicKey,
@@ -140,7 +148,7 @@ export const Navbar = () => {
                 Buy in
                 {usdc !== undefined && usdc > BigInt(0) && (
                   <p className="gap flex items-center gap-2 pr-2 text-blue-400">
-                    {getTokenIcon(USDC_MINT)}
+                    {getTokenIcon(competitionMint)}
                     {formatNumber(Number(usdc) / 10 ** 6)}
                   </p>
                 )}

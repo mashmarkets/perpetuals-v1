@@ -2,7 +2,7 @@ import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { getTokenIcon } from "@/lib/Token";
+import { useGetTokenInfo } from "@/hooks/token";
 
 interface Props {
   className?: string;
@@ -10,6 +10,7 @@ interface Props {
 }
 
 function TokenIconArray(props: Props) {
+  const { getTokenIcon } = useGetTokenInfo();
   return (
     <div className="flex items-center -space-x-6">
       {props.tokens.slice(0, 3).map((token, i) => {

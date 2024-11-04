@@ -2,8 +2,9 @@ import { Address } from "@solana/addresses";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { create, indexedResolver, windowScheduler } from "@yornaath/batshit";
 
-import { getCoingeckoId, USDC_MINT } from "@/lib/Token";
 import { queryClient } from "@/utils/queryClient";
+
+import { useGetTokenInfo } from "./token";
 
 export interface PriceStat {
   change24hr: number;
@@ -14,8 +15,7 @@ export interface PriceStat {
 
 const coingeckoBatcher = create({
   name: "coingecko",
-  fetcher: async (mints: Address[]) => {
-    const ids = mints.map(getCoingeckoId).join(",");
+  fetcher: async (ids: string[]) => {
     return fetch(
       `https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=USD&include_24hr_vol=true&include_24hr_change=true`,
     )
@@ -27,11 +27,11 @@ const coingeckoBatcher = create({
             { usd: number; usd_24_vol: number; usd_24h_change: number }
           >,
         ) =>
-          mints.reduce(
-            (acc, mint) => {
+          ids.reduce(
+            (acc, id) => {
               // Force USDC to be $1Dollar
-              if (mint === USDC_MINT) {
-                acc[mint.toString()] = {
+              if (id === "usd-coin") {
+                acc[id] = {
                   change24hr: 0,
                   currentPrice: 1.0,
                   high24hr: 0,
@@ -39,8 +39,8 @@ const coingeckoBatcher = create({
                 };
                 return acc;
               }
-              const d = data[getCoingeckoId(mint)!];
-              acc[mint.toString()] = {
+              const d = data[id];
+              acc[id] = {
                 change24hr: d?.usd_24h_change ?? 0,
                 currentPrice: d?.usd ?? 0,
                 high24hr: 0,
@@ -63,21 +63,30 @@ queryClient.setQueryDefaults(["price"], {
 });
 
 export const usePrice = (mint: Address | undefined) => {
+  const { getTokenInfo } = useGetTokenInfo();
+  const coingeckoId = getTokenInfo(mint!)?.extensions.coingeckoId;
+
   return useQuery<PriceStat>({
-    queryKey: ["price", mint?.toString()],
-    enabled: !!mint,
-    queryFn: () => coingeckoBatcher.fetch(mint!) as Promise<PriceStat>,
+    queryKey: ["coingecko", coingeckoId],
+    enabled: !!mint && coingeckoId !== undefined,
+    queryFn: () => coingeckoBatcher.fetch(coingeckoId!) as Promise<PriceStat>,
     staleTime: 5 * ONE_MINUTE,
   });
 };
 
 export const usePrices = (mints: Address[]) => {
+  const { getTokenInfo } = useGetTokenInfo();
   return useQueries({
-    queries: mints.map((mint) => ({
-      queryKey: ["price", mint.toString()],
-      queryFn: () => coingeckoBatcher.fetch(mint) as Promise<PriceStat>,
-      staleTime: 60 * 1000,
-    })),
+    queries: mints.map((mint) => {
+      const coingeckoId = getTokenInfo(mint!)?.extensions.coingeckoId;
+      return {
+        queryKey: ["price", coingeckoId],
+        enabled: coingeckoId !== undefined,
+        queryFn: () =>
+          coingeckoBatcher.fetch(coingeckoId!) as Promise<PriceStat>,
+        staleTime: 60 * 1000,
+      };
+    }),
     combine: (results) => {
       return results.reduce(
         (acc, v, i) => {

@@ -17,18 +17,18 @@ import { LeverageSlider } from "@/components/ui/LeverageSlider";
 import { LoadingDots } from "@/components/ui/LoadingDots";
 import { SolidButton } from "@/components/ui/SolidButton";
 import { UserBalance } from "@/components/ui/UserBalance";
+import { useCompetitionMint, useCurrentEpoch } from "@/hooks/competition";
 import {
   useAllUserPositions,
   usePoolCustodies,
   usePositions,
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
-import { useBalance } from "@/hooks/token";
+import { useBalance, useGetTokenInfo } from "@/hooks/token";
 import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
 } from "@/hooks/useProgram";
-import { getCurrentEpoch, getTokenInfo, USDC_MINT } from "@/lib/Token";
 import { BPS_POWER, PRICE_POWER, RATE_POWER, Side } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
@@ -74,6 +74,9 @@ export function TradePosition({
   mint: Address;
   poolAddress: Address;
 }) {
+  const epoch = useCurrentEpoch();
+  const { getTokenInfo } = useGetTokenInfo();
+  const payToken = useCompetitionMint();
   const perpetuals = useWritePerpetualsProgram();
   const faucet = useWriteFaucetProgram();
   const { publicKey } = useWallet();
@@ -84,7 +87,6 @@ export function TradePosition({
   const custodies = usePoolCustodies(poolAddress);
   const custody = Object.values(custodies)[0];
 
-  const payToken = USDC_MINT;
   const positionToken = mint;
   const [lastChanged, setLastChanged] = useState<Input>(Input.Pay);
   const [payAmount, setPayAmount] = useState(1);
@@ -103,7 +105,7 @@ export function TradePosition({
     poolAddress,
     price: BigInt(Math.round((price?.currentPrice ?? 0) * PRICE_POWER * 1.05)),
     size: BigInt(Math.round(positionAmount * 10 ** decimals)),
-    epoch: getCurrentEpoch(),
+    epoch,
   };
   const { data: estimate } = useEntryEstimate(params);
 

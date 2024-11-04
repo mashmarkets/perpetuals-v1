@@ -5,7 +5,7 @@ import { twMerge } from "tailwind-merge";
 
 import { usePoolCustodies } from "@/hooks/perpetuals";
 import { usePrices } from "@/hooks/price";
-import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
+import { useGetTokenInfo } from "@/hooks/token";
 import { formatNumberCommas } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
@@ -15,6 +15,7 @@ export default function PoolTokenStats({
 }: {
   poolAddress: Address;
 }) {
+  const { getTokenSymbol, getTokenLabel, getTokenIcon } = useGetTokenInfo();
   const custodies = usePoolCustodies(poolAddress);
   const prices = usePrices(
     dedupe(Object.values(custodies ?? {}).map((x) => x.mint)),

@@ -154,7 +154,8 @@ async function forceClose(
     createCloseAccountInstruction(receivingAccount, publicKey, publicKey),
   ];
 
-  return await sendInstructions(program.provider, instructions);
+  const tx = await sendInstructions(program.provider, instructions);
+  await program.provider.connection.confirmTransaction(tx);
 }
 
 const getCustodies = async (program, positions: Position[]) => {

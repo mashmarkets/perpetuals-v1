@@ -14,14 +14,14 @@ import {
   usePool,
   usePoolCustodies,
 } from "@/hooks/perpetuals";
-import { useBalance, useMint } from "@/hooks/token";
-import { getTokenIcon, tokensByMint } from "@/lib/Token";
+import { useBalance, useGetTokenInfo, useMint } from "@/hooks/token";
 import { USD_POWER } from "@/lib/types";
 import { formatNumberCommas } from "@/utils/formatters";
 
 function PoolRow({ poolAddress }: { poolAddress: Address }) {
   const { publicKey } = useWallet();
   const router = useRouter();
+  const { getTokenSymbol, getTokenIcon } = useGetTokenInfo();
   const { data: pool } = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);
   const { data: aum } = useGetAssetsUnderManagement(pool);
@@ -70,7 +70,7 @@ function PoolRow({ poolAddress }: { poolAddress: Address }) {
             <p className="text-xs font-medium">{pool?.name}</p>
             <div className="flex flex-row truncate text-xs font-medium text-zinc-500">
               {Object.values(custodies)
-                .map((x) => tokensByMint[x.mint.toString()]!.symbol)
+                .map((x) => getTokenSymbol(x.mint))
                 .join(", ")}
             </div>
           </div>

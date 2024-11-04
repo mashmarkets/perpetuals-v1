@@ -22,6 +22,7 @@ import { Navbar } from "@/components/Navbar";
 
 import "@/styles/wallet-adapter.css";
 
+import { CurrentEpochProvider } from "@/hooks/competition";
 import { queryClient } from "@/utils/queryClient";
 
 // If loading a variable font, you don't need to specify the font weight
@@ -29,26 +30,28 @@ const inter = Inter({ subsets: ["latin"] });
 
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
-    <QueryClientProvider client={queryClient}>
-      <Context>
-        <ToastContainer
-          position="top-right"
-          autoClose={5000}
-          hideProgressBar={false}
-          newestOnTop={false}
-          closeOnClick
-          rtl={false}
-          pauseOnFocusLoss
-          draggable
-          pauseOnHover
-          theme="dark"
-          className="mt-12"
-        />
-        <Navbar />
-        <Component {...pageProps} />
-      </Context>
-      <ReactQueryDevtools initialIsOpen={false} />
-    </QueryClientProvider>
+    <CurrentEpochProvider>
+      <QueryClientProvider client={queryClient}>
+        <Context>
+          <ToastContainer
+            position="top-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+            theme="dark"
+            className="mt-12"
+          />
+          <Navbar />
+          <Component {...pageProps} />
+        </Context>
+        <ReactQueryDevtools initialIsOpen={false} />
+      </QueryClientProvider>
+    </CurrentEpochProvider>
   );
 }
 

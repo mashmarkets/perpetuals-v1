@@ -1,4 +1,3 @@
-import { get } from "http";
 import ChevronDownIcon from "@carbon/icons-react/lib/ChevronDown";
 import ChevronLeft from "@carbon/icons-react/lib/ChevronLeft";
 import ChevronRight from "@carbon/icons-react/lib/ChevronRight";
@@ -9,7 +8,11 @@ import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 import { CompetitionClaim } from "@/components/CompetitionClaim";
-import { usePrizePool } from "@/hooks/competition";
+import {
+  useCompetitionMint,
+  useCurrentEpoch,
+  usePrizePool,
+} from "@/hooks/competition";
 import {
   useAllPositions,
   useCustodies,
@@ -19,12 +22,9 @@ import { usePrices } from "@/hooks/price";
 import { useAllMintHolders, useBalances } from "@/hooks/token";
 import {
   getCompetitionMint,
-  getCurrentEpoch,
   getNextEpoch,
   getPreviousEpoch,
   getTokenInfo,
-  getTokenSymbol,
-  USDC_MINT,
 } from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatNumber, formatPrice } from "@/utils/formatters";
@@ -32,13 +32,14 @@ import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 import { dedupe } from "@/utils/utils";
 
 const useLeaderboardData = (epoch: Date) => {
+  const currentEpoch = useCurrentEpoch();
   const { data: currentPositionsMapping } = useAllPositions();
   const mint = getCompetitionMint(epoch);
   const { data: holders } = useAllMintHolders(mint);
 
   // Positions only apply to current epoch
   const positionsMapping =
-    epoch === getCurrentEpoch() ? currentPositionsMapping : {};
+    epoch === currentEpoch ? currentPositionsMapping : {};
 
   const users = dedupe([
     ...(holders ?? []),
@@ -124,6 +125,7 @@ function Leaderboard({ epoch }: { epoch: Date }) {
   const { publicKey } = useWallet();
   const leaderboard = useLeaderboardData(epoch);
   const { data: prize } = usePrizePool(epoch);
+  const competitionMint = useCompetitionMint();
 
   const toggleUser = (userId: string) => {
     const newExpanded = new Set(expandedUsers);
@@ -135,7 +137,8 @@ function Leaderboard({ epoch }: { epoch: Date }) {
     setExpandedUsers(newExpanded);
   };
 
-  const { symbol, decimals } = getTokenInfo(USDC_MINT);
+  const { symbol, decimals } = getTokenInfo(competitionMint, epoch);
+
   return (
     <div className="">
       <p className="text-lg font-bold text-gray-200">
@@ -213,7 +216,8 @@ function Leaderboard({ epoch }: { epoch: Date }) {
                                 href={ACCOUNT_URL(position.mint)}
                                 target="_blank"
                               >
-                                {getTokenSymbol(position.mint)}
+                                {getTokenInfo(position.mint, epoch)?.symbol ??
+                                  "???"}
                               </a>
                             </span>
                             <div className="space-x-4">
@@ -265,7 +269,8 @@ function Leaderboard({ epoch }: { epoch: Date }) {
 }
 
 export default function Page() {
-  const [epoch, setEpoch] = useState(getCurrentEpoch());
+  const currentEpoch = useCurrentEpoch();
+  const [epoch, setEpoch] = useState(currentEpoch);
 
   return (
     <div className="container mx-auto px-4 py-8">

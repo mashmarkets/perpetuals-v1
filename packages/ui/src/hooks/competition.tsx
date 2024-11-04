@@ -3,25 +3,31 @@ import { NATIVE_MINT } from "@solana/spl-token";
 import { useConnection } from "@solana/wallet-adapter-react";
 import { PublicKey } from "@solana/web3.js";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect, useState } from "react";
+import {
+  createContext,
+  ReactNode,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 
 import { findFaucetAddressSync } from "@/actions/faucet";
-import { getCurrentEpoch } from "@/lib/Token";
+import { getCompetitionMint, getCurrentEpoch } from "@/lib/Token";
 
 import { connectionBatcher } from "./accounts";
 import { useBalance } from "./token";
 import { useReadFaucetProgram } from "./useProgram";
 
-function parseFutureDate(futureDate: Date) {
-  const now = Date.now();
-  const future = futureDate.getTime();
+function getCountdown(date: Date) {
+  const now = Math.ceil(Date.now() / 1000) * 1000;
+  const epoch = date.getTime();
 
   // Ensure the future date is indeed in the future
-  if (future <= now) {
+  if (now >= epoch) {
     return "Ended";
   }
 
-  let delta = Math.floor((future - now) / 1000);
+  let delta = Math.floor((epoch - now) / 1000);
 
   const days = Math.floor(delta / (24 * 3600));
   delta = delta % (24 * 3600);
@@ -40,17 +46,51 @@ function parseFutureDate(futureDate: Date) {
   return `${days}D ${h}:${m}:${s}`;
 }
 
-export const useEpochCountdown = () => {
-  const [counter, setCounter] = useState(parseFutureDate(getCurrentEpoch()));
+const CurrentEpochContext = createContext<Date>(getCurrentEpoch());
+
+// We need a global value of epoch to keep everything in sync
+export const CurrentEpochProvider = ({ children }: { children: ReactNode }) => {
+  const [epoch, setEpoch] = useState(getCurrentEpoch());
+
   useEffect(() => {
     const id = setInterval(() => {
-      setCounter(parseFutureDate(getCurrentEpoch()));
-    }, 1000);
+      setEpoch(getCurrentEpoch());
+    }, 500);
 
     return () => clearInterval(id);
   }, []);
 
-  return counter;
+  return (
+    <CurrentEpochContext.Provider value={epoch}>
+      {children}
+    </CurrentEpochContext.Provider>
+  );
+};
+
+export const useCurrentEpoch = () => {
+  return useContext(CurrentEpochContext);
+};
+
+export const useCompetitionMint = () => {
+  const epoch = useCurrentEpoch();
+  return getCompetitionMint(epoch);
+};
+
+export const useEpochCountdown = () => {
+  const epoch = useCurrentEpoch();
+  const [countdown, setCountdown] = useState(getCountdown(epoch));
+
+  // For some reason doesn't work passing in Date object
+  const ms = epoch.getTime();
+  useEffect(() => {
+    const id = setInterval(() => {
+      setCountdown(() => getCountdown(new Date(ms)));
+    }, 500);
+
+    return () => clearInterval(id);
+  }, [ms]);
+
+  return countdown;
 };
 
 export const useCompetitionAccount = (epoch: Date) => {

@@ -4,7 +4,7 @@ import { twMerge } from "tailwind-merge";
 
 import TokenIconArray from "@/components/ui/TokenIconArray";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
-import { getTokenSymbol } from "@/lib/Token";
+import { useGetTokenInfo } from "@/hooks/token";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
 
 export function TitleHeader({
@@ -16,6 +16,7 @@ export function TitleHeader({
   iconClassName?: string;
   poolAddress: Address;
 }) {
+  const { getTokenSymbol } = useGetTokenInfo();
   const { data: pool } = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);
 

@@ -145,14 +145,15 @@ export async function addCollateral(
 
   // Precompute for swap
   const canonicalIn = new PublicKey(
-    getTokenInfo(params.payMint).extensions.canonical,
+    getTokenInfo(params.payMint, params.epoch).extensions.canonical,
   );
   const canonicalOut = new PublicKey(
-    getTokenInfo(params.custody.mint).extensions.canonical,
+    getTokenInfo(params.custody.mint, params.epoch).extensions.canonical,
   );
   const tokenAccountIn = getAssociatedTokenAddressSync(payMint, publicKey);
   const tokenAccountOut = getAssociatedTokenAddressSync(mint, publicKey);
-  const priceUpdate = getTokenInfo(params.custody.mint).extensions.oracle;
+  const priceUpdate = getTokenInfo(params.custody.mint, params.epoch).extensions
+    .oracle;
 
   const instructions = [
     // Create account to hold position mint tokens
@@ -373,14 +374,15 @@ export async function closePositionWithSwap(
   const publicKey = program.provider.publicKey!;
   // Precompute for swap
   const canonicalIn = new PublicKey(
-    getTokenInfo(custody.mint).extensions.canonical,
+    getTokenInfo(custody.mint, params.epoch).extensions.canonical,
   );
 
   const mintIn = new PublicKey(custody.mint);
   const mintOut = new PublicKey(receiveMint);
   const tokenAccountIn = getAssociatedTokenAddressSync(mintIn, publicKey);
   const tokenAccountOut = getAssociatedTokenAddressSync(mintOut, publicKey);
-  const priceUpdate = getTokenInfo(custody.mint).extensions.oracle;
+  const priceUpdate = getTokenInfo(custody.mint, params.epoch).extensions
+    .oracle;
 
   const instructions = [
     // Create the ata
@@ -542,6 +544,7 @@ export interface OpenPositionParams {
   poolAddress: Address;
   price: bigint;
   size: bigint;
+  epoch: Date;
 }
 
 export async function openPosition(
@@ -550,7 +553,7 @@ export async function openPosition(
 ) {
   const {
     extensions: { oracle },
-  } = getTokenInfo(params.mint);
+  } = getTokenInfo(params.mint, params.epoch);
 
   const custody = findPerpetualsAddressSync(
     "custody",
@@ -627,19 +630,19 @@ export async function openPositionWithSwap(
   const payMint = new PublicKey(params.payMint);
   const {
     extensions: { oracle },
-  } = getTokenInfo(params.mint);
+  } = getTokenInfo(params.mint, params.epoch);
 
   const publicKey = program.provider.publicKey!;
   // Precompute for swap
   const canonicalIn = new PublicKey(
-    getTokenInfo(params.payMint).extensions.canonical,
+    getTokenInfo(params.payMint, params.epoch).extensions.canonical,
   );
   const canonicalOut = new PublicKey(
-    getTokenInfo(params.mint).extensions.canonical,
+    getTokenInfo(params.mint, params.epoch).extensions.canonical,
   );
   const tokenAccountIn = getAssociatedTokenAddressSync(payMint, publicKey);
   const tokenAccountOut = getAssociatedTokenAddressSync(mint, publicKey);
-  const priceUpdate = getTokenInfo(params.mint).extensions.oracle;
+  const priceUpdate = getTokenInfo(params.mint, params.epoch).extensions.oracle;
 
   // Precomputed things for open position
   const custody = findPerpetualsAddressSync(
@@ -793,7 +796,7 @@ export const getEntryPriceAndFee = async (
 ) => {
   const {
     extensions: { oracle },
-  } = getTokenInfo(params.mint);
+  } = getTokenInfo(params.mint, params.epoch);
 
   const custody = findPerpetualsAddressSync(
     "custody",
@@ -1016,13 +1019,14 @@ export async function removeCollateral(
   const publicKey = program.provider.publicKey!;
   // Precompute for swap
   const canonicalIn = new PublicKey(
-    getTokenInfo(custody.mint).extensions.canonical,
+    getTokenInfo(custody.mint, params.epoch).extensions.canonical,
   );
   const mintIn = new PublicKey(custody.mint);
   const mintOut = new PublicKey(receiveMint);
   const tokenAccountIn = getAssociatedTokenAddressSync(mintIn, publicKey);
   const tokenAccountOut = getAssociatedTokenAddressSync(mintOut, publicKey);
-  const priceUpdate = getTokenInfo(custody.mint).extensions.oracle;
+  const priceUpdate = getTokenInfo(custody.mint, params.epoch).extensions
+    .oracle;
 
   const instructions = [
     // Create the ata

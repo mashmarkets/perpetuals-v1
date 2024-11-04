@@ -17,7 +17,7 @@ import {
   usePosition,
 } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/price";
-import { getTokenIcon, getTokenLabel, getTokenSymbol } from "@/lib/Token";
+import { useGetTokenInfo } from "@/hooks/token";
 import { BPS_POWER, PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
@@ -51,6 +51,7 @@ export default function PositionBasicInfo({
   positionAddress: Address;
   onClickExpand?(): void;
 }) {
+  const { getTokenLabel, getTokenSymbol, getTokenIcon } = useGetTokenInfo();
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
   const { data: liquidationPrice } = useGetLiquidationPrice({ position });

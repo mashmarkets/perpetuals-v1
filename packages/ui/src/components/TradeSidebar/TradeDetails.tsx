@@ -2,7 +2,7 @@ import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { getTokenIcon, getTokenSymbol } from "@/lib/Token";
+import { useGetTokenInfo } from "@/hooks/token";
 import { Side } from "@/lib/types";
 import { formatFees, formatPrice, formatUsd } from "@/utils/formatters";
 
@@ -20,6 +20,8 @@ interface Props {
 }
 
 export function TradeDetails(props: Props) {
+  const { getTokenSymbol, getTokenIcon } = useGetTokenInfo();
+
   const icon = getTokenIcon(props.positionToken);
   const symbol = getTokenSymbol(props.positionToken);
 

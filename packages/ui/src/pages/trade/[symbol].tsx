@@ -10,7 +10,8 @@ import { DailyStats } from "@/components/Chart/DailyStats";
 import { ExistingPositions } from "@/components/Positions/ExistingPositions";
 import { TradeSidebar } from "@/components/TradeSidebar";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
-import { getTradingViewSymbol, isValidSymbol } from "@/lib/Token";
+import { useGetTokenInfo } from "@/hooks/token";
+import { isValidSymbol } from "@/lib/Token";
 
 const TradingViewWidget = dynamic(
   () =>
@@ -26,6 +27,7 @@ export default function Page() {
     ? findPerpetualsAddressSync("pool", router.query.symbol as string)
     : undefined;
 
+  const { getTokenInfo } = useGetTokenInfo();
   const pool = usePool(poolAddress);
   const custodies = usePoolCustodies(poolAddress);
   const mint = Object.values(custodies)[0]?.mint;
@@ -66,7 +68,7 @@ export default function Page() {
           <div className="h-[350px] md:h-[700px]">
             <TradingViewWidget
               autosize
-              symbol={getTradingViewSymbol(mint)}
+              symbol={getTokenInfo(mint)?.extensions.tradingView}
               theme="dark"
               allow_symbol_change={false}
             />

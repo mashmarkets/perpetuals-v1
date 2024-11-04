@@ -9,9 +9,9 @@ import { useState } from "react";
 import { competitionEnter, findFaucetAddressSync } from "@/actions/faucet";
 import { TokenSelector } from "@/components/TokenSelector";
 import { SolidButton } from "@/components/ui/SolidButton";
-import { useBalance } from "@/hooks/token";
+import { useCompetitionMint, useCurrentEpoch } from "@/hooks/competition";
+import { useBalance, useGetTokenInfo } from "@/hooks/token";
 import { useWriteFaucetProgram } from "@/hooks/useProgram";
-import { getCurrentEpoch, getTokenSymbol, USDC_MINT } from "@/lib/Token";
 import { SOL_RESERVE_AMOUNT } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
@@ -19,6 +19,9 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
   const min = 0.05;
   const rate = 10_000 / min;
   const [depositAmount, setDepositAmount] = useState(min);
+  const epoch = useCurrentEpoch();
+  const { getTokenSymbol } = useGetTokenInfo();
+  const competitionMint = useCompetitionMint();
   const [open, setOpen] = useState(false);
 
   const { publicKey } = useWallet();
@@ -38,7 +41,7 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
   const buyIn = useMutation({
     onSuccess: () => {
       queryClient.invalidateQueries({
-        queryKey: ["account", publicKey?.toString(), USDC_MINT],
+        queryKey: ["account", publicKey?.toString(), competitionMint],
       });
       queryClient.invalidateQueries({
         queryKey: ["account", publicKey?.toString(), payToken],
@@ -47,7 +50,7 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
       const vault = findFaucetAddressSync(
         "vault",
         new PublicKey(payToken),
-        getCurrentEpoch(),
+        epoch,
       );
 
       queryClient.invalidateQueries({
@@ -63,7 +66,7 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
         program.provider.connection,
         competitionEnter(program, {
           amount: BigInt(Math.round(depositAmount * LAMPORTS_PER_SOL)),
-          epoch: getCurrentEpoch(),
+          epoch,
         }),
       );
     },
@@ -102,8 +105,8 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
               <TokenSelector
                 className="mt-2"
                 amount={depositAmount * rate}
-                token={USDC_MINT}
-                tokenList={[USDC_MINT]}
+                token={competitionMint}
+                tokenList={[competitionMint]}
               />
             </div>
 
@@ -113,8 +116,8 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
             </p>
 
             <p className="max-w-xs py-2 text-sm text-red-400">
-              Note: {getTokenSymbol(USDC_MINT)} has no real value, and can only
-              be used for trading simulation on mash markets
+              Note: {getTokenSymbol(competitionMint)} has no real value, and can
+              only be used for trading simulation on mash markets
             </p>
             <div className="flex-end flex pt-2">
               <Dialog.Close asChild>

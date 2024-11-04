@@ -7,6 +7,7 @@ import { twMerge } from "tailwind-merge";
 import { closePositionWithSwap } from "@/actions/perpetuals";
 import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/ui/SolidButton";
+import { useCompetitionMint, useCurrentEpoch } from "@/hooks/competition";
 import {
   useCustody,
   useGetLiquidationPrice,
@@ -18,7 +19,6 @@ import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
 } from "@/hooks/useProgram";
-import { getCurrentEpoch, USDC_MINT } from "@/lib/Token";
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
@@ -32,6 +32,8 @@ export function PositionAdditionalInfo({
 }) {
   const queryClient = useQueryClient();
 
+  const epoch = useCurrentEpoch();
+  const receiveMint = useCompetitionMint();
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
   const { data: liquidationPrice } = useGetLiquidationPrice({ position });
@@ -43,7 +45,6 @@ export function PositionAdditionalInfo({
   const { publicKey } = useWallet();
   const perpetuals = useWritePerpetualsProgram();
   const faucet = useWriteFaucetProgram();
-  const receiveMint = USDC_MINT;
 
   const closePositionMutation = useMutation({
     onSuccess: () => {
@@ -86,7 +87,7 @@ export function PositionAdditionalInfo({
             custody,
             price: BigInt(Math.round(price.currentPrice * PRICE_POWER * 0.95)), // Slippage
             receiveMint,
-            epoch: getCurrentEpoch(),
+            epoch,
           },
         ),
         {

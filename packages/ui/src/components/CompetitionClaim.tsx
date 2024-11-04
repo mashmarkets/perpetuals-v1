@@ -9,6 +9,7 @@ import { useWriteFaucetProgram } from "@/hooks/useProgram";
 import { getCompetitionMint } from "@/lib/Token";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
+// Note: epoch might be historical, so don't use "current" global state
 export function CompetitionClaim({ epoch }: { epoch: Date }) {
   const mint = getCompetitionMint(epoch);
   const { publicKey } = useWallet();
@@ -37,6 +38,7 @@ export function CompetitionClaim({ epoch }: { epoch: Date }) {
   });
 
   if (
+    epoch.getTime() > Date.now() || // Still not expired
     account === undefined ||
     account === null ||
     (account as Account)?.amount === BigInt(0) ||

@@ -6,7 +6,7 @@ import { twMerge } from "tailwind-merge";
 import { TokenSelectorList } from "@/components/TokenSelectorList";
 import { MaxButton } from "@/components/ui/MaxButton";
 import { usePrice } from "@/hooks/price";
-import { getTokenIcon, getTokenSymbol } from "@/lib/Token";
+import { useGetTokenInfo } from "@/hooks/token";
 
 function formatNumber(num: number) {
   const formatter = Intl.NumberFormat("en", {
@@ -32,6 +32,7 @@ interface Props {
 export function TokenSelector(props: Props) {
   const { data: price } = usePrice(props.token);
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const { getTokenSymbol, getTokenIcon } = useGetTokenInfo();
 
   if (props.token === undefined) {
     return (

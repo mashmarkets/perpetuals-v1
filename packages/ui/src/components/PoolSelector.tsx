@@ -7,7 +7,7 @@ import { twMerge } from "tailwind-merge";
 
 import TokenIconArray from "@/components/ui/TokenIconArray";
 import { useAllPools, useCustodies } from "@/hooks/perpetuals";
-import { getTokenSymbol } from "@/lib/Token";
+import { useGetTokenInfo } from "@/hooks/token";
 import { dedupe } from "@/utils/utils";
 
 interface Props {
@@ -24,6 +24,8 @@ export function PoolSelector(props: Props) {
   const custodies = useCustodies(
     dedupe(Object.values(pools ?? {}).flatMap((x) => x.custodies)),
   );
+
+  const { getTokenSymbol } = useGetTokenInfo();
 
   const selectedPool = pools?.[poolAddress.toString()];
   const getTokenList = (address: Address) =>

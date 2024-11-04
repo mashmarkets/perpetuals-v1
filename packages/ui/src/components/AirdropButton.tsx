@@ -3,8 +3,8 @@ import { NATIVE_MINT } from "@solana/spl-token";
 import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
+import { useGetTokenInfo } from "@/hooks/token";
 import { useAnchorProvider } from "@/hooks/useProgram";
-import { getTokenSymbol, tokensByMint } from "@/lib/Token";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
 import { SolidButton } from "./ui/SolidButton";
@@ -12,8 +12,9 @@ import { SolidButton } from "./ui/SolidButton";
 export default function AirdropButton({ mint }: { mint: Address }) {
   const queryClient = useQueryClient();
   const provider = useAnchorProvider();
+  const { getTokenSymbol } = useGetTokenInfo();
 
-  const { symbol } = tokensByMint[mint.toString()]!;
+  const symbol = getTokenSymbol(mint);
 
   const airdropMutation = useMutation({
     onSuccess: () => {

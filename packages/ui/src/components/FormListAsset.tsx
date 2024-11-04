@@ -4,7 +4,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { useAllPools } from "@/hooks/perpetuals";
-import { getTokenInfo, getTokenSymbol, TRADEABLE_MINTS } from "@/lib/Token";
+import { useGetTokenInfo, useTradeableMints } from "@/hooks/token";
 import { BPS_DECIMALS, RATE_DECIMALS, USD_DECIMALS } from "@/lib/types";
 import { parseUnits } from "@/utils/viem";
 
@@ -87,6 +87,8 @@ const AddCustodyForm = ({
   custodies: { mint: Address }[];
   onSubmit: (x: AddCustodyParams) => void;
 }) => {
+  const { getTokenInfo, getTokenSymbol } = useGetTokenInfo();
+  const tradeableMints = useTradeableMints();
   const pools = useAllPools();
   const defaultValues: AddCustodyState = {
     poolName: poolName,
@@ -152,7 +154,7 @@ const AddCustodyForm = ({
     });
 
   const oracleType = watch("oracle.oracleType");
-  const list = TRADEABLE_MINTS.map(getTokenInfo);
+  const list = tradeableMints.map((a) => getTokenInfo(a));
   return (
     <div>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">

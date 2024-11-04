@@ -10,8 +10,12 @@ import {
 import { useConnection } from "@solana/wallet-adapter-react";
 import { AccountInfo, PublicKey } from "@solana/web3.js";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
+
+import { getTokenInfo, getTokenList } from "@/lib/Token";
 
 import { connectionBatcher } from "./accounts";
+import { useCurrentEpoch } from "./competition";
 
 const ONE_MINUTE = 60 * 1000;
 export const useMint = (mint: Address | undefined) => {
@@ -194,4 +198,51 @@ export const useAllMintHolders = (mint: Address | undefined) => {
       return accounts.map((x) => x.owner.toString() as Address);
     },
   });
+};
+
+export const useTokenList = () => {
+  const epoch = useCurrentEpoch();
+  return useMemo(() => getTokenList(epoch), [epoch]);
+};
+
+export const useTradeableMints = () => {
+  const epoch = useCurrentEpoch();
+  return useMemo(() => {
+    return getTokenList(epoch)
+      .filter(
+        (x) =>
+          !x.symbol.startsWith("US") && x.address !== NATIVE_MINT.toString(),
+      )
+      .sort((a, b) => a.symbol.localeCompare(b.symbol))
+      .map((x) => x.address) as Address[];
+  }, [epoch]);
+};
+
+// Because of the way current epoch updates on interval, it might be "out of sync"
+// So force consistency
+export const useGetTokenInfo = () => {
+  const epoch = useCurrentEpoch();
+  const get = (mint: Address | undefined) => getTokenInfo(mint, epoch);
+  return {
+    getTokenInfo: get,
+    getTokenSymbol: (mint: Address | undefined) => get(mint!)?.symbol ?? "???",
+    getTokenLabel: (mint: Address | undefined) => get(mint!)?.name ?? "Unknown",
+    getTokenIcon: (mint: Address | undefined) => {
+      const { logoURI, name } = get(mint!);
+      if (logoURI === undefined) {
+        return <></>;
+      }
+
+      return (
+        // eslint-disable-next-line @next/next/no-img-element -- Don't want to be reliant on vercel deployment for now
+        <img
+          src={logoURI}
+          alt={name}
+          width={20}
+          height={20}
+          className="rounded-full"
+        />
+      );
+    },
+  };
 };
