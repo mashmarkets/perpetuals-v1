@@ -8,11 +8,7 @@ import { useState } from "react";
 import { twMerge } from "tailwind-merge";
 
 import { CompetitionClaim } from "@/components/CompetitionClaim";
-import {
-  useCompetitionMint,
-  useCurrentEpoch,
-  usePrizePool,
-} from "@/hooks/competition";
+import { useCurrentEpoch, usePrizePool } from "@/hooks/competition";
 import {
   useAllPositions,
   useCustodies,
@@ -125,7 +121,7 @@ function Leaderboard({ epoch }: { epoch: Date }) {
   const { publicKey } = useWallet();
   const leaderboard = useLeaderboardData(epoch);
   const { data: prize } = usePrizePool(epoch);
-  const competitionMint = useCompetitionMint();
+  const competitionMint = getCompetitionMint(epoch);
 
   const toggleUser = (userId: string) => {
     const newExpanded = new Set(expandedUsers);
