@@ -5,7 +5,7 @@ import { twMerge } from "tailwind-merge";
 
 import { TokenSelectorList } from "@/components/TokenSelectorList";
 import { MaxButton } from "@/components/ui/MaxButton";
-import { usePrice } from "@/hooks/price";
+import { usePrice } from "@/hooks/pyth";
 import { useGetTokenInfo } from "@/hooks/token";
 
 function formatNumber(num: number) {
@@ -121,9 +121,9 @@ export function TokenSelector(props: Props) {
               }}
             />
           )}
-          {!!price?.currentPrice && props.amount !== undefined && (
+          {!!price && props.amount !== undefined && (
             <div className="mt-0.5 text-right text-xs text-zinc-500">
-              {formatNumber(props.amount * price.currentPrice)}
+              {formatNumber(props.amount * price)}
             </div>
           )}
         </div>

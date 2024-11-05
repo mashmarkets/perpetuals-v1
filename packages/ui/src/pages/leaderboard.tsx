@@ -14,7 +14,7 @@ import {
   useCustodies,
   usePositions,
 } from "@/hooks/perpetuals";
-import { usePrices } from "@/hooks/price";
+import { usePrices } from "@/hooks/pyth";
 import { useAllMintHolders, useBalances } from "@/hooks/token";
 import {
   getCompetitionMint,
@@ -35,7 +35,7 @@ const useLeaderboardData = (epoch: Date) => {
 
   // Positions only apply to current epoch
   const positionsMapping =
-    epoch === currentEpoch ? currentPositionsMapping : {};
+    epoch.getTime() === currentEpoch.getTime() ? currentPositionsMapping : {};
 
   const users = dedupe([
     ...(holders ?? []),
@@ -49,6 +49,7 @@ const useLeaderboardData = (epoch: Date) => {
   const custodies = useCustodies(
     Object.values(allPositions ?? {}).map((x) => x.custody),
   );
+
   const prices = usePrices(Object.values(custodies ?? {}).map((x) => x.mint));
 
   return users
@@ -60,7 +61,7 @@ const useLeaderboardData = (epoch: Date) => {
 
         const mark =
           c && prices[c.mint]
-            ? BigInt(Math.round(prices[c.mint].currentPrice * USD_POWER))
+            ? BigInt(Math.round(prices[c.mint] * USD_POWER))
             : BigInt(0);
 
         // TODO:- Need to incorporate borrow fees

@@ -4,7 +4,7 @@ import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
 import { usePoolCustodies } from "@/hooks/perpetuals";
-import { usePrices } from "@/hooks/price";
+import { usePrices } from "@/hooks/pyth";
 import { useGetTokenInfo } from "@/hooks/token";
 import { formatNumberCommas } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
@@ -38,7 +38,7 @@ export default function PoolTokenStats({
           </thead>
           <tbody className={twMerge("text-xs")}>
             {Object.values(custodies ?? {}).map((custody) => {
-              const price = prices[custody.mint.toString()]?.currentPrice;
+              const price = prices[custody.mint.toString()];
               return (
                 <tr
                   key={custody.mint.toString()}

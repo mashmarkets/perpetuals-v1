@@ -98,7 +98,7 @@ async function createPool(
     tradeSpreadLong: new BN(10), // 0.1%
     tradeSpreadShort: new BN(10), // 0.1%
     minInitialLeverage: new BN(1_000_000), // 100x
-    maxInitialLeverage: new BN(10_000_000), // 100x
+    maxInitialLeverage: new BN(10_000_000), // 1000x
     maxLeverage: new BN(10_000_000), // 1000x
     maxPayoffMult: new BN(10_000), // 100%
     maxUtilization: new BN(10_000), // 100%
@@ -125,7 +125,7 @@ async function createPool(
   };
 
   const borrowRate: BorrowRateParams = {
-    baseRate: new BN(0.005),
+    baseRate: new BN(0),
     slope1: new BN(80_000), // 0.008%
     slope2: new BN(120_000),
     optimalUtilization: new BN(800_000_000), // 80%

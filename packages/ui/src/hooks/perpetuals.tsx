@@ -20,7 +20,7 @@ import {
   useWritePerpetualsProgram,
 } from "./useProgram";
 
-const fromBN = (v: BN) => BigInt(v.toString());
+export const fromBN = (v: BN) => BigInt(v.toString());
 
 const parsePool = (data: ProgramAccount<IdlAccounts<Perpetuals>["pool"]>) => {
   const p = data.account;

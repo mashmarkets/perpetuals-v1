@@ -58,11 +58,11 @@ const coingeckoBatcher = create({
 
 const ONE_MINUTE = 60 * 1000;
 
-queryClient.setQueryDefaults(["price"], {
+queryClient.setQueryDefaults(["coingecko"], {
   refetchInterval: ONE_MINUTE, // 1 MINUTE
 });
 
-export const usePrice = (mint: Address | undefined) => {
+export const usePriceStat = (mint: Address | undefined) => {
   const { getTokenInfo } = useGetTokenInfo();
   const coingeckoId = getTokenInfo(mint!)?.extensions.coingeckoId;
 
@@ -74,13 +74,13 @@ export const usePrice = (mint: Address | undefined) => {
   });
 };
 
-export const usePrices = (mints: Address[]) => {
+export const usePriceStats = (mints: Address[]) => {
   const { getTokenInfo } = useGetTokenInfo();
   return useQueries({
     queries: mints.map((mint) => {
       const coingeckoId = getTokenInfo(mint!)?.extensions.coingeckoId;
       return {
-        queryKey: ["price", coingeckoId],
+        queryKey: ["coingecko", coingeckoId],
         enabled: coingeckoId !== undefined,
         queryFn: () =>
           coingeckoBatcher.fetch(coingeckoId!) as Promise<PriceStat>,

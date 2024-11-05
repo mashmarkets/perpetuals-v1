@@ -16,7 +16,7 @@ import {
   useGetPnl,
   usePosition,
 } from "@/hooks/perpetuals";
-import { usePrice } from "@/hooks/price";
+import { usePrice } from "@/hooks/pyth";
 import { useGetTokenInfo } from "@/hooks/token";
 import { BPS_POWER, PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
@@ -155,7 +155,7 @@ export default function PositionBasicInfo({
           {position ? formatPrice(Number(position.price) / PRICE_POWER) : "-"}
         </div>
         <div className="text-sm text-slate-400">
-          {price ? formatPrice(price.currentPrice) : "-"}
+          {price ? formatPrice(price) : "-"}
         </div>
       </PositionColumn>
       <PositionColumn num={7}>

@@ -23,7 +23,7 @@ import {
   usePoolCustodies,
   usePositions,
 } from "@/hooks/perpetuals";
-import { usePrice } from "@/hooks/price";
+import { usePrice } from "@/hooks/pyth";
 import { useBalance, useGetTokenInfo } from "@/hooks/token";
 import {
   useWriteFaucetProgram,
@@ -97,13 +97,13 @@ export function TradePosition({
   const { decimals } = getTokenInfo(mint);
   const payDecimals = getTokenInfo(payToken).decimals;
 
-  const collateralAmount = price ? (payAmount / price.currentPrice) * 0.995 : 0;
+  const collateralAmount = price ? (payAmount / price) * 0.995 : 0;
   const params = {
     collateral: BigInt(Math.round(collateralAmount * 10 ** decimals)),
     mint: positionToken,
     payMint: payToken,
     poolAddress,
-    price: BigInt(Math.round((price?.currentPrice ?? 0) * PRICE_POWER * 1.05)),
+    price: BigInt(Math.round((price ?? 0) * PRICE_POWER * 1.05)),
     size: BigInt(Math.round(positionAmount * 10 ** decimals)),
     epoch,
   };
@@ -181,12 +181,11 @@ export function TradePosition({
   const isBalanceValid = payAmount <= (payTokenBalance ? payTokenBalance : 0);
 
   const availableLiquidity =
-    (price.currentPrice *
-      Number(custody.assets.owned - custody.assets.locked)) /
+    (price * Number(custody.assets.owned - custody.assets.locked)) /
     10 ** custody.decimals;
 
   const isLiquidityExceeded =
-    price && positionAmount * price.currentPrice > availableLiquidity;
+    price && positionAmount * price > availableLiquidity;
 
   return (
     <div className={className}>
@@ -243,7 +242,7 @@ export function TradePosition({
           if (lastChanged === Input.Pay) {
             setPositionAmount((l * collateralAmount) / (1 + priceSlippage * l));
           } else {
-            setPayAmount((positionAmount / l) * price.currentPrice);
+            setPayAmount((positionAmount / l) * price);
           }
         }}
       />

@@ -3,7 +3,8 @@ import { Address } from "@solana/addresses";
 import { cloneElement } from "react";
 import { twMerge } from "tailwind-merge";
 
-import { usePrices } from "@/hooks/price";
+import { usePriceStats } from "@/hooks/coingecko";
+import { usePrices } from "@/hooks/pyth";
 import { useGetTokenInfo, useTradeableMints } from "@/hooks/token";
 import { formatPrice } from "@/utils/formatters";
 
@@ -19,6 +20,7 @@ export function TokenSelectorList(props: Props) {
   const tradeableMints = useTradeableMints();
   const list = props.tokenList ? props.tokenList : tradeableMints;
 
+  const stats = usePriceStats(list);
   const prices = usePrices(list);
 
   return (
@@ -40,7 +42,8 @@ export function TokenSelectorList(props: Props) {
           {list.map((token) => {
             const icon = getTokenIcon(token);
 
-            const stats = prices[token.toString()];
+            const stat = stats[token];
+            const price = prices[token];
             return (
               <button
                 key={token.toString()}
@@ -71,30 +74,31 @@ export function TokenSelectorList(props: Props) {
                     {getTokenLabel(token)}
                   </div>
                 </div>
-                {stats && (
-                  <>
-                    <div className="text-right text-sm text-white">
-                      ${formatPrice(stats.currentPrice)}
+                <div className="text-right text-sm text-white">
+                  {price && "$" + formatPrice(price)}
+
+                  {stat && (
+                    <>
                       <br />
                       <span
                         className={twMerge(
                           "text-xs",
-                          stats.change24hr < 0 && "text-rose-400",
-                          stats.change24hr === 0 && "text-white",
-                          stats.change24hr > 0 && "text-emerald-400",
+                          stat.change24hr < 0 && "text-rose-400",
+                          stat.change24hr === 0 && "text-white",
+                          stat.change24hr > 0 && "text-emerald-400",
                           "text-opacity-90",
                         )}
                       >
-                        {(stats.change24hr / 100).toLocaleString(undefined, {
+                        {(stat.change24hr / 100).toLocaleString(undefined, {
                           style: "percent",
                           minimumFractionDigits: 2,
                           maximumFractionDigits: 2,
                           signDisplay: "always",
                         })}
                       </span>
-                    </div>
-                  </>
-                )}
+                    </>
+                  )}
+                </div>
               </button>
             );
           })}

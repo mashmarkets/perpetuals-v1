@@ -20,7 +20,7 @@ import {
   useGetLiquidationPrice,
   usePosition,
 } from "@/hooks/perpetuals";
-import { usePrice } from "@/hooks/price";
+import { usePrice } from "@/hooks/pyth";
 import { useBalance } from "@/hooks/token";
 import {
   useWriteFaucetProgram,
@@ -68,11 +68,7 @@ export function CollateralModal({
     addCollateral: BigInt(Math.round(amounts.depositAmount * CUSTODY_POWER)),
     // This is awkward, because the actual function takes USD, but the estimate takes in collateral amount
     removeCollateral: price
-      ? BigInt(
-          Math.round(
-            (amounts.withdrawAmount * CUSTODY_POWER) / price.currentPrice,
-          ),
-        )
+      ? BigInt(Math.round((amounts.withdrawAmount * CUSTODY_POWER) / price))
       : BigInt(0),
   });
 
@@ -80,17 +76,11 @@ export function CollateralModal({
   const payToken = competitionMint;
 
   const payTokenBalance = Number(collateralBalance) / CUSTODY_POWER;
-  const collateralAmount = price
-    ? (depositAmount * 0.995) / price.currentPrice
-    : 0;
+  const collateralAmount = price ? (depositAmount * 0.995) / price : 0;
 
   const changeCollateralUsd =
     tab === Tab.Add
-      ? BigInt(
-          Math.round(
-            (price?.currentPrice ?? 0) * collateralAmount * CUSTODY_POWER,
-          ),
-        )
+      ? BigInt(Math.round((price ?? 0) * collateralAmount * CUSTODY_POWER))
       : BigInt(Math.round(-1 * withdrawAmount) * USD_POWER);
 
   const newCollateralUsd = position
@@ -271,9 +261,7 @@ export function CollateralModal({
                 },
                 {
                   label: "Mark Price",
-                  value: `$${
-                    price ? formatNumberCommas(price.currentPrice) : "-"
-                  }`,
+                  value: `$${price ? formatNumberCommas(price) : "-"}`,
                 },
                 {
                   label: "Leverage",

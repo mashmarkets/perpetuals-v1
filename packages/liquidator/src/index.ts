@@ -365,7 +365,7 @@ async function main() {
       notify(`Found position to liquidate: ${position.address}`);
       try {
         await limiter.removeTokens(1);
-        const tx = await liquidate(program, position, custody).catch(() => {});
+        const tx = await liquidate(program, position, custody)
         notify(`Liquidated position with tx: ${tx}`);
       } catch (error) {
         notify(

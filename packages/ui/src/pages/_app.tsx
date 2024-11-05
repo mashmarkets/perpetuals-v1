@@ -6,12 +6,12 @@ import {
   WalletProvider,
 } from "@solana/wallet-adapter-react";
 import { WalletModalProvider } from "@solana/wallet-adapter-react-ui";
-import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
+// import { PhantomWalletAdapter } from "@solana/wallet-adapter-wallets";
 import { clusterApiUrl } from "@solana/web3.js";
 import { ReactQueryDevtools } from "@tanstack/react-query-devtools";
 import { AppProps } from "next/app";
 import { Inter } from "next/font/google";
-import React, { FC, ReactNode, useMemo } from "react";
+import React, { FC, ReactNode, useMemo, useState } from "react";
 import { ToastContainer } from "react-toastify";
 
 import "react-toastify/dist/ReactToastify.css";
@@ -28,10 +28,39 @@ import { queryClient } from "@/utils/queryClient";
 // If loading a variable font, you don't need to specify the font weight
 const inter = Inter({ subsets: ["latin"] });
 
+// Call window.toggleDevtools() to lazy load devtools in production
+// https://tanstack.com/query/latest/docs/framework/react/devtools#devtools-in-production
+const ReactQueryDevtoolsProduction = React.lazy(() =>
+  import("@tanstack/react-query-devtools/build/modern/production.js").then(
+    (d) => ({
+      default: d.ReactQueryDevtools,
+    }),
+  ),
+);
+
+const ReactQueryProvider = ({ children }: { children: ReactNode }) => {
+  const [showDevtools, setShowDevtools] = useState(false);
+  React.useEffect(() => {
+    // @ts-expect-error -- Allow toggling of devtools
+    window.toggleDevtools = () => setShowDevtools((old) => !old);
+  }, []);
+  return (
+    <QueryClientProvider client={queryClient}>
+      {children}
+      <ReactQueryDevtools initialIsOpen={false} />
+      {showDevtools && (
+        <React.Suspense fallback={null}>
+          <ReactQueryDevtoolsProduction />
+        </React.Suspense>
+      )}
+    </QueryClientProvider>
+  );
+};
+
 export default function MyApp({ Component, pageProps }: AppProps) {
   return (
     <CurrentEpochProvider>
-      <QueryClientProvider client={queryClient}>
+      <ReactQueryProvider>
         <Context>
           <ToastContainer
             position="top-right"
@@ -49,8 +78,7 @@ export default function MyApp({ Component, pageProps }: AppProps) {
           <Navbar />
           <Component {...pageProps} />
         </Context>
-        <ReactQueryDevtools initialIsOpen={false} />
-      </QueryClientProvider>
+      </ReactQueryProvider>
     </CurrentEpochProvider>
   );
 }
@@ -63,7 +91,7 @@ const Context: FC<{ children: ReactNode }> = ({ children }) => {
 
   const wallets = useMemo(
     () => [
-      new PhantomWalletAdapter(),
+      // new PhantomWalletAdapter(),
       // new SlopeWalletAdapter(),
       // new TorusWalletAdapter(),
       // new LedgerWalletAdapter(),

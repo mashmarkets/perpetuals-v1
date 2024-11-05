@@ -14,7 +14,7 @@ import {
   useGetPnl,
   usePosition,
 } from "@/hooks/perpetuals";
-import { usePrice } from "@/hooks/price";
+import { usePrice } from "@/hooks/pyth";
 import {
   useWriteFaucetProgram,
   useWritePerpetualsProgram,
@@ -85,7 +85,7 @@ export function PositionAdditionalInfo({
           {
             position,
             custody,
-            price: BigInt(Math.round(price.currentPrice * PRICE_POWER * 0.95)), // Slippage
+            price: BigInt(Math.round(price * PRICE_POWER * 0.95)), // Slippage
             receiveMint,
             epoch,
           },
@@ -99,7 +99,7 @@ export function PositionAdditionalInfo({
     },
   });
 
-  if (price === undefined) return <p>sdf</p>;
+  if (price === undefined) return <p></p>;
 
   return (
     <div
@@ -174,9 +174,7 @@ export function PositionAdditionalInfo({
           <div className="text-xs text-zinc-500">Liq. Threshold</div>
           <div className="mt-1 text-sm text-white">
             {price && liquidationPrice
-              ? formatPrice(
-                  price.currentPrice - Number(liquidationPrice) / PRICE_POWER,
-                )
+              ? formatPrice(price - Number(liquidationPrice) / PRICE_POWER)
               : "-"}
             {/* // props.position.side === Side.Long // ? price.currentPrice -
             props.liqPrice // : props.liqPrice - price.currentPrice, */}
