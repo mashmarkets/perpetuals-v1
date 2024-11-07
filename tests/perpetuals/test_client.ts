@@ -19,7 +19,7 @@ import {
 } from "spl-token-bankrun";
 import * as nacl from "tweetnacl";
 
-import { Perpetuals } from "../../../../target/types/perpetuals";
+import { Perpetuals } from "../../target/types/perpetuals.js";
 
 export class TestClient {
   context: ProgramTestContext;

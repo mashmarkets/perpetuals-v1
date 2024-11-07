@@ -9,7 +9,8 @@ const PRICE_DECIMALS: u8 = 9;
 const USDC_DECIMALS: u8 = 6;
 const ETH_DECIMALS: u8 = 9;
 
-pub async fn basic_interactions() {
+#[tokio::test]
+async fn basic_interactions() {
     let test_setup = utils::TestSetup::new(
         vec![
             utils::UserParam {

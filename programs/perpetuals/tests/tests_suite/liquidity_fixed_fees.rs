@@ -10,7 +10,8 @@ use {
 const USDC_DECIMALS: u8 = 6;
 const USD_DECIMALS: u8 = 9;
 
-pub async fn fixed_fees() {
+#[tokio::test]
+async fn liquidity_fixed_fees() {
     let test_setup = utils::TestSetup::new(
         vec![utils::UserParam {
             name: "alice",

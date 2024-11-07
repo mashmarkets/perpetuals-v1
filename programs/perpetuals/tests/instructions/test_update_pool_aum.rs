@@ -8,7 +8,7 @@ use {
     tokio::sync::RwLock,
 };
 
-pub async fn test_update_pool_aum(
+pub async fn _test_update_pool_aum(
     program_test_ctx: &RwLock<ProgramTestContext>,
     payer: &Keypair,
     pool_pda: &Pubkey,

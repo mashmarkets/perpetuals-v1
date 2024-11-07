@@ -1,0 +1,6 @@
+mod instructions;
+mod utils;
+
+// Seems better to have a single file, rather than split integration tests
+// https://matklad.github.io/2021/02/27/delete-cargo-integration-tests.html
+mod tests_suite;

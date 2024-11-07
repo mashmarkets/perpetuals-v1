@@ -71,27 +71,28 @@ function redeploy {
 }
 
 
-function test-perpetuals-native {
-  RUST_BACKTRACE=1 RUST_LOG= cargo test-sbf -- --nocapture
+function test-perpetuals-rust {
+  mv ./programs/perpetuals/tests/tests._rs ./programs/perpetuals/tests/tests.rs
+  RUST_BACKTRACE=1 RUST_LOG= cargo test-sbf
+  mv ./programs/perpetuals/tests/tests.rs ./programs/perpetuals/tests/tests._rs
 }
 
-function test-perpetuals-anchor {
+function test-perpetuals-ts {
   # We don't want the validator as we using bankrun
   command anchor build -p perpetuals 
   types
-  RUST_LOG= command npm run test -- --run --dir "./programs/perpetuals/tests/"
+  RUST_LOG= command npm run test -- --dir "./tests/perpetuals/" $1
 }
 
 function test-perpetuals {
-  test-perpetuals-native
-  test-perpetuals-anchor
+  test-perpetuals-rust
+  test-perpetuals-ts --run
 }
 
 function test-faucet {
   # We don't want the validator as we using bankrun
   command anchor build -p faucet 
-  types
-  RUST_LOG= command npm run test -- --run --dir "./programs/faucet/tests"
+  RUST_LOG= command npm run test -- --run --dir "./tests/faucet"
 }
 
 function test {

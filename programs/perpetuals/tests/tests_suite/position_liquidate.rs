@@ -11,7 +11,8 @@ use {
 const ETH_DECIMALS: u8 = 9;
 const USDC_DECIMALS: u8 = 6;
 
-pub async fn liquidate_position() {
+#[tokio::test]
+async fn position_liquidate() {
     let test_setup = utils::TestSetup::new(
         vec![
             utils::UserParam {

@@ -3,17 +3,14 @@ use {
     anchor_spl::token::spl_token,
     bonfida_test_utils::ProgramTestContextExt,
     borsh::BorshDeserialize,
-    perpetuals::{math, state::perpetuals::Perpetuals},
+    perpetuals::math,
     solana_program::{
         clock::DEFAULT_MS_PER_SLOT, epoch_schedule::DEFAULT_SLOTS_PER_EPOCH, program_pack::Pack,
     },
     solana_program_test::{BanksClientError, ProgramTest, ProgramTestContext},
     solana_sdk::{account, signature::Keypair, signer::Signer, signers::Signers},
-    std::ops::{Div, Mul},
     tokio::sync::RwLock,
 };
-
-pub const ANCHOR_DISCRIMINATOR_SIZE: usize = 8;
 
 pub fn create_and_fund_account(address: &Pubkey, program_test: &mut ProgramTest) {
     program_test.add_account(
@@ -82,7 +79,7 @@ pub async fn get_current_unix_timestamp(program_test_ctx: &RwLock<ProgramTestCon
         .unix_timestamp
 }
 
-pub async fn initialize_token_account(
+pub async fn _initialize_token_account(
     program_test_ctx: &RwLock<ProgramTestContext>,
     mint: &Pubkey,
     owner: &Pubkey,
@@ -94,14 +91,14 @@ pub async fn initialize_token_account(
         .unwrap()[0]
 }
 
-pub async fn initialize_and_fund_token_account(
+pub async fn _initialize_and_fund_token_account(
     program_test_ctx: &RwLock<ProgramTestContext>,
     mint: &Pubkey,
     owner: &Pubkey,
     mint_authority: &Keypair,
     amount: u64,
 ) -> Pubkey {
-    let token_account_address = initialize_token_account(program_test_ctx, mint, owner).await;
+    let token_account_address = _initialize_token_account(program_test_ctx, mint, owner).await;
 
     mint_tokens(
         program_test_ctx,
@@ -258,13 +255,6 @@ pub fn scale_f64(amount: f64, decimals: u8) -> u64 {
         math::checked_float_mul(amount, 10u64.pow(decimals as u32) as f64).unwrap(),
     )
     .unwrap()
-}
-
-pub fn ratio_from_percentage(percentage: f64) -> u64 {
-    (Perpetuals::BPS_POWER as f64)
-        .mul(percentage)
-        .div(100_f64)
-        .floor() as u64
 }
 
 pub async fn initialize_users_token_accounts(

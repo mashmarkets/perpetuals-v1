@@ -1,17 +1,14 @@
 use {
     crate::{instructions, utils},
     maplit::hashmap,
-    perpetuals::{
-        instructions::{ClosePositionParams, OpenPositionParams, SetCustomOraclePriceParams},
-        state::custody::PricingParams,
-    },
-    solana_sdk::signer::Signer,
+    perpetuals::{instructions::OpenPositionParams, state::custody::PricingParams},
 };
 
 const ETH_DECIMALS: u8 = 9;
 const USDC_DECIMALS: u8 = 6;
 
-pub async fn max_user_profit() {
+#[tokio::test]
+async fn position_min_max_leverage() {
     let test_setup = utils::TestSetup::new(
         vec![
             utils::UserParam {
@@ -62,8 +59,10 @@ pub async fn max_user_profit() {
                     initial_conf: utils::scale(10, ETH_DECIMALS),
                     pricing_params: Some(PricingParams {
                         // Expressed in BPS, with BPS = 10_000
-                        // 2_500 = x0.25, 10_000 = x1, 50_000 = x5
-                        max_payoff_mult: 2_500,
+                        // 10_000 = x1, 50_000 = x5
+                        max_leverage: 100_000,
+                        min_initial_leverage: 10_000,
+                        max_initial_leverage: 100_000,
                         ..utils::fixtures::pricing_params_regular(false)
                     }),
                     permissions: None,
@@ -79,14 +78,11 @@ pub async fn max_user_profit() {
 
     let martin = test_setup.get_user_keypair_by_name("martin");
 
-    let admin_a = test_setup.get_multisig_member_keypair_by_name("admin_a");
-
-    let multisig_signers = test_setup.get_multisig_signers();
-
     let eth_mint = &test_setup.get_mint_by_name("eth");
 
-    // Martin: Open 1 ETH long position x5
-    let position_pda = instructions::test_open_position(
+    // Martin: Open 1 ETH long position x10 should fail
+    // Fails because fees increase ETH entry price
+    assert!(instructions::test_open_position(
         &test_setup.program_test_ctx,
         martin,
         &test_setup.payer_keypair,
@@ -96,69 +92,26 @@ pub async fn max_user_profit() {
             // max price paid (slippage implied)
             price: utils::scale(1_550, ETH_DECIMALS),
             collateral: utils::scale(1, ETH_DECIMALS),
-            size: utils::scale(5, ETH_DECIMALS),
+            size: utils::scale(10, ETH_DECIMALS),
         },
     )
     .await
-    .unwrap()
-    .0;
+    .is_err());
 
-    // Makes ETH price to raise 100%
-    {
-        let eth_test_oracle_pda = test_setup.custodies_info[1].custom_oracle_pda;
-        let eth_custody_pda = test_setup.custodies_info[1].custody_pda;
-
-        let publish_time = utils::get_current_unix_timestamp(&test_setup.program_test_ctx).await;
-
-        instructions::test_set_custom_oracle_price(
-            &test_setup.program_test_ctx,
-            admin_a,
-            &test_setup.payer_keypair,
-            &test_setup.pool_pda,
-            &eth_custody_pda,
-            &eth_test_oracle_pda,
-            SetCustomOraclePriceParams {
-                price: utils::scale(3_000, ETH_DECIMALS),
-                expo: -(ETH_DECIMALS as i32),
-                conf: utils::scale(10, ETH_DECIMALS),
-                ema: utils::scale(3_000, ETH_DECIMALS),
-                publish_time,
-            },
-            &multisig_signers,
-        )
-        .await
-        .unwrap();
-    }
-
-    utils::warp_forward(&test_setup.program_test_ctx, 1).await;
-
-    instructions::test_close_position(
+    // Martin: Open 1 ETH long position x0.5 should fail
+    assert!(instructions::test_open_position(
         &test_setup.program_test_ctx,
         martin,
         &test_setup.payer_keypair,
         &test_setup.pool_pda,
         eth_mint,
-        &position_pda,
-        ClosePositionParams {
-            // lowest exit price paid (slippage implied)
-            price: utils::scale(2_970, USDC_DECIMALS),
+        OpenPositionParams {
+            // max price paid (slippage implied)
+            price: utils::scale(1_550, ETH_DECIMALS),
+            collateral: utils::scale(1, ETH_DECIMALS),
+            size: utils::scale_f64(0.5, ETH_DECIMALS),
         },
     )
     .await
-    .unwrap();
-
-    utils::warp_forward(&test_setup.program_test_ctx, 1).await;
-
-    // Check user gains
-    {
-        let martin_eth_pda = utils::find_associated_token_account(&martin.pubkey(), eth_mint).0;
-
-        let martin_eth_balance =
-            utils::get_token_account_balance(&test_setup.program_test_ctx, martin_eth_pda).await;
-
-        // Gains are limited to 0.25 * 5 = 1.25 ETH
-        // True gains should be 2.5 ETH less fees (price did x2 on x5 leverage)
-        // if this fails, make sure you run a non-test build, i.e. re-run "anchor build"
-        assert_eq!(martin_eth_balance, utils::scale_f64(2.7, ETH_DECIMALS));
-    }
+    .is_err());
 }

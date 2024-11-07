@@ -7,7 +7,8 @@ use {
 const USDC_DECIMALS: u8 = 6;
 const ETH_DECIMALS: u8 = 9;
 
-pub async fn lp_token_price() {
+#[tokio::test]
+async fn lp_token_price() {
     let test_setup = utils::TestSetup::new(
         vec![utils::UserParam {
             name: "alice",

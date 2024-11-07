@@ -13,7 +13,7 @@ use {
     tokio::sync::RwLock,
 };
 
-pub async fn test_set_custody_config(
+pub async fn _test_set_custody_config(
     program_test_ctx: &RwLock<ProgramTestContext>,
     admin: &Keypair,
     payer: &Keypair,

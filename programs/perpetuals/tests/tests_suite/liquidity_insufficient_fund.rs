@@ -8,7 +8,8 @@ use {
 const USDC_DECIMALS: u8 = 6;
 const ETH_DECIMALS: u8 = 9;
 
-pub async fn insuffisient_fund() {
+#[tokio::test]
+async fn liquidity_insufficient_fund() {
     let test_setup = utils::TestSetup::new(
         vec![utils::UserParam {
             name: "alice",

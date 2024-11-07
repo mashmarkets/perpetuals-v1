@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { aw } from "vitest/dist/chunks/reporters.C4ZHgdxQ";
 import { BN, Program, setProvider, utils, Wallet } from "@coral-xyz/anchor";
 import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
 import { getI32Codec, getI64Codec, getU64Codec } from "@solana/codecs-numbers";
@@ -17,8 +16,8 @@ import { BankrunProvider } from "anchor-bankrun";
 import { Clock, startAnchor } from "solana-bankrun";
 import { getAccount, getMint } from "spl-token-bankrun";
 
-import IDL from "../../../target/idl/faucet.json";
-import { Faucet } from "../../../target/types/faucet";
+import IDL from "../../target/idl/faucet.json";
+import { Faucet } from "../../target/types/faucet.js";
 
 describe("Token Faucet", async () => {
   const context = await startAnchor(".", [], []);
@@ -368,6 +367,7 @@ describe("Token Faucet", async () => {
       .accounts({
         competition,
         vault,
+        vaultMint: NATIVE_MINT,
         payer: payer.publicKey,
         mint: mintUsdc,
         tokenProgram: TOKEN_PROGRAM_ID,

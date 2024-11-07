@@ -1,4 +1,3 @@
-import fs from "fs";
 import { describe, expect, it } from "vitest";
 import * as anchor from "@coral-xyz/anchor";
 import { BN, Program } from "@coral-xyz/anchor";
@@ -6,9 +5,9 @@ import { Keypair, PublicKey } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
 import { Clock, startAnchor } from "solana-bankrun";
 
-import IDL from "../../../../target/idl/perpetuals.json";
-import { Perpetuals } from "../../../../target/types/perpetuals";
-import { TestClient } from "./test_client";
+import IDL from "../../target/idl/perpetuals.json";
+import { Perpetuals } from "../../target/types/perpetuals.js";
+import { TestClient } from "./test_client.js";
 
 const USD_DECIMALS = 9;
 describe("perpetuals", () => {
