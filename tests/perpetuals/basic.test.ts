@@ -1,16 +1,76 @@
 import { describe, expect, it } from "vitest";
 import * as anchor from "@coral-xyz/anchor";
+import { Event } from "@coral-xyz/anchor";
 import { BN, Program } from "@coral-xyz/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import {
+  Keypair,
+  PublicKey,
+  TransactionInstruction,
+  TransactionMessage,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
-import { Clock, startAnchor } from "solana-bankrun";
+import { BanksTransactionMeta, Clock, startAnchor } from "solana-bankrun";
 
 import IDL from "../../target/idl/perpetuals.json";
 import { Perpetuals } from "../../target/types/perpetuals.js";
 import { TestClient } from "./test_client.js";
 
 const USD_DECIMALS = 9;
-describe("perpetuals", () => {
+
+// Its difficult to debug differences in BN and PublicKey, so convert them to simplify types
+const simplify = (x: unknown): any => {
+  if (Array.isArray(x)) {
+    return x.map(simplify);
+  }
+
+  if (x instanceof PublicKey) {
+    return x.toString();
+  }
+
+  if (x instanceof BN) {
+    return BigInt((x as BN).toString());
+  }
+
+  if (typeof x === "object" && x !== null) {
+    return Object.fromEntries(
+      Object.entries(x).map(([k, v]) => [k, simplify(v)]),
+    );
+  }
+
+  return x;
+};
+describe("perpetuals", async () => {
+  const context = await startAnchor(".", [], []);
+  const provider = new BankrunProvider(context);
+
+  const program = new Program<Perpetuals>(IDL as Perpetuals, provider);
+
+  // Doesn't seem possible to fetch logs after the transaction is processed in bankrun
+  // So need to process manually
+  const processInstructions = async (ixs: TransactionInstruction[]) => {
+    const recentBlockhash =
+      (await context.banksClient.getLatestBlockhash())![0];
+
+    const transaction = new VersionedTransaction(
+      new TransactionMessage({
+        payerKey: program.provider.publicKey!,
+        recentBlockhash,
+        instructions: ixs,
+      }).compileToV0Message(),
+    );
+
+    transaction.sign([context.payer]);
+    return await context.banksClient.processTransaction(transaction);
+  };
+
+  const getEvents = async (result: BanksTransactionMeta): Promise<Event[]> => {
+    const coder = new anchor.EventParser(program.programId, program.coder);
+    const events = await coder.parseLogs(result.logMessages ?? []);
+    // Convert generator to array
+    return Array.from(events);
+  };
+
   let tc: TestClient;
   let oracleConfig;
   let pricing;
@@ -24,11 +84,6 @@ describe("perpetuals", () => {
 
   let setClock: (epoch: number) => Promise<void>;
   it("init", async () => {
-    const context = await startAnchor(".", [], []);
-    const provider = new BankrunProvider(context);
-
-    const program = new Program<Perpetuals>(IDL as Perpetuals, provider);
-
     tc = new TestClient(context, program);
     tc.printErrors = true;
     await tc.initFixture();
@@ -521,7 +576,7 @@ describe("perpetuals", () => {
   });
 
   it("openPosition", async () => {
-    await tc.openPosition(
+    const ix = await tc.openPosition(
       125,
       tc.toTokenAmount(1, tc.custodies[0].decimals),
       tc.toTokenAmount(7, tc.custodies[0].decimals),
@@ -530,6 +585,25 @@ describe("perpetuals", () => {
       tc.users[0].positionAccountsLong[0],
       tc.custodies[0],
     );
+
+    const result = await processInstructions([ix]);
+    expect(simplify(await getEvents(result))).toStrictEqual([
+      {
+        data: {
+          borrowSizeUsd: BigInt("869610000000"),
+          collateralAmount: BigInt("1000000000"),
+          collateralUsd: BigInt("123000000000"),
+          custody: tc.custodies[0].custody.toString(),
+          lockedAmount: BigInt("7000000000"),
+          openTime: BigInt("111"),
+          owner: tc.users[0].wallet.publicKey.toString(),
+          pool: tc.pool.publicKey.toString(),
+          price: BigInt("124230000000"),
+          sizeUsd: BigInt("869610000000"),
+        },
+        name: "openPosition",
+      },
+    ]);
 
     let position = await tc.program.account.position.fetch(
       tc.users[0].positionAccountsLong[0],
@@ -589,7 +663,7 @@ describe("perpetuals", () => {
   });
 
   it("liquidate", async () => {
-    await tc.openPosition(
+    const ix = await tc.openPosition(
       125,
       tc.toTokenAmount(1, tc.custodies[0].decimals),
       tc.toTokenAmount(7, tc.custodies[0].decimals),
@@ -598,6 +672,7 @@ describe("perpetuals", () => {
       tc.users[0].positionAccountsLong[0],
       tc.custodies[0],
     );
+    await processInstructions([ix]);
     await tc.setCustomOraclePrice(80, tc.custodies[0]);
     await tc.liquidate(
       tc.users[0],

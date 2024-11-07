@@ -1701,6 +1701,163 @@
       ]
     }
   ],
+  "events": [
+    {
+      "name": "OpenPosition",
+      "discriminator": [
+        217,
+        229,
+        234,
+        190,
+        68,
+        176,
+        142,
+        115
+      ]
+    }
+  ],
+  "errors": [
+    {
+      "code": 6000,
+      "name": "MultisigAccountNotAuthorized",
+      "msg": "Account is not authorized to sign this instruction"
+    },
+    {
+      "code": 6001,
+      "name": "MultisigAlreadySigned",
+      "msg": "Account has already signed this instruction"
+    },
+    {
+      "code": 6002,
+      "name": "MultisigAlreadyExecuted",
+      "msg": "This instruction has already been executed"
+    },
+    {
+      "code": 6003,
+      "name": "MathOverflow",
+      "msg": "Overflow in arithmetic operation"
+    },
+    {
+      "code": 6004,
+      "name": "UnsupportedOracle",
+      "msg": "Unsupported price oracle"
+    },
+    {
+      "code": 6005,
+      "name": "InvalidOracleAccount",
+      "msg": "Invalid oracle account"
+    },
+    {
+      "code": 6006,
+      "name": "InvalidOracleState",
+      "msg": "Invalid oracle state"
+    },
+    {
+      "code": 6007,
+      "name": "StaleOraclePrice",
+      "msg": "Stale oracle price"
+    },
+    {
+      "code": 6008,
+      "name": "InvalidOraclePrice",
+      "msg": "Invalid oracle price"
+    },
+    {
+      "code": 6009,
+      "name": "InvalidEnvironment",
+      "msg": "Instruction is not allowed in production"
+    },
+    {
+      "code": 6010,
+      "name": "InvalidPoolState",
+      "msg": "Invalid pool state"
+    },
+    {
+      "code": 6011,
+      "name": "InvalidCustodyState",
+      "msg": "Invalid custody state"
+    },
+    {
+      "code": 6012,
+      "name": "InvalidPositionState",
+      "msg": "Invalid position state"
+    },
+    {
+      "code": 6013,
+      "name": "InvalidPerpetualsConfig",
+      "msg": "Invalid perpetuals config"
+    },
+    {
+      "code": 6014,
+      "name": "InvalidPoolConfig",
+      "msg": "Invalid pool config"
+    },
+    {
+      "code": 6015,
+      "name": "InvalidCustodyConfig",
+      "msg": "Invalid custody config"
+    },
+    {
+      "code": 6016,
+      "name": "InsufficientAmountReturned",
+      "msg": "Insufficient token amount returned"
+    },
+    {
+      "code": 6017,
+      "name": "MaxPriceSlippage",
+      "msg": "Price slippage limit exceeded"
+    },
+    {
+      "code": 6018,
+      "name": "MaxLeverage",
+      "msg": "Position leverage limit exceeded"
+    },
+    {
+      "code": 6019,
+      "name": "CustodyAmountLimit",
+      "msg": "Custody amount limit exceeded"
+    },
+    {
+      "code": 6020,
+      "name": "PositionAmountLimit",
+      "msg": "Position amount limit exceeded"
+    },
+    {
+      "code": 6021,
+      "name": "UnsupportedToken",
+      "msg": "Token is not supported"
+    },
+    {
+      "code": 6022,
+      "name": "InstructionNotAllowed",
+      "msg": "Instruction is not allowed at this time"
+    },
+    {
+      "code": 6023,
+      "name": "MaxUtilization",
+      "msg": "Token utilization limit exceeded"
+    },
+    {
+      "code": 6024,
+      "name": "PermissionlessOracleMissingSignature",
+      "msg": "Permissionless oracle update must be preceded by Ed25519 signature verification instruction"
+    },
+    {
+      "code": 6025,
+      "name": "PermissionlessOracleMalformedEd25519Data",
+      "msg": "Ed25519 signature verification data does not match expected format"
+    },
+    {
+      "code": 6026,
+      "name": "PermissionlessOracleSignerMismatch",
+      "msg": "Ed25519 signature was not signed by the oracle authority"
+    },
+    {
+      "code": 6027,
+      "name": "PermissionlessOracleMessageMismatch",
+      "msg": "Signed message does not match instruction params"
+    }
+  ],
   "types": [
     {
       "name": "AddCollateralParams",
@@ -2329,6 +2486,54 @@
           },
           {
             "name": "fee",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "OpenPosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "borrow_size_usd",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_amount",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_usd",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "locked_amount",
+            "type": "u64"
+          },
+          {
+            "name": "open_time",
+            "type": "i64"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "size_usd",
             "type": "u64"
           }
         ]

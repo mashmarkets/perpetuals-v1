@@ -894,7 +894,7 @@ export class TestClient {
     custody,
   ) => {
     try {
-      await this.program.methods
+      return await this.program.methods
         .openPosition({
           price: new BN(price * 10 ** 9),
           collateral,
@@ -914,7 +914,7 @@ export class TestClient {
           tokenProgram: spl.TOKEN_PROGRAM_ID,
         })
         .signers([user.wallet])
-        .rpc();
+        .instruction();
     } catch (err) {
       if (this.printErrors) {
         console.log(err);

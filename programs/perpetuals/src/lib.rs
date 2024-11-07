@@ -3,6 +3,7 @@
 #![allow(clippy::result_large_err)]
 
 pub mod error;
+pub mod events;
 pub mod instructions;
 pub mod math;
 pub mod state;

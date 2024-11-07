@@ -3,7 +3,7 @@
 use {
     crate::{
         error::PerpetualsError,
-        math,
+        events, math,
         state::{
             custody::Custody,
             oracle::OraclePrice,
@@ -256,6 +256,19 @@ pub fn open_position<'info>(
 
     custody.add_position(position, &token_ema_price, curtime)?;
     custody.update_borrow_rate(curtime)?;
+
+    emit!(events::OpenPosition {
+        borrow_size_usd: position.borrow_size_usd,
+        collateral_amount: position.collateral_amount,
+        collateral_usd: position.collateral_usd,
+        custody: position.custody,
+        locked_amount: position.locked_amount,
+        open_time: position.open_time,
+        owner: position.owner,
+        pool: position.pool,
+        price: position.price,
+        size_usd: position.size_usd,
+    });
 
     Ok(())
 }
