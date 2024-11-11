@@ -228,7 +228,7 @@ export const useGetTokenInfo = () => {
     getTokenSymbol: (mint: Address | undefined) => get(mint!)?.symbol ?? "???",
     getTokenLabel: (mint: Address | undefined) => get(mint!)?.name ?? "Unknown",
     getTokenIcon: (mint: Address | undefined) => {
-      const { logoURI, name } = get(mint!);
+      const { logoURI, name } = get(mint!) ?? {};
       if (logoURI === undefined) {
         return <></>;
       }
