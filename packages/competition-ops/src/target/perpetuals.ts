@@ -1709,6 +1709,32 @@ export type Perpetuals = {
   ],
   "events": [
     {
+      "name": "closePosition",
+      "discriminator": [
+        46,
+        75,
+        165,
+        128,
+        171,
+        114,
+        231,
+        78
+      ]
+    },
+    {
+      "name": "liquidatePosition",
+      "discriminator": [
+        16,
+        216,
+        71,
+        233,
+        8,
+        255,
+        133,
+        237
+      ]
+    },
+    {
       "name": "openPosition",
       "discriminator": [
         217,
@@ -2033,6 +2059,62 @@ export type Perpetuals = {
           {
             "name": "lastUpdate",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "closePosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collateralAmount",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "sizeUsd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "feeAmount",
+            "type": "u64"
+          },
+          {
+            "name": "lossUsd",
+            "type": "u64"
+          },
+          {
+            "name": "profitUsd",
+            "type": "u64"
+          },
+          {
+            "name": "protocolFee",
+            "type": "u64"
+          },
+          {
+            "name": "transferAmount",
+            "type": "u64"
           }
         ]
       }
@@ -2419,6 +2501,70 @@ export type Perpetuals = {
       }
     },
     {
+      "name": "liquidatePosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collateralAmount",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "sizeUsd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "feeAmount",
+            "type": "u64"
+          },
+          {
+            "name": "lossUsd",
+            "type": "u64"
+          },
+          {
+            "name": "profitUsd",
+            "type": "u64"
+          },
+          {
+            "name": "protocolFee",
+            "type": "u64"
+          },
+          {
+            "name": "transferAmount",
+            "type": "u64"
+          },
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "rewardAmount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "multisig",
       "serialization": "bytemuck",
       "repr": {
@@ -2503,28 +2649,12 @@ export type Perpetuals = {
         "kind": "struct",
         "fields": [
           {
-            "name": "borrowSizeUsd",
-            "type": "u64"
-          },
-          {
             "name": "collateralAmount",
-            "type": "u64"
-          },
-          {
-            "name": "collateralUsd",
             "type": "u64"
           },
           {
             "name": "custody",
             "type": "pubkey"
-          },
-          {
-            "name": "lockedAmount",
-            "type": "u64"
-          },
-          {
-            "name": "openTime",
-            "type": "i64"
           },
           {
             "name": "owner",
@@ -2540,6 +2670,22 @@ export type Perpetuals = {
           },
           {
             "name": "sizeUsd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "borrowSizeUsd",
+            "type": "u64"
+          },
+          {
+            "name": "collateralUsd",
+            "type": "u64"
+          },
+          {
+            "name": "lockedAmount",
             "type": "u64"
           }
         ]

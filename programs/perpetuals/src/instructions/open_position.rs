@@ -263,7 +263,7 @@ pub fn open_position<'info>(
         collateral_usd: position.collateral_usd,
         custody: position.custody,
         locked_amount: position.locked_amount,
-        open_time: position.open_time,
+        time: position.open_time,
         owner: position.owner,
         pool: position.pool,
         price: position.price,

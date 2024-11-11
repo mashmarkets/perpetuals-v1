@@ -595,7 +595,7 @@ describe("perpetuals", async () => {
           collateralUsd: BigInt("123000000000"),
           custody: tc.custodies[0].custody.toString(),
           lockedAmount: BigInt("7000000000"),
-          openTime: BigInt("111"),
+          time: BigInt("111"),
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
           price: BigInt("124230000000"),
@@ -650,38 +650,84 @@ describe("perpetuals", async () => {
   });
 
   it("closePosition", async () => {
-    await tc.closePosition(
+    const ix = await tc.closePosition(
       1,
       tc.users[0],
       tc.users[0].tokenAccounts[0],
       tc.users[0].positionAccountsLong[0],
       tc.custodies[0],
     );
-    await tc.ensureFails(
-      tc.program.account.position.fetch(tc.users[0].positionAccountsLong[0]),
-    );
+    const result = await processInstructions([ix]);
+    expect(simplify(await getEvents(result))).toStrictEqual([
+      {
+        data: {
+          collateralAmount: BigInt("1999991870"),
+          custody: tc.custodies[0].custody.toString(),
+          feeAmount: BigInt("70700000"),
+          lossUsd: BigInt("25916100000"),
+          owner: tc.users[0].wallet.publicKey.toString(),
+          pool: tc.pool.publicKey.toString(),
+          price: BigInt("121770000000"),
+          profitUsd: BigInt("0"),
+          protocolFee: BigInt("70700"),
+          sizeUsd: BigInt("869610000000"),
+          time: BigInt("111"),
+          transferAmount: BigInt("1789291869"),
+        },
+        name: "closePosition",
+      },
+    ]);
+
+    await expect(
+      program.account.position.fetch(tc.users[0].positionAccountsLong[0]),
+    ).rejects.toThrow("Could not find");
   });
 
   it("liquidate", async () => {
-    const ix = await tc.openPosition(
-      125,
-      tc.toTokenAmount(1, tc.custodies[0].decimals),
-      tc.toTokenAmount(7, tc.custodies[0].decimals),
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.users[0].positionAccountsLong[0],
-      tc.custodies[0],
-    );
-    await processInstructions([ix]);
+    await processInstructions([
+      await tc.openPosition(
+        125,
+        tc.toTokenAmount(1, tc.custodies[0].decimals),
+        tc.toTokenAmount(7, tc.custodies[0].decimals),
+        tc.users[0],
+        tc.users[0].tokenAccounts[0],
+        tc.users[0].positionAccountsLong[0],
+        tc.custodies[0],
+      ),
+    ]);
+
     await tc.setCustomOraclePrice(80, tc.custodies[0]);
-    await tc.liquidate(
+    const ix = await tc.liquidate(
       tc.users[0],
       tc.users[0].tokenAccounts[0],
       tc.users[0].positionAccountsLong[0],
       tc.custodies[0],
     );
-    await tc.ensureFails(
-      tc.program.account.position.fetch(tc.users[0].positionAccountsLong[0]),
-    );
+    const result = await processInstructions([ix]);
+    expect(simplify(await getEvents(result))).toStrictEqual([
+      {
+        data: {
+          collateralAmount: BigInt("1000000000"),
+          custody: tc.custodies[0].custody.toString(),
+          feeAmount: BigInt("217402500"),
+          lossUsd: BigInt("332602200000"),
+          owner: tc.users[0].wallet.publicKey.toString(),
+          pool: tc.pool.publicKey.toString(),
+          price: BigInt("80000"),
+          profitUsd: BigInt("0"),
+          protocolFee: BigInt("217403"),
+          rewardAmount: BigInt("0"),
+          signer: tc.users[0].wallet.publicKey.toString(),
+          sizeUsd: BigInt("869610000000"),
+          time: BigInt("111"),
+          transferAmount: BigInt("0"),
+        },
+        name: "liquidatePosition",
+      },
+    ]);
+
+    await expect(
+      program.account.position.fetch(tc.users[0].positionAccountsLong[0]),
+    ).rejects.toThrow("Could not find");
   });
 });

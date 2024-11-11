@@ -3,7 +3,7 @@
 use {
     crate::{
         error::PerpetualsError,
-        math,
+        events, math,
         state::{
             custody::Custody,
             oracle::OraclePrice,
@@ -216,5 +216,19 @@ pub fn close_position<'info>(
     custody.remove_position(position, curtime)?;
     custody.update_borrow_rate(curtime)?;
 
+    emit!(events::ClosePosition {
+        profit_usd,
+        loss_usd,
+        fee_amount,
+        transfer_amount,
+        protocol_fee,
+        collateral_amount: position.collateral_amount,
+        custody: position.custody,
+        time: position.open_time,
+        owner: position.owner,
+        pool: position.pool,
+        price: exit_price,
+        size_usd: position.size_usd,
+    });
     Ok(())
 }

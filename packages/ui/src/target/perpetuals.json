@@ -1703,6 +1703,32 @@
   ],
   "events": [
     {
+      "name": "ClosePosition",
+      "discriminator": [
+        46,
+        75,
+        165,
+        128,
+        171,
+        114,
+        231,
+        78
+      ]
+    },
+    {
+      "name": "LiquidatePosition",
+      "discriminator": [
+        16,
+        216,
+        71,
+        233,
+        8,
+        255,
+        133,
+        237
+      ]
+    },
+    {
       "name": "OpenPosition",
       "discriminator": [
         217,
@@ -2027,6 +2053,62 @@
           {
             "name": "last_update",
             "type": "i64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "ClosePosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collateral_amount",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "size_usd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "loss_usd",
+            "type": "u64"
+          },
+          {
+            "name": "profit_usd",
+            "type": "u64"
+          },
+          {
+            "name": "protocol_fee",
+            "type": "u64"
+          },
+          {
+            "name": "transfer_amount",
+            "type": "u64"
           }
         ]
       }
@@ -2413,6 +2495,70 @@
       }
     },
     {
+      "name": "LiquidatePosition",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collateral_amount",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "size_usd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "fee_amount",
+            "type": "u64"
+          },
+          {
+            "name": "loss_usd",
+            "type": "u64"
+          },
+          {
+            "name": "profit_usd",
+            "type": "u64"
+          },
+          {
+            "name": "protocol_fee",
+            "type": "u64"
+          },
+          {
+            "name": "transfer_amount",
+            "type": "u64"
+          },
+          {
+            "name": "signer",
+            "type": "pubkey"
+          },
+          {
+            "name": "reward_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
       "name": "Multisig",
       "serialization": "bytemuck",
       "repr": {
@@ -2497,28 +2643,12 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "borrow_size_usd",
-            "type": "u64"
-          },
-          {
             "name": "collateral_amount",
-            "type": "u64"
-          },
-          {
-            "name": "collateral_usd",
             "type": "u64"
           },
           {
             "name": "custody",
             "type": "pubkey"
-          },
-          {
-            "name": "locked_amount",
-            "type": "u64"
-          },
-          {
-            "name": "open_time",
-            "type": "i64"
           },
           {
             "name": "owner",
@@ -2534,6 +2664,22 @@
           },
           {
             "name": "size_usd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "borrow_size_usd",
+            "type": "u64"
+          },
+          {
+            "name": "collateral_usd",
+            "type": "u64"
+          },
+          {
+            "name": "locked_amount",
             "type": "u64"
           }
         ]

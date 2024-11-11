@@ -3,7 +3,7 @@
 use {
     crate::{
         error::PerpetualsError,
-        math,
+        events, math,
         state::{
             custody::Custody,
             oracle::OraclePrice,
@@ -234,5 +234,26 @@ pub fn liquidate<'info>(
     custody.remove_position(position, curtime)?;
     custody.update_borrow_rate(curtime)?;
 
+    emit!(events::LiquidatePosition {
+        // Common position fields
+        collateral_amount: position.collateral_amount,
+        custody: position.custody,
+        owner: position.owner,
+        pool: position.pool,
+        price: token_price.price,
+        size_usd: position.size_usd,
+        time: position.open_time,
+
+        // Common with Close position
+        fee_amount,
+        loss_usd,
+        profit_usd,
+        transfer_amount: user_amount,
+        protocol_fee,
+
+        // Unique with Liquidate Position
+        reward_amount: reward,
+        signer: ctx.accounts.signer.key(),
+    });
     Ok(())
 }

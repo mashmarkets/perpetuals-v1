@@ -998,31 +998,23 @@ export class TestClient {
     positionAccount,
     custody,
   ) => {
-    try {
-      await this.program.methods
-        .closePosition({
-          price: new BN(price),
-        })
-        .accounts({
-          owner: user.wallet.publicKey,
-          receivingAccount,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          position: positionAccount,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-          custodyTokenAccount: custody.tokenAccount,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .signers([user.wallet])
-        .rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    return await this.program.methods
+      .closePosition({
+        price: new BN(price),
+      })
+      .accounts({
+        owner: user.wallet.publicKey,
+        receivingAccount,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        position: positionAccount,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+        custodyTokenAccount: custody.tokenAccount,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      })
+      .instruction();
   };
 
   liquidate = async (
@@ -1031,30 +1023,22 @@ export class TestClient {
     positionAccount: PublicKey,
     custody,
   ) => {
-    try {
-      await this.program.methods
-        .liquidate({})
-        .accounts({
-          signer: user.wallet.publicKey,
-          receivingAccount: tokenAccount,
-          rewardsReceivingAccount: tokenAccount,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          position: positionAccount,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-          custodyTokenAccount: custody.tokenAccount,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .signers([user.wallet])
-        .rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    return await this.program.methods
+      .liquidate({})
+      .accounts({
+        signer: user.wallet.publicKey,
+        receivingAccount: tokenAccount,
+        rewardsReceivingAccount: tokenAccount,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        position: positionAccount,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+        custodyTokenAccount: custody.tokenAccount,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      })
+      .instruction();
   };
 
   getEntryPriceAndFee = async (size: BN, custody) => {
