@@ -1,10 +1,7 @@
 //! UpdatePoolAum instruction handler
 
 use {
-    crate::state::{
-        perpetuals::Perpetuals,
-        pool::{AumCalcMode, Pool},
-    },
+    crate::state::{perpetuals::Perpetuals, pool::Pool},
     anchor_lang::prelude::*,
 };
 
@@ -43,8 +40,7 @@ pub fn update_pool_aum<'info>(
 
     msg!("Previous value: {}", pool.aum_usd);
 
-    pool.aum_usd =
-        pool.get_assets_under_management_usd(AumCalcMode::EMA, ctx.remaining_accounts, curtime)?;
+    pool.aum_usd = pool.get_assets_under_management_usd(ctx.remaining_accounts, curtime)?;
 
     msg!("Updated value: {}", pool.aum_usd);
 

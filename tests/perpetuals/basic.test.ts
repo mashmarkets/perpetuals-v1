@@ -219,7 +219,6 @@ describe("perpetuals", async () => {
       oracleAuthority: tc.oracleAuthority.publicKey,
     };
     pricing = {
-      useEma: true,
       useUnrealizedPnlInAum: true,
       tradeSpreadLong: new BN(100),
       tradeSpreadShort: new BN(100),
@@ -278,7 +277,6 @@ describe("perpetuals", async () => {
         maxPriceAgeSec: 60,
       },
       pricing: {
-        useEma: true,
         useUnrealizedPnlInAum: true,
         tradeSpreadLong: "100",
         tradeSpreadShort: "100",
@@ -419,7 +417,6 @@ describe("perpetuals", async () => {
       price: new BN(123000),
       expo: -3,
       conf: new BN(0),
-      ema: new BN(123000),
       publishTime: oracle.publishTime,
     };
     expect(JSON.stringify(oracle)).to.equal(JSON.stringify(oracleExpected));
@@ -443,7 +440,6 @@ describe("perpetuals", async () => {
       price: new BN(500000),
       expo: -3,
       conf: new BN(10),
-      ema: new BN(500000),
       publishTime: oracle.publishTime,
     };
     expect(JSON.stringify(oracle)).to.equal(JSON.stringify(oracleExpected));
@@ -478,7 +474,6 @@ describe("perpetuals", async () => {
       JSON.stringify({
         ...oracleExpected,
         price: new BN(1000000),
-        ema: new BN(1000000),
         publishTime: oracle.publishTime,
       }),
     );
@@ -498,7 +493,7 @@ describe("perpetuals", async () => {
       tc.custodies[0].oracleAccount,
     );
     const publishTime = oracle.publishTime.add(new BN(1));
-    // // Attempting to update with a payload signed by a bogus key should fail.
+    // Attempting to update with a payload signed by a bogus key should fail.
     let bogusKeypair = Keypair.generate();
     await expect(
       tc.setCustomOraclePricePermissionless(
@@ -521,7 +516,7 @@ describe("perpetuals", async () => {
     ).rejects.toThrow(/PermissionlessOracleMissingSignature/);
 
     // Sending the permissionless update with malformed message should fail.
-    let randomMessage = Buffer.alloc(68);
+    let randomMessage = Buffer.alloc(60);
     randomMessage.fill(0xab);
     await expect(
       tc.setCustomOraclePricePermissionless(

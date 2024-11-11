@@ -4,12 +4,7 @@ use {
     crate::{
         error::PerpetualsError,
         math,
-        state::{
-            custody::Custody,
-            oracle::OraclePrice,
-            perpetuals::Perpetuals,
-            pool::{AumCalcMode, Pool},
-        },
+        state::{custody::Custody, oracle::OraclePrice, perpetuals::Perpetuals, pool::Pool},
     },
     anchor_lang::prelude::*,
     anchor_spl::token::{Mint, Token, TokenAccount},
@@ -128,31 +123,16 @@ pub fn add_liquidity<'info>(
     let curtime = perpetuals.get_time()?;
 
     // Refresh pool.aum_usm to adapt to token price change
-    pool.aum_usd =
-        pool.get_assets_under_management_usd(AumCalcMode::EMA, ctx.remaining_accounts, curtime)?;
+    pool.aum_usd = pool.get_assets_under_management_usd(ctx.remaining_accounts, curtime)?;
 
     let token_price = OraclePrice::new_from_oracle(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
     )?;
-
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
-    )?;
-
-    let min_price = if token_price < token_ema_price {
-        token_price
-    } else {
-        token_ema_price
-    };
 
     let fee_amount =
-        pool.get_add_liquidity_fee(token_id, params.amount_in, custody, &token_ema_price)?;
+        pool.get_add_liquidity_fee(token_id, params.amount_in, custody, &token_price)?;
     msg!("Collected fee: {}", fee_amount);
 
     // check pool constraints
@@ -172,8 +152,7 @@ pub fn add_liquidity<'info>(
 
     // compute assets under management
     msg!("Compute assets under management");
-    let pool_amount_usd =
-        pool.get_assets_under_management_usd(AumCalcMode::Max, ctx.remaining_accounts, curtime)?;
+    let pool_amount_usd = pool.get_assets_under_management_usd(ctx.remaining_accounts, curtime)?;
 
     // compute amount of lp tokens to mint
     let no_fee_amount = math::checked_sub(params.amount_in, fee_amount)?;
@@ -183,7 +162,7 @@ pub fn add_liquidity<'info>(
         PerpetualsError::InsufficientAmountReturned
     );
 
-    let token_amount_usd = min_price.get_asset_amount_usd(no_fee_amount, custody.decimals)?;
+    let token_amount_usd = token_price.get_asset_amount_usd(no_fee_amount, custody.decimals)?;
 
     let lp_amount = if pool_amount_usd == 0 {
         token_amount_usd
@@ -217,12 +196,12 @@ pub fn add_liquidity<'info>(
     custody.collected_fees.add_liquidity_usd = custody
         .collected_fees
         .add_liquidity_usd
-        .wrapping_add(token_ema_price.get_asset_amount_usd(fee_amount, custody.decimals)?);
+        .wrapping_add(token_price.get_asset_amount_usd(fee_amount, custody.decimals)?);
 
     custody.volume_stats.add_liquidity_usd = custody
         .volume_stats
         .add_liquidity_usd
-        .wrapping_add(token_ema_price.get_asset_amount_usd(params.amount_in, custody.decimals)?);
+        .wrapping_add(token_price.get_asset_amount_usd(params.amount_in, custody.decimals)?);
 
     custody.assets.protocol_fees = math::checked_add(custody.assets.protocol_fees, protocol_fee)?;
 
@@ -233,8 +212,7 @@ pub fn add_liquidity<'info>(
     // update pool stats
     msg!("Update pool stats");
     custody.exit(&crate::ID)?;
-    pool.aum_usd =
-        pool.get_assets_under_management_usd(AumCalcMode::EMA, ctx.remaining_accounts, curtime)?;
+    pool.aum_usd = pool.get_assets_under_management_usd(ctx.remaining_accounts, curtime)?;
 
     Ok(())
 }

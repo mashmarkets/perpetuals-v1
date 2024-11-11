@@ -2269,10 +2269,6 @@ export type Perpetuals = {
             "type": "u64"
           },
           {
-            "name": "ema",
-            "type": "u64"
-          },
-          {
             "name": "publishTime",
             "type": "i64"
           }
@@ -2426,12 +2422,7 @@ export type Perpetuals = {
       "name": "getOraclePriceParams",
       "type": {
         "kind": "struct",
-        "fields": [
-          {
-            "name": "ema",
-            "type": "bool"
-          }
-        ]
+        "fields": []
       }
     },
     {
@@ -2998,10 +2989,6 @@ export type Perpetuals = {
         "kind": "struct",
         "fields": [
           {
-            "name": "useEma",
-            "type": "bool"
-          },
-          {
             "name": "useUnrealizedPnlInAum",
             "type": "bool"
           },
@@ -3180,10 +3167,6 @@ export type Perpetuals = {
             "type": "u64"
           },
           {
-            "name": "ema",
-            "type": "u64"
-          },
-          {
             "name": "publishTime",
             "type": "i64"
           }
@@ -3209,10 +3192,6 @@ export type Perpetuals = {
           },
           {
             "name": "conf",
-            "type": "u64"
-          },
-          {
-            "name": "ema",
             "type": "u64"
           },
           {

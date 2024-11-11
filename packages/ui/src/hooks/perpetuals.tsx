@@ -143,7 +143,6 @@ const parseCustody = (
       minInitialLeverage: fromBN(c.pricing.minInitialLeverage),
       tradeSpreadLong: fromBN(c.pricing.tradeSpreadLong),
       tradeSpreadShort: fromBN(c.pricing.tradeSpreadShort),
-      useEma: c.pricing.useEma,
       useUnrealizedPnlInAum: c.pricing.useUnrealizedPnlInAum,
     },
     tradeStats: {

@@ -68,20 +68,11 @@ pub fn get_liquidation_state<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
-    )?;
-
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
     )?;
 
     if ctx.accounts.pool.check_leverage(
         &ctx.accounts.position,
         &token_price,
-        &token_ema_price,
         custody,
         curtime,
         false,

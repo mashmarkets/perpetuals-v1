@@ -1,10 +1,7 @@
 //! GetAssetsUnderManagement instruction handler
 
 use {
-    crate::state::{
-        perpetuals::Perpetuals,
-        pool::{AumCalcMode, Pool},
-    },
+    crate::state::{perpetuals::Perpetuals, pool::Pool},
     anchor_lang::prelude::*,
 };
 
@@ -34,7 +31,6 @@ pub fn get_assets_under_management<'info>(
     _params: &GetAssetsUnderManagementParams,
 ) -> Result<u128> {
     ctx.accounts.pool.get_assets_under_management_usd(
-        AumCalcMode::EMA,
         ctx.remaining_accounts,
         ctx.accounts.perpetuals.get_time()?,
     )

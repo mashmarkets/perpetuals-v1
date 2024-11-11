@@ -34,7 +34,6 @@ const addCustodySchema = z.object({
     maxPriceError: z.string().transform(transformToBigInt(BPS_DECIMALS - 2)),
   }),
   pricing: z.object({
-    useEma: z.boolean(),
     useUnrealizedPnlInAum: z.boolean(),
     tradeSpreadLong: z.string().transform(transformToBigInt(BPS_DECIMALS - 2)),
     tradeSpreadShort: z.string().transform(transformToBigInt(BPS_DECIMALS - 2)),
@@ -101,7 +100,6 @@ const AddCustodyForm = ({
       oracleAuthority: "11111111111111111111111111111111",
     },
     pricing: {
-      useEma: false,
       useUnrealizedPnlInAum: true,
       tradeSpreadLong: "0.10",
       tradeSpreadShort: "0.10",
@@ -331,14 +329,6 @@ const AddCustodyForm = ({
         <div className="mb-2 grid grid-cols-[200px_1fr] items-center gap-4">
           <label className="text-white">Options:</label>
           <div className="space-y-2">
-            <label className="flex items-center text-white">
-              <input
-                type="checkbox"
-                {...register("pricing.useEma")}
-                className="mr-2"
-              />
-              Use EMA
-            </label>
             <label className="flex items-center text-white">
               <input
                 type="checkbox"

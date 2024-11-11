@@ -58,7 +58,6 @@ pub struct SetCustomOraclePricePermissionlessParams {
     pub price: u64,
     pub expo: i32,
     pub conf: u64,
-    pub ema: u64,
     pub publish_time: i64,
 }
 
@@ -80,13 +79,9 @@ pub fn set_custom_oracle_price_permissionless<'info>(
         params,
     )?;
 
-    ctx.accounts.oracle_account.set(
-        params.price,
-        params.expo,
-        params.conf,
-        params.ema,
-        params.publish_time,
-    );
+    ctx.accounts
+        .oracle_account
+        .set(params.price, params.expo, params.conf, params.publish_time);
     Ok(())
 }
 
@@ -103,7 +98,7 @@ fn validate_ed25519_signature_instruction(
     require!(
         signature_ix.accounts.is_empty() /* no accounts touched */
             && signature_ix.data[0] == 0x01 /* only one ed25519 signature */
-            && signature_ix.data.len() == 180, /* data len matches exactly the expected */
+            && signature_ix.data.len() == 172, /* data len matches exactly the expected */
         PerpetualsError::PermissionlessOracleMalformedEd25519Data
     );
 

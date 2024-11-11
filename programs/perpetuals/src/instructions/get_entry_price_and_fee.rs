@@ -67,27 +67,16 @@ pub fn get_entry_price_and_fee<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
     )?;
 
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
-    )?;
-
-    let min_collateral_price = token_price.get_min_price(&token_ema_price)?;
-
-    let entry_price = pool.get_entry_price(&token_price, &token_ema_price, custody)?;
+    let entry_price = pool.get_entry_price(&token_price, custody)?;
 
     let position_oracle_price = OraclePrice {
         price: entry_price,
         exponent: -(Perpetuals::PRICE_DECIMALS as i32),
     };
     let size_usd = position_oracle_price.get_asset_amount_usd(params.size, custody.decimals)?;
-    let collateral_usd =
-        min_collateral_price.get_asset_amount_usd(params.collateral, custody.decimals)?;
+    let collateral_usd = token_price.get_asset_amount_usd(params.collateral, custody.decimals)?;
 
     let locked_amount = custody.get_locked_amount(params.size)?;
 
@@ -100,7 +89,7 @@ pub fn get_entry_price_and_fee<'info>(
     };
 
     let liquidation_price =
-        pool.get_liquidation_price(&position, &token_ema_price, custody, curtime)?;
+        pool.get_liquidation_price(&position, &token_price, custody, curtime)?;
 
     let fee = pool.get_entry_fee(
         custody.fees.open_position,

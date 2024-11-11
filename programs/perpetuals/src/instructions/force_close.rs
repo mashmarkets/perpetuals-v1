@@ -140,27 +140,13 @@ pub fn force_close<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
-    )?;
-
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
     )?;
 
     msg!("Settle position");
-    let (total_amount_out, fee_amount, profit_usd, loss_usd) = pool.get_close_amount(
-        position,
-        &token_price,
-        &token_ema_price,
-        custody,
-        curtime,
-        true,
-    )?;
+    let (total_amount_out, fee_amount, profit_usd, loss_usd) =
+        pool.get_close_amount(position, &token_price, custody, curtime, true)?;
 
-    let fee_amount_usd = token_ema_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
+    let fee_amount_usd = token_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
 
     msg!("Net profit: {}, loss: {}", profit_usd, loss_usd);
     msg!("Collected fee: {}", fee_amount);

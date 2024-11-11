@@ -71,19 +71,11 @@ pub fn get_exit_price_and_fee<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
     )?;
 
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
-    )?;
+    let price = pool.get_exit_price(&token_price, custody)?;
 
-    let price = pool.get_exit_price(&token_price, &token_ema_price, custody)?;
-
-    let size = token_ema_price.get_token_amount(position.size_usd, custody.decimals)?;
+    let size = token_price.get_token_amount(position.size_usd, custody.decimals)?;
 
     let fee = pool.get_exit_fee(size, custody)?;
 

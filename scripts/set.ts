@@ -112,7 +112,6 @@ const getCustodyParam = (symbol: string): CustodyParams => {
     },
     // Figures are in BPS
     pricing: {
-      useEma: false, // Keep things simple for now
       useUnrealizedPnlInAum: true,
       tradeSpreadLong: new BN(0), // 0%
       tradeSpreadShort: new BN(0), // 0%

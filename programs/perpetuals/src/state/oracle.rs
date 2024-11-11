@@ -45,18 +45,16 @@ pub struct CustomOracle {
     pub price: u64,
     pub expo: i32,
     pub conf: u64,
-    pub ema: u64,
     pub publish_time: i64,
 }
 
 impl CustomOracle {
     pub const LEN: usize = 8 + std::mem::size_of::<CustomOracle>();
 
-    pub fn set(&mut self, price: u64, expo: i32, conf: u64, ema: u64, publish_time: i64) {
+    pub fn set(&mut self, price: u64, expo: i32, conf: u64, publish_time: i64) {
         self.price = price;
         self.expo = expo;
         self.conf = conf;
-        self.ema = ema;
         self.publish_time = publish_time;
     }
 }
@@ -97,7 +95,6 @@ impl OraclePrice {
         oracle_account: &AccountInfo,
         oracle_params: &OracleParams,
         current_time: i64,
-        use_ema: bool,
     ) -> Result<Self> {
         match oracle_params.oracle_type {
             OracleType::Custom => Self::get_custom_price(
@@ -105,14 +102,12 @@ impl OraclePrice {
                 oracle_params.max_price_error,
                 oracle_params.max_price_age_sec,
                 current_time,
-                use_ema,
             ),
             OracleType::Pyth => Self::get_pyth_price(
                 oracle_account,
                 oracle_params.max_price_error,
                 oracle_params.max_price_age_sec,
                 current_time,
-                use_ema,
             ),
             _ => err!(PerpetualsError::UnsupportedOracle),
         }
@@ -221,7 +216,6 @@ impl OraclePrice {
         max_price_error: u64,
         max_price_age_sec: u32,
         current_time: i64,
-        use_ema: bool,
     ) -> Result<OraclePrice> {
         require!(
             !Perpetuals::is_empty_account(custom_price_info)?,
@@ -235,11 +229,7 @@ impl OraclePrice {
             msg!("Error: Custom oracle price is stale");
             return err!(PerpetualsError::StaleOraclePrice);
         }
-        let price = if use_ema {
-            oracle_acc.ema
-        } else {
-            oracle_acc.price
-        };
+        let price = oracle_acc.price;
 
         if price == 0
             || math::checked_div(
@@ -263,7 +253,6 @@ impl OraclePrice {
         max_price_error: u64,
         max_price_age_sec: u32,
         current_time: i64,
-        use_ema: bool,
     ) -> Result<OraclePrice> {
         require!(
             !Perpetuals::is_empty_account(pyth_price_info)?,
@@ -273,11 +262,7 @@ impl OraclePrice {
         let pyth_feed = pyth_min::price_update::PriceUpdateV2::get_price_update_v2_from_bytes(data)
             .price_message;
 
-        let pyth_price = if use_ema {
-            pyth_feed.ema_price
-        } else {
-            pyth_feed.price
-        };
+        let pyth_price = pyth_feed.price;
 
         let last_update_age_sec = math::checked_sub(current_time, pyth_feed.publish_time)?;
         if last_update_age_sec > max_price_age_sec as i64 {

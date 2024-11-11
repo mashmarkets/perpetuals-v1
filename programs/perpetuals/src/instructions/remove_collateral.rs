@@ -124,25 +124,10 @@ pub fn remove_collateral<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
     )?;
-
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
-    )?;
-
-    let max_collateral_price = if token_price > token_ema_price {
-        token_price
-    } else {
-        token_ema_price
-    };
 
     // compute amount to transfer
-    let collateral =
-        max_collateral_price.get_token_amount(params.collateral_usd, custody.decimals)?;
+    let collateral = token_price.get_token_amount(params.collateral_usd, custody.decimals)?;
     if collateral > position.collateral_amount {
         return Err(ProgramError::InsufficientFunds.into());
     }
@@ -157,14 +142,7 @@ pub fn remove_collateral<'info>(
     // check position risk
     msg!("Check position risks");
     require!(
-        pool.check_leverage(
-            position,
-            &token_price,
-            &token_ema_price,
-            custody,
-            curtime,
-            true
-        )?,
+        pool.check_leverage(position, &token_price, custody, curtime, true)?,
         PerpetualsError::MaxLeverage
     );
 

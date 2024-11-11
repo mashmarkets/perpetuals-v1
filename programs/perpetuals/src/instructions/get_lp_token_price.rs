@@ -3,10 +3,7 @@
 use {
     crate::{
         math,
-        state::{
-            perpetuals::Perpetuals,
-            pool::{AumCalcMode, Pool},
-        },
+        state::{perpetuals::Perpetuals, pool::Pool},
     },
     anchor_lang::prelude::*,
     anchor_spl::token::Mint,
@@ -45,7 +42,6 @@ pub fn get_lp_token_price<'info>(
     _params: &GetLpTokenPriceParams,
 ) -> Result<u64> {
     let aum_usd = math::checked_as_u64(ctx.accounts.pool.get_assets_under_management_usd(
-        AumCalcMode::EMA,
         ctx.remaining_accounts,
         ctx.accounts.perpetuals.get_time()?,
     )?)?;

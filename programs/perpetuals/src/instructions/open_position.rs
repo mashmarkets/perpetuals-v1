@@ -133,19 +133,9 @@ pub fn open_position<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
     )?;
 
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
-    )?;
-
-    let min_collateral_price = token_price.get_min_price(&token_ema_price)?;
-
-    let position_price = pool.get_entry_price(&token_price, &token_ema_price, custody)?;
+    let position_price = pool.get_entry_price(&token_price, custody)?;
     msg!("Entry price: {}", position_price);
 
     require_gte!(
@@ -160,8 +150,7 @@ pub fn open_position<'info>(
         exponent: -(Perpetuals::PRICE_DECIMALS as i32),
     };
     let size_usd = position_oracle_price.get_asset_amount_usd(params.size, custody.decimals)?;
-    let collateral_usd =
-        min_collateral_price.get_asset_amount_usd(params.collateral, custody.decimals)?;
+    let collateral_usd = token_price.get_asset_amount_usd(params.collateral, custody.decimals)?;
 
     let locked_amount = custody.get_locked_amount(params.size)?;
 
@@ -179,7 +168,7 @@ pub fn open_position<'info>(
         locked_amount,
         custody,
     )?;
-    let fee_amount_usd = token_ema_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
+    let fee_amount_usd = token_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
     msg!("Collected fee: {}", fee_amount);
 
     // compute amount to transfer
@@ -211,14 +200,7 @@ pub fn open_position<'info>(
         PerpetualsError::InsufficientAmountReturned
     );
     require!(
-        pool.check_leverage(
-            position,
-            &token_price,
-            &token_ema_price,
-            custody,
-            curtime,
-            true
-        )?,
+        pool.check_leverage(position, &token_price, custody, curtime, true)?,
         PerpetualsError::MaxLeverage
     );
 
@@ -254,7 +236,7 @@ pub fn open_position<'info>(
 
     custody.trade_stats.oi_long_usd = math::checked_add(custody.trade_stats.oi_long_usd, size_usd)?;
 
-    custody.add_position(position, &token_ema_price, curtime)?;
+    custody.add_position(position, &token_price, curtime)?;
     custody.update_borrow_rate(curtime)?;
 
     emit!(events::OpenPosition {

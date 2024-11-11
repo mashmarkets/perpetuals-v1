@@ -21,8 +21,8 @@ import { setIntervalAsync } from "set-interval-async/dynamic";
 
 import { env } from "./env.js";
 import { Perpetuals } from "./target/perpetuals.js";
-// @ts-ignore 
-import IDL from "./target/perpetuals.json" with { type: "json" }
+// @ts-ignore
+import IDL from "./target/perpetuals.json" with { type: "json" };
 import { getProgramIdFromUrl, notify, sleep } from "./utils.js";
 
 // Related to https://github.com/jhurliman/node-rate-limiter/issues/80
@@ -137,7 +137,6 @@ const parseCustody = (
       minInitialLeverage: fromBN(c.pricing.minInitialLeverage),
       tradeSpreadLong: fromBN(c.pricing.tradeSpreadLong),
       tradeSpreadShort: fromBN(c.pricing.tradeSpreadShort),
-      useEma: c.pricing.useEma,
       useUnrealizedPnlInAum: c.pricing.useUnrealizedPnlInAum,
     },
     tradeStats: {
@@ -365,7 +364,7 @@ async function main() {
       notify(`Found position to liquidate: ${position.address}`);
       try {
         await limiter.removeTokens(1);
-        const tx = await liquidate(program, position, custody)
+        const tx = await liquidate(program, position, custody);
         notify(`Liquidated position with tx: ${tx}`);
       } catch (error) {
         notify(

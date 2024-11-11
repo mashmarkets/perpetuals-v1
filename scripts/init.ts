@@ -93,7 +93,6 @@ async function createPool(
 
   // Figures are in BPS
   const pricingConfig: PricingParams = {
-    useEma: false, // Keep things simple for now
     useUnrealizedPnlInAum: true,
     tradeSpreadLong: new BN(10), // 0.1%
     tradeSpreadShort: new BN(10), // 0.1%

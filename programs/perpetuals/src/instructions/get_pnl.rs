@@ -71,25 +71,10 @@ pub fn get_pnl<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
-    )?;
-
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
     )?;
 
     // compute pnl
-    let (profit, loss, _) = pool.get_pnl_usd(
-        position,
-        &token_price,
-        &token_ema_price,
-        custody,
-        curtime,
-        false,
-    )?;
+    let (profit, loss, _) = pool.get_pnl_usd(position, &token_price, custody, curtime, false)?;
 
     Ok(ProfitAndLoss { profit, loss })
 }

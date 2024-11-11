@@ -63,7 +63,6 @@ pub struct Assets {
 
 #[derive(Copy, Clone, PartialEq, AnchorSerialize, AnchorDeserialize, Default, Debug)]
 pub struct PricingParams {
-    pub use_ema: bool,
     // whether to account for unrealized pnl in assets under management calculations
     pub use_unrealized_pnl_in_aum: bool,
     // pricing params have implied BPS_DECIMALS decimals (except ended with _usd)

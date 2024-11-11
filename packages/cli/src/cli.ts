@@ -68,7 +68,6 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
       };
 
       const pricingConfig: PricingParams = {
-        useEma: true,
         useUnrealizedPnlInAum: true,
         tradeSpreadLong: new BN(100),
         tradeSpreadShort: new BN(100),
@@ -300,14 +299,9 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .description("Read oracle price for the token")
     .argument("<string>", "Pool name")
     .argument("<pubkey>", "Token mint")
-    .option("-e, --ema", "Return EMA price")
-    .action(async (poolName, tokenMint, options) => {
+    .action(async (poolName, tokenMint) => {
       client.prettyPrint(
-        await client.getOraclePrice(
-          poolName,
-          new PublicKey(tokenMint),
-          options.ema,
-        ),
+        await client.getOraclePrice(poolName, new PublicKey(tokenMint)),
       );
     });
 
@@ -477,13 +471,11 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     .requiredOption("-p, --price <int>", "Current price as integer")
     .requiredOption("-e, --exponent <int>", "Price exponent")
     .requiredOption("-c, --confidence <int>", "Confidence")
-    .requiredOption("-m, --ema <int>", "EMA price as integer")
     .action(async (poolName, tokenMint, options) => {
       const priceConfig: SetCustomOraclePriceParams = {
         price: new BN(options.price),
         expo: options.exponent,
         conf: new BN(options.confidence),
-        ema: new BN(options.ema),
         publishTime: new BN(client.getTime()),
       };
       await client.setCustomOraclePrice(

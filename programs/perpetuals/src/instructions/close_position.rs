@@ -122,32 +122,18 @@ pub fn close_position<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
     )?;
 
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
-    )?;
-
-    let exit_price = pool.get_exit_price(&token_price, &token_ema_price, custody)?;
+    let exit_price = pool.get_exit_price(&token_price, custody)?;
     msg!("Exit price: {}", exit_price);
 
     require_gte!(exit_price, params.price, PerpetualsError::MaxPriceSlippage);
 
     msg!("Settle position");
-    let (transfer_amount, fee_amount, profit_usd, loss_usd) = pool.get_close_amount(
-        position,
-        &token_price,
-        &token_ema_price,
-        custody,
-        curtime,
-        false,
-    )?;
+    let (transfer_amount, fee_amount, profit_usd, loss_usd) =
+        pool.get_close_amount(position, &token_price, custody, curtime, false)?;
 
-    let fee_amount_usd = token_ema_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
+    let fee_amount_usd = token_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
 
     msg!("Net profit: {}, loss: {}", profit_usd, loss_usd);
     msg!("Collected fee: {}", fee_amount);

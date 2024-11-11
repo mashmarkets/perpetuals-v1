@@ -69,7 +69,7 @@ async fn position_liquidate() {
                         // Expressed in BPS, with BPS = 10_000
                         // 50_000 = x5, 100_000 = x10
                         max_leverage: 100_000,
-                        ..utils::fixtures::pricing_params_regular(false)
+                        ..utils::fixtures::pricing_params_regular()
                     }),
                     permissions: None,
                     fees: None,
@@ -140,7 +140,6 @@ async fn position_liquidate() {
                 price: utils::scale(1_350, ETH_DECIMALS),
                 expo: -(ETH_DECIMALS as i32),
                 conf: utils::scale(10, ETH_DECIMALS),
-                ema: utils::scale(1_350, ETH_DECIMALS),
                 publish_time,
             },
             &multisig_signers,

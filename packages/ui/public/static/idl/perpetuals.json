@@ -2263,10 +2263,6 @@
             "type": "u64"
           },
           {
-            "name": "ema",
-            "type": "u64"
-          },
-          {
             "name": "publish_time",
             "type": "i64"
           }
@@ -2420,12 +2416,7 @@
       "name": "GetOraclePriceParams",
       "type": {
         "kind": "struct",
-        "fields": [
-          {
-            "name": "ema",
-            "type": "bool"
-          }
-        ]
+        "fields": []
       }
     },
     {
@@ -2992,10 +2983,6 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "use_ema",
-            "type": "bool"
-          },
-          {
             "name": "use_unrealized_pnl_in_aum",
             "type": "bool"
           },
@@ -3174,10 +3161,6 @@
             "type": "u64"
           },
           {
-            "name": "ema",
-            "type": "u64"
-          },
-          {
             "name": "publish_time",
             "type": "i64"
           }
@@ -3203,10 +3186,6 @@
           },
           {
             "name": "conf",
-            "type": "u64"
-          },
-          {
-            "name": "ema",
             "type": "u64"
           },
           {

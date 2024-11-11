@@ -8,6 +8,7 @@ This protocol is a fork of the [Solana Perpetuals](https://github.com/solana-lab
 
 - Upgraded to Pyth V2 pull-style oracles
 - Push oracles are no longer supported by Pyth
+- Removed ability to use token ema price
 
 ### Simplified Pool Structure
 

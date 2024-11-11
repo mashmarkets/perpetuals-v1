@@ -65,7 +65,7 @@ async fn position_max_user_profit() {
                         // Expressed in BPS, with BPS = 10_000
                         // 2_500 = x0.25, 10_000 = x1, 50_000 = x5
                         max_payoff_mult: 2_500,
-                        ..utils::fixtures::pricing_params_regular(false)
+                        ..utils::fixtures::pricing_params_regular()
                     }),
                     permissions: None,
                     fees: None,
@@ -122,7 +122,6 @@ async fn position_max_user_profit() {
                 price: utils::scale(3_000, ETH_DECIMALS),
                 expo: -(ETH_DECIMALS as i32),
                 conf: utils::scale(10, ETH_DECIMALS),
-                ema: utils::scale(3_000, ETH_DECIMALS),
                 publish_time,
             },
             &multisig_signers,

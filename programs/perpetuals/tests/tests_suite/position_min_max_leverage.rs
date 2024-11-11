@@ -63,7 +63,7 @@ async fn position_min_max_leverage() {
                         max_leverage: 100_000,
                         min_initial_leverage: 10_000,
                         max_initial_leverage: 100_000,
-                        ..utils::fixtures::pricing_params_regular(false)
+                        ..utils::fixtures::pricing_params_regular()
                     }),
                     permissions: None,
                     fees: None,

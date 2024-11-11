@@ -245,7 +245,6 @@ export async function addCustody(
         maxPriceError: new BN(params.oracle.maxPriceError.toString()),
       },
       pricing: {
-        useEma: params.pricing.useEma,
         useUnrealizedPnlInAum: params.pricing.useUnrealizedPnlInAum,
         tradeSpreadLong: new BN(params.pricing.tradeSpreadLong.toString()),
         tradeSpreadShort: new BN(params.pricing.tradeSpreadShort.toString()),
@@ -475,7 +474,6 @@ export async function addPoolAndCustody(
         maxPriceError: new BN(params.oracle.maxPriceError.toString()),
       },
       pricing: {
-        useEma: params.pricing.useEma,
         useUnrealizedPnlInAum: params.pricing.useUnrealizedPnlInAum,
         tradeSpreadLong: new BN(params.pricing.tradeSpreadLong.toString()),
         tradeSpreadShort: new BN(params.pricing.tradeSpreadShort.toString()),

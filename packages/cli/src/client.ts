@@ -667,12 +667,9 @@ export class PerpetualsClient {
   getOraclePrice = async (
     poolName: string,
     tokenMint: PublicKey,
-    ema: boolean,
   ): Promise<BN> => {
     return this.program.methods
-      .getOraclePrice({
-        ema,
-      })
+      .getOraclePrice({})
       .accounts({
         perpetuals: this.perpetuals.publicKey,
         pool: this.getPoolKey(poolName),

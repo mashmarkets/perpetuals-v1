@@ -115,21 +115,10 @@ pub fn add_collateral<'info>(
         &ctx.accounts.custody_oracle_account.to_account_info(),
         &custody.oracle,
         curtime,
-        false,
     )?;
-
-    let token_ema_price = OraclePrice::new_from_oracle(
-        &ctx.accounts.custody_oracle_account.to_account_info(),
-        &custody.oracle,
-        curtime,
-        custody.pricing.use_ema,
-    )?;
-
-    let min_collateral_price = token_price.get_min_price(&token_ema_price)?;
 
     // compute amount to transfer
-    let collateral_usd =
-        min_collateral_price.get_asset_amount_usd(params.collateral, custody.decimals)?;
+    let collateral_usd = token_price.get_asset_amount_usd(params.collateral, custody.decimals)?;
     msg!("Amount in: {}", params.collateral);
     msg!("Collateral added in USD: {}", collateral_usd);
 
@@ -142,14 +131,7 @@ pub fn add_collateral<'info>(
     // check position risk
     msg!("Check position risks");
     require!(
-        pool.check_leverage(
-            position,
-            &token_price,
-            &token_ema_price,
-            custody,
-            curtime,
-            true
-        )?,
+        pool.check_leverage(position, &token_price, custody, curtime, true)?,
         PerpetualsError::MaxLeverage
     );
 
