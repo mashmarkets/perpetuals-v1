@@ -40,7 +40,7 @@ export function TradeDetails(props: Props) {
         {[
           {
             label: "Collateral in",
-            value: "USD",
+            value: getTokenSymbol(props.collateralToken),
           },
           {
             label: "Entry Price",
@@ -51,7 +51,7 @@ export function TradeDetails(props: Props) {
             value: `${formatPrice(props.liquidationPrice)}`,
           },
           {
-            label: "Fees",
+            label: "Entry Fees",
             value: `${props.fees} ${symbol}`,
           },
           {

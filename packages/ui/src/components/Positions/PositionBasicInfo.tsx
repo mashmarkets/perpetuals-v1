@@ -32,11 +32,9 @@ const getPositionLeverage = (
 
   const size = Number(position.sizeUsd);
   const collateral = Number(position.collateralUsd);
-  const slippage = Number(custody.pricing.tradeSpreadShort) / BPS_POWER;
   const fees = Number(custody.fees.closePosition) / BPS_POWER;
-  // TODO:- This is wrong - slippage acts on mark price
-  const margin = collateral - slippage * size - fees * collateral;
 
+  const margin = collateral - size * fees;
   return size / margin;
 };
 

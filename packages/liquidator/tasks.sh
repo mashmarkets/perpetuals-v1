@@ -11,6 +11,11 @@ function push {
   docker push $IMAGE:latest
 }
 
+function deploy {
+  build
+  push
+}
+
 function run {
   # Load .env file
   source .env

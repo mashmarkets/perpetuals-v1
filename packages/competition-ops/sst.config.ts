@@ -12,7 +12,7 @@ export default $config({
       throw new Error("PRIVATE_KEY is not set");
     }
     new sst.aws.Cron("CompetitionRotate", {
-      schedule: "cron(0/10 * * * ? *)", // Every 10 minutes
+      schedule: "cron(*/20 * * * ? *)", // Every 10 minutes
       job: {
         runtime: "nodejs20.x",
         handler: "src/index.handler",
@@ -21,6 +21,7 @@ export default $config({
         live: false,
         environment: {
           PRIVATE_KEY: process.env.PRIVATE_KEY,
+          HEALTHCHECKS_URL: process.env.HEALTHCHECKS_URL,
         },
         nodejs: {
           format: "cjs",

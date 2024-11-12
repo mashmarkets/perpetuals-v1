@@ -89,7 +89,7 @@ export function TradePosition({
 
   const positionToken = mint;
   const [lastChanged, setLastChanged] = useState<Input>(Input.Pay);
-  const [payAmount, setPayAmount] = useState(1);
+  const [payAmount, setPayAmount] = useState(100);
   const [positionAmount, setPositionAmount] = useState(0);
 
   const { data: price } = usePrice(positionToken);
@@ -97,7 +97,7 @@ export function TradePosition({
   const { decimals } = getTokenInfo(mint);
   const payDecimals = getTokenInfo(payToken).decimals;
 
-  const collateralAmount = price ? (payAmount / price) * 0.995 : 0;
+  const collateralAmount = price ? payAmount / price : 0;
   const params = {
     collateral: BigInt(Math.round(collateralAmount * 10 ** decimals)),
     mint: positionToken,
@@ -109,12 +109,13 @@ export function TradePosition({
   };
   const { data: estimate } = useEntryEstimate(params);
 
-  const priceSlippage = custody
-    ? (Number(
-        custody.pricing.tradeSpreadShort + custody.pricing.tradeSpreadLong,
-      ) +
-        1) /
-      BPS_POWER
+  const fees = custody
+    ? Number(
+        custody.pricing.tradeSpreadShort +
+          custody.pricing.tradeSpreadLong +
+          custody.fees.openPosition +
+          custody.fees.closePosition,
+      ) / BPS_POWER
     : 0;
 
   const payTokenBalance = balance
@@ -233,14 +234,12 @@ export function TradePosition({
       /> */}
       <LeverageSlider
         className="mt-6"
-        value={
-          positionAmount / (collateralAmount - priceSlippage * positionAmount)
-        }
+        value={positionAmount / (collateralAmount - fees * positionAmount)}
         minLeverage={Number(custody.pricing.minInitialLeverage) / 10000}
         maxLeverage={Number(custody.pricing.maxInitialLeverage) / 10000}
         onChange={(l) => {
           if (lastChanged === Input.Pay) {
-            setPositionAmount((l * collateralAmount) / (1 + priceSlippage * l));
+            setPositionAmount((l * collateralAmount) / (1 + fees * l));
           } else {
             setPayAmount((positionAmount / l) * price);
           }
@@ -299,7 +298,7 @@ export function TradePosition({
           "pt-4",
           "px-4",
         )}
-        collateralToken={payToken!}
+        collateralToken={positionToken!}
         positionToken={positionToken!}
         entryPrice={Number(estimate?.entryPrice ?? 0) / PRICE_POWER}
         liquidationPrice={Number(estimate?.liquidationPrice ?? 0) / PRICE_POWER}

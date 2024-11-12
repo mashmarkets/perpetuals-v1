@@ -1,3 +1,4 @@
+import https from "https";
 import { AnchorProvider, Wallet } from "@coral-xyz/anchor";
 import { Connection, Keypair } from "@solana/web3.js";
 
@@ -5,16 +6,17 @@ import { competitionEnd, competitionStart } from "./competition";
 import { createFaucetProgram } from "./faucet";
 import { createPerpetualsProgram } from "./perpetuals";
 
+const durationMinutes = 20;
 const getCurrentEpoch = (now: Date) => {
   const epoch = new Date(now);
   let minutes = epoch.getUTCMinutes();
-  minutes = minutes - (minutes % 10);
+  minutes = minutes - (minutes % durationMinutes);
   epoch.setMinutes(minutes, 0, 0);
   return epoch;
 };
 
 const getNextEpoch = (d: Date) => {
-  return new Date(d.getTime() + 1000 * 60 * 10);
+  return new Date(d.getTime() + 1000 * 60 * durationMinutes);
 };
 
 export const handler = async () => {
@@ -48,6 +50,10 @@ export const handler = async () => {
 
   // Start next competition
   await competitionStart({ faucet }, { epoch: next });
+
+  if (process.env.HEALTHCHECKS_URL) {
+    await https.get(process.env.HEALTHCHECKS_URL);
+  }
 };
 
 // handler();

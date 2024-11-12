@@ -27,7 +27,7 @@ interface Token {
   };
 }
 
-const min = 10;
+const min = 20;
 const delta = min * 60 * 1000;
 
 const getEpoch = () => {
