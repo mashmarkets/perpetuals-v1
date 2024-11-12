@@ -1,10 +1,8 @@
 import { AnchorProvider, BN } from "@coral-xyz/anchor";
-import { getPriceFeedAccountForProgram } from "@pythnetwork/pyth-solana-receiver";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { PublicKey } from "@solana/web3.js";
 import axios from "axios";
 
 import { PerpetualsClient } from "../packages/cli/src/client.js";
@@ -14,33 +12,11 @@ import {
   mintCreate,
   oracleAdd,
 } from "../packages/cli/src/faucet.js";
-import {
-  BorrowRateParams,
-  Fees,
-  OracleParams,
-  Permissions,
-  PricingParams,
-} from "../packages/cli/src/types.js";
 import { sleep } from "../packages/liquidator/src/utils.js";
 import { universe } from "../packages/ui/src/lib/universe.js";
+import { getCustodyParam, tradeableTokens } from "./config.js";
 
 const epoch = BigInt(0);
-interface Token {
-  address: string;
-  symbol: string;
-  decimals: number;
-  extensions: {
-    coingeckoId: string;
-    feedId: string;
-  };
-}
-const tokens = universe.reduce(
-  (acc, curr) => {
-    acc[curr.symbol] = curr;
-    return acc;
-  },
-  {} as Record<string, Token>,
-);
 
 function roundToOneSignificantFigure(num: number): number {
   if (num === 0) return 0; // Handle the case for 0 separately
@@ -72,92 +48,14 @@ const getPrices = async () => {
   );
 };
 
-async function createPool(
-  client: PerpetualsClient,
-  token: Token,
-  amount: BigInt,
-) {
-  const poolName = token.symbol.toUpperCase();
-  await client
-    .addPool(poolName)
-    .then((sig) => console.log(`Pool ${poolName} added: `, sig));
+const getInitialSeedUsd = (s: string) => {
+  const symbol = s.toUpperCase();
+  if (symbol === "GOFX" || symbol === "SAMO") {
+    return 5_000_000;
+  }
 
-  const oracle = getPriceFeedAccountForProgram(0, token.extensions.feedId);
-  const oracleConfig: OracleParams = {
-    maxPriceError: new BN(10_000), //u64 Max Price
-    maxPriceAgeSec: 600, // 10 minutes. Seems we are using some old pyth oracles that often go stale
-    oracleType: { ["pyth"]: {} }, // None, custom, pyth
-    oracleAccount: oracle,
-    oracleAuthority: PublicKey.default, // By default, permissionless oracle price update is not allowed. Pubkey allowed to sign permissionless off-chain price updates
-  };
-
-  // Figures are in BPS
-  const pricingConfig: PricingParams = {
-    useUnrealizedPnlInAum: true,
-    tradeSpreadLong: new BN(10), // 0.1%
-    tradeSpreadShort: new BN(10), // 0.1%
-    minInitialLeverage: new BN(1_000_000), // 100x
-    maxInitialLeverage: new BN(10_000_000), // 1000x
-    maxLeverage: new BN(10_000_000), // 1000x
-    maxPayoffMult: new BN(10_000), // 100%
-    maxUtilization: new BN(10_000), // 100%
-    maxPositionLockedUsd: new BN(0), // No limit
-    maxTotalLockedUsd: new BN(0), // No limit
-  };
-  const permissions: Permissions = {
-    allowAddLiquidity: true,
-    allowRemoveLiquidity: true,
-    allowOpenPosition: true,
-    allowClosePosition: true,
-    allowPnlWithdrawal: true,
-    allowCollateralWithdrawal: true,
-    allowSizeChange: true,
-  };
-  const fees: Fees = {
-    utilizationMult: new BN(0), // 0%
-    addLiquidity: new BN(0), // 0%
-    removeLiquidity: new BN(0), // 0
-    openPosition: new BN(0), // 0%
-    closePosition: new BN(0), // 0%
-    liquidation: new BN(0), // 0%
-    protocolShare: new BN(0), // 0%
-  };
-
-  const borrowRate: BorrowRateParams = {
-    baseRate: new BN(0),
-    slope1: new BN(80_000), // 0.008%
-    slope2: new BN(120_000),
-    optimalUtilization: new BN(800_000_000), // 80%
-  };
-
-  const mint = findFaucetMint(token.address, epoch);
-  await client
-    .addCustody(
-      poolName,
-      mint,
-      oracleConfig,
-      pricingConfig,
-      permissions,
-      fees,
-      borrowRate,
-    )
-    .then((sig) => console.log(`Custody for ${poolName} added: `, sig));
-
-  const payer = client.program.provider.publicKey!;
-
-  const lpMint = client.getPoolLpTokenKey(poolName);
-  await client
-    .addLiquidity(poolName, mint, new BN(amount.toString()), new BN(0), [
-      createAssociatedTokenAccountIdempotentInstruction(
-        payer,
-        getAssociatedTokenAddressSync(lpMint, payer),
-        payer,
-        lpMint,
-      ),
-    ])
-    .then((sig) => console.log(`Liquidity added for ${poolName}: `, sig));
-}
-
+  return 100_000_000;
+};
 async function main() {
   const KEY = process.env.PRIVATE_KEY;
 
@@ -168,11 +66,10 @@ async function main() {
     preflightCommitment: "confirmed",
   });
   const faucet = createFaucetProgram(provider);
-  const perpetuals = new PerpetualsClient("https://api.devnet.solana.com", KEY);
-
-  const USDC = Object.values(tokens).find(
-    (x) => x.address === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
-  )!;
+  const perpetuals = new PerpetualsClient(
+    "https://api.devnet.solana.com",
+    KEY!,
+  );
 
   // Initialize the protocol
   await perpetuals
@@ -194,24 +91,27 @@ async function main() {
 
   const prices = await getPrices();
 
-  // Create pools
-  const pools = Object.values(tokens)
-    .filter((x) => !x.symbol.startsWith("US"))
-    .sort((a, b) => a.address.localeCompare(b.address));
-
-  for (let i = 0; i < pools.length; i++) {
-    const token = pools[i];
+  for (let i = 0; i < tradeableTokens.length; i++) {
+    // for (let i of [23]) {
+    const token = tradeableTokens[i];
     await sleep(1000); // Avoid 429
-    console.log(`\n [${i} ${token.symbol}] Setting up trading`);
+    console.log(`\n[${i} ${token.symbol}] Setting up trading`);
+
+    const poolName = token.symbol.toUpperCase();
+    const mint = findFaucetMint(token.address, epoch);
+    const custodyParams = getCustodyParam(token.symbol);
+    const payer = perpetuals.program.provider.publicKey!;
+    const lpMint = perpetuals.getPoolLpTokenKey(poolName);
+    const usd = getInitialSeedUsd(token.symbol);
+
     const amount = BigInt(
       roundToOneSignificantFigure(
-        (100_000_000 * 10 ** token.decimals) / prices[token.address],
+        (usd * 10 ** token.decimals) / prices[token.address],
       ),
     );
 
-    // console.log(`[${token.symbol}] Price ${prices[token.address]}`);
     if (amount > BigInt("18446744073709551615")) {
-      console.log(`[${token.symbol}] Trying to create more than supply`);
+      console.log(`  Trying to create more than supply`);
       continue;
     }
 
@@ -220,7 +120,7 @@ async function main() {
       maxPriceAgeSec: BigInt(600),
       feedId: token.extensions.feedId,
     }).then((sig) =>
-      console.log(`Added oracle for ${token.symbol} to faucet: ${sig}`),
+      console.log(`  Added oracle for ${token.symbol} to faucet: ${sig}`),
     );
 
     await mintCreate(faucet, {
@@ -229,10 +129,35 @@ async function main() {
       decimals: token.decimals,
       amount,
     }).then((sig) =>
-      console.log(`Created mint for ${token.symbol} in faucet: ${sig}`),
+      console.log(`  Created mint for ${token.symbol} in faucet: ${sig}`),
     );
 
-    await createPool(perpetuals, token, amount);
+    await perpetuals
+      .addPool(poolName)
+      .then((sig) => console.log(`  Pool ${poolName} added: `, sig));
+
+    await perpetuals
+      .addCustody(
+        poolName,
+        mint,
+        custodyParams.oracle,
+        custodyParams.pricing,
+        custodyParams.permissions,
+        custodyParams.fees,
+        custodyParams.borrowRate,
+      )
+      .then((sig) => console.log(`  Custody for ${poolName} added: `, sig));
+
+    await perpetuals
+      .addLiquidity(poolName, mint, new BN(amount.toString()), new BN(0), [
+        createAssociatedTokenAccountIdempotentInstruction(
+          payer,
+          getAssociatedTokenAddressSync(lpMint, payer),
+          payer,
+          lpMint,
+        ),
+      ])
+      .then((sig) => console.log(`  Liquidity added for ${poolName}: `, sig));
   }
 }
 

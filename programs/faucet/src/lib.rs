@@ -5,7 +5,7 @@ pub mod error;
 pub mod instructions;
 pub mod state;
 
-declare_id!("5g5d84Tbp4qqHDUZ7UrCU7t8pgNnxmdhhfAKiqBaHMkS");
+declare_id!("3TkyhpJ9zhUmZ8Ao3269g7Rwz2N4ZumgnGAp3TwZjdhT");
 
 #[program]
 pub mod faucet {

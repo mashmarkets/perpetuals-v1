@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/faucet.json`.
  */
 export type Faucet = {
-  "address": "5g5d84Tbp4qqHDUZ7UrCU7t8pgNnxmdhhfAKiqBaHMkS",
+  "address": "3TkyhpJ9zhUmZ8Ao3269g7Rwz2N4ZumgnGAp3TwZjdhT",
   "metadata": {
     "name": "faucet",
     "version": "0.1.0",

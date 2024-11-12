@@ -7,12 +7,12 @@ resolution = false
 skip-lint = false
 
 [programs.devnet]
-faucet = "5g5d84Tbp4qqHDUZ7UrCU7t8pgNnxmdhhfAKiqBaHMkS"
-perpetuals = "GmU79uB4Z78rZEooejYtJWgQr28wWCoAcaf9Uc7cyWfw"
+faucet = "3TkyhpJ9zhUmZ8Ao3269g7Rwz2N4ZumgnGAp3TwZjdhT"
+perpetuals = "BYebp9bdeK45oNLKxpacWJYq9Fy3TSzNN3Yn3iRaxtam"
 
 [programs.localnet]
-faucet = "5g5d84Tbp4qqHDUZ7UrCU7t8pgNnxmdhhfAKiqBaHMkS"
-perpetuals = "GmU79uB4Z78rZEooejYtJWgQr28wWCoAcaf9Uc7cyWfw"
+faucet = "3TkyhpJ9zhUmZ8Ao3269g7Rwz2N4ZumgnGAp3TwZjdhT"
+perpetuals = "BYebp9bdeK45oNLKxpacWJYq9Fy3TSzNN3Yn3iRaxtam"
 
 [registry]
 url = "https://api.apr.dev"

@@ -449,7 +449,7 @@ export class PerpetualsClient {
       })
       .signers([this.admin])
       .rpc()
-      .then((tx) => console.log("Custody init: ", tx));
+      .then((tx) => console.log("  Custody init: ", tx));
 
     return await this.program.methods
       .addCustody({
