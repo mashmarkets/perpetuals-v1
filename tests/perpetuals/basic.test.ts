@@ -10,7 +10,12 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
-import { BanksTransactionMeta, Clock, startAnchor } from "solana-bankrun";
+import {
+  BanksTransactionMeta,
+  BanksTransactionResultWithMeta,
+  Clock,
+  startAnchor,
+} from "solana-bankrun";
 
 import IDL from "../../target/idl/perpetuals.json";
 import { Perpetuals } from "../../target/types/perpetuals.js";
@@ -40,6 +45,7 @@ const simplify = (x: unknown): any => {
 
   return x;
 };
+
 describe("perpetuals", async () => {
   const context = await startAnchor(".", [], []);
   const provider = new BankrunProvider(context);
@@ -63,12 +69,39 @@ describe("perpetuals", async () => {
     transaction.sign([context.payer]);
     return await context.banksClient.processTransaction(transaction);
   };
+  const simulateInstruction = async (ix: TransactionInstruction) => {
+    const recentBlockhash =
+      (await context.banksClient.getLatestBlockhash())![0];
+
+    const transaction = new VersionedTransaction(
+      new TransactionMessage({
+        payerKey: program.provider.publicKey!,
+        recentBlockhash,
+        instructions: [ix],
+      }).compileToV0Message(),
+    );
+
+    transaction.sign([context.payer]);
+    return await context.banksClient.simulateTransaction(transaction);
+  };
 
   const getEvents = async (result: BanksTransactionMeta): Promise<Event[]> => {
     const coder = new anchor.EventParser(program.programId, program.coder);
     const events = await coder.parseLogs(result.logMessages ?? []);
     // Convert generator to array
     return Array.from(events);
+  };
+
+  const parseResultFromLogs = (
+    typeName: string,
+    result: BanksTransactionResultWithMeta,
+  ) => {
+    const prefix = `Program return: ${program.programId.toString()} `;
+    const returnData = result.meta?.logMessages.filter((x) =>
+      x.startsWith(prefix),
+    );
+    const data = returnData?.map((x) => x.slice(prefix.length))[0];
+    return program.coder.types.decode(typeName, Buffer.from(data!, "base64"));
   };
 
   let tc: TestClient;
@@ -100,7 +133,6 @@ describe("perpetuals", async () => {
       );
     };
     await setClock(0);
-    console.log("=== Fixtured done");
     await tc.init();
 
     // await expect(tc.init()).rejects.toThrow("already in use");
@@ -622,6 +654,31 @@ describe("perpetuals", async () => {
     };
 
     expect(JSON.stringify(position)).to.equal(JSON.stringify(positionExpected));
+  });
+
+  it("getPosition", async () => {
+    const ix = await program.methods
+      .getPosition({})
+      .accounts({
+        perpetuals: tc.perpetuals.publicKey,
+        pool: tc.pool.publicKey,
+        position: tc.users[0].positionAccountsLong[0],
+        custody: tc.custodies[0].custody,
+        custodyOracleAccount: tc.custodies[0].oracleAccount,
+      })
+      .instruction();
+    const result = await simulateInstruction(ix);
+    expect(
+      simplify(parseResultFromLogs("getPositionResult", result)),
+    ).toStrictEqual({
+      leverage: BigInt("89573"),
+      liquidationPrice: BigInt("109143171429"),
+      liquidationState: false,
+      loss: BigInt("25916100000"),
+      markPrice: BigInt("123000"),
+      margin: BigInt("895"),
+      profit: BigInt("0"),
+    });
   });
 
   it("addCollateral", async () => {

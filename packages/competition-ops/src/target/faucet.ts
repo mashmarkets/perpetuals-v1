@@ -601,6 +601,9 @@ export type Faucet = {
         "fields": [
           {
             "name": "feedId",
+            "docs": [
+              "`FeedId` but avoid the type alias because of compatibility issues with Anchor's `idl-build` feature."
+            ],
             "type": {
               "array": [
                 "u8",

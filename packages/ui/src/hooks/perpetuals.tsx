@@ -8,7 +8,7 @@ import {
   getAddLiquidityAmountAndFee,
   getAssetsUnderManagement,
   getLiquidationPrice,
-  getPnl,
+  getPosition,
   getRemoveLiquidityAmountAndFee,
 } from "@/actions/perpetuals";
 import { Perpetuals } from "@/target/perpetuals";
@@ -527,15 +527,16 @@ export const useGetLiquidationPrice = ({
   });
 };
 
-export const useGetPnl = (position: Position | undefined) => {
+export const useGetPosition = (position: Position | undefined) => {
   const program = useWritePerpetualsProgram();
   const { data: custody } = useCustody(position?.custody);
 
   return useQuery({
-    queryKey: ["getPnl", position?.address.toString()],
+    queryKey: ["getPosition", position?.address.toString()],
     refetchInterval: 5 * 1000,
     enabled: !!program && !!position && !!custody,
-    queryFn: () => getPnl(program!, { position: position!, custody: custody! }),
+    queryFn: () =>
+      getPosition(program!, { position: position!, custody: custody! }),
   });
 };
 

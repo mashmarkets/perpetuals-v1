@@ -264,22 +264,6 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     });
 
   program
-    .command("get-liquidation-state")
-    .description("Get liquidation state of the position")
-    .argument("<pubkey>", "User wallet")
-    .argument("<string>", "Pool name")
-    .argument("<pubkey>", "Token mint")
-    .action(async (wallet, poolName, tokenMint) => {
-      client.prettyPrint(
-        await client.getLiquidationState(
-          new PublicKey(wallet),
-          poolName,
-          new PublicKey(tokenMint),
-        ),
-      );
-    });
-
-  program
     .command("get-lp-token-mint")
     .description("Get LP token mint address for the pool")
     .argument("<string>", "Pool name")
@@ -313,14 +297,14 @@ function initClient(clusterUrl: string, adminKeyPath: string): void {
     });
 
   program
-    .command("get-pnl")
-    .description("Compute PnL of the position")
+    .command("get-position")
+    .description("Get live position details")
     .argument("<pubkey>", "User wallet")
     .argument("<string>", "Pool name")
     .argument("<pubkey>", "Token mint")
     .action(async (wallet, poolName, tokenMint) => {
       client.prettyPrint(
-        await client.getPnl(
+        await client.getPosition(
           new PublicKey(wallet),
           poolName,
           new PublicKey(tokenMint),

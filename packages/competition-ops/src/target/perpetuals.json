@@ -656,47 +656,6 @@
       "returns": "u64"
     },
     {
-      "name": "get_liquidation_state",
-      "discriminator": [
-        127,
-        126,
-        199,
-        117,
-        90,
-        89,
-        29,
-        50
-      ],
-      "accounts": [
-        {
-          "name": "perpetuals"
-        },
-        {
-          "name": "pool"
-        },
-        {
-          "name": "position"
-        },
-        {
-          "name": "custody"
-        },
-        {
-          "name": "custody_oracle_account"
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": {
-              "name": "GetLiquidationStateParams"
-            }
-          }
-        }
-      ],
-      "returns": "u8"
-    },
-    {
       "name": "get_lp_token_price",
       "discriminator": [
         71,
@@ -770,16 +729,16 @@
       "returns": "u64"
     },
     {
-      "name": "get_pnl",
+      "name": "get_position",
       "discriminator": [
-        106,
-        212,
-        3,
-        250,
-        195,
-        224,
-        64,
-        160
+        180,
+        163,
+        144,
+        54,
+        113,
+        248,
+        101,
+        122
       ],
       "accounts": [
         {
@@ -803,14 +762,14 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "GetPnlParams"
+              "name": "GetPositionParams"
             }
           }
         }
       ],
       "returns": {
         "defined": {
-          "name": "ProfitAndLoss"
+          "name": "GetPositionResult"
         }
       }
     },
@@ -2399,13 +2358,6 @@
       }
     },
     {
-      "name": "GetLiquidationStateParams",
-      "type": {
-        "kind": "struct",
-        "fields": []
-      }
-    },
-    {
       "name": "GetLpTokenPriceParams",
       "type": {
         "kind": "struct",
@@ -2420,10 +2372,46 @@
       }
     },
     {
-      "name": "GetPnlParams",
+      "name": "GetPositionParams",
       "type": {
         "kind": "struct",
         "fields": []
+      }
+    },
+    {
+      "name": "GetPositionResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "profit",
+            "type": "u64"
+          },
+          {
+            "name": "loss",
+            "type": "u64"
+          },
+          {
+            "name": "liquidation_price",
+            "type": "u64"
+          },
+          {
+            "name": "liquidation_state",
+            "type": "bool"
+          },
+          {
+            "name": "mark_price",
+            "type": "u64"
+          },
+          {
+            "name": "leverage",
+            "type": "u64"
+          },
+          {
+            "name": "margin",
+            "type": "u64"
+          }
+        ]
       }
     },
     {
@@ -3020,22 +3008,6 @@
           },
           {
             "name": "max_total_locked_usd",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "ProfitAndLoss",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "profit",
-            "type": "u64"
-          },
-          {
-            "name": "loss",
             "type": "u64"
           }
         ]

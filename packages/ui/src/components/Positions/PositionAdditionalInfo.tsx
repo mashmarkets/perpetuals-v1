@@ -8,12 +8,7 @@ import { closePositionWithSwap } from "@/actions/perpetuals";
 import { PositionValueDelta } from "@/components/Positions/PositionValueDelta";
 import { SolidButton } from "@/components/ui/SolidButton";
 import { useCompetitionMint, useCurrentEpoch } from "@/hooks/competition";
-import {
-  useCustody,
-  useGetLiquidationPrice,
-  useGetPnl,
-  usePosition,
-} from "@/hooks/perpetuals";
+import { useCustody, useGetPosition, usePosition } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/pyth";
 import {
   useWriteFaucetProgram,
@@ -36,8 +31,7 @@ export function PositionAdditionalInfo({
   const receiveMint = useCompetitionMint();
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
-  const { data: liquidationPrice } = useGetLiquidationPrice({ position });
-  const { data: pnl } = useGetPnl(position);
+  const { data: getPosition } = useGetPosition(position);
 
   const mint = custody?.mint;
   const { data: price } = usePrice(mint);
@@ -135,12 +129,14 @@ export function PositionAdditionalInfo({
         </div>
         <div>
           <div className="text-xs text-zinc-500">PnL</div>
-          {position && pnl ? (
+          {position && getPosition ? (
             <PositionValueDelta
               className="mt-0.5"
-              valueDelta={Number(pnl.profit - pnl.loss) / USD_POWER}
+              valueDelta={
+                Number(getPosition.profit - getPosition.loss) / USD_POWER
+              }
               valueDeltaPercentage={
-                (Number(pnl.profit - pnl.loss) /
+                (Number(getPosition.profit - getPosition.loss) /
                   Number(position.collateralUsd)) *
                 100
               }
@@ -173,8 +169,10 @@ export function PositionAdditionalInfo({
         <div>
           <div className="text-xs text-zinc-500">Liq. Threshold</div>
           <div className="mt-1 text-sm text-white">
-            {price && liquidationPrice
-              ? formatPrice(price - Number(liquidationPrice) / PRICE_POWER)
+            {price && getPosition
+              ? formatPrice(
+                  price - Number(getPosition.liquidationPrice) / PRICE_POWER,
+                )
               : "-"}
             {/* // props.position.side === Side.Long // ? price.currentPrice -
             props.liqPrice // : props.liqPrice - price.currentPrice, */}

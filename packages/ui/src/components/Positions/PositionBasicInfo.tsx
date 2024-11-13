@@ -8,35 +8,12 @@ import { twMerge } from "tailwind-merge";
 
 import { CollateralModal } from "@/components/CollateralModal";
 import { PositionColumn } from "@/components/Positions/PositionColumn";
-import {
-  Custody,
-  Position,
-  useCustody,
-  useGetLiquidationPrice,
-  useGetPnl,
-  usePosition,
-} from "@/hooks/perpetuals";
+import { useCustody, useGetPosition, usePosition } from "@/hooks/perpetuals";
 import { usePrice } from "@/hooks/pyth";
 import { useGetTokenInfo } from "@/hooks/token";
 import { BPS_POWER, PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
 import { ACCOUNT_URL } from "@/utils/TransactionHandlers";
-
-const getPositionLeverage = (
-  position: Position | undefined,
-  custody: Custody | undefined,
-) => {
-  if (!position || !custody) {
-    return undefined;
-  }
-
-  const size = Number(position.sizeUsd);
-  const collateral = Number(position.collateralUsd);
-  const fees = Number(custody.fees.closePosition) / BPS_POWER;
-
-  const margin = collateral - size * fees;
-  return size / margin;
-};
 
 export default function PositionBasicInfo({
   className,
@@ -52,18 +29,14 @@ export default function PositionBasicInfo({
   const { getTokenLabel, getTokenSymbol, getTokenIcon } = useGetTokenInfo();
   const { data: position } = usePosition(positionAddress);
   const { data: custody } = useCustody(position?.custody);
-  const { data: liquidationPrice } = useGetLiquidationPrice({ position });
-  const { data: pnl } = useGetPnl(position);
+  const { data: getPosition } = useGetPosition(position);
 
   const mint = custody?.mint;
-  const { data: price } = usePrice(mint);
   const tokenIcon = getTokenIcon(mint);
 
-  const leverage = getPositionLeverage(position, custody);
-
   const netValue =
-    position && pnl
-      ? position.collateralUsd + pnl.profit - pnl.loss
+    position && getPosition
+      ? position.collateralUsd + getPosition.profit - getPosition.loss
       : undefined;
 
   return (
@@ -97,7 +70,10 @@ export default function PositionBasicInfo({
       </PositionColumn>
       <PositionColumn num={2}>
         <div className="text-sm text-white">
-          {leverage ? leverage.toFixed(3) : "-"}x
+          {getPosition
+            ? (Number(getPosition.leverage) / BPS_POWER).toFixed(3)
+            : "-"}
+          x
         </div>
         <div
           className={twMerge(
@@ -153,14 +129,16 @@ export default function PositionBasicInfo({
           {position ? formatPrice(Number(position.price) / PRICE_POWER) : "-"}
         </div>
         <div className="text-sm text-slate-400">
-          {price ? formatPrice(price) : "-"}
+          {getPosition
+            ? formatPrice(Number(getPosition.markPrice) / PRICE_POWER)
+            : "-"}
         </div>
       </PositionColumn>
       <PositionColumn num={7}>
         <div className="flex items-center justify-between pr-2">
           <div className="text-sm text-white">
-            {liquidationPrice
-              ? formatPrice(Number(liquidationPrice) / PRICE_POWER)
+            {getPosition
+              ? formatPrice(Number(getPosition.liquidationPrice) / PRICE_POWER)
               : "-"}
           </div>
           {position && (

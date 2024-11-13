@@ -29,6 +29,8 @@ import IDL from "@/target/perpetuals.json";
 import { sendInstructions } from "./connection";
 import { epochToBN, findFaucetAddressSync } from "./faucet";
 
+console.log("Perpetuals Program ID: ", IDL.address);
+
 // HACK: While we fix permissions in contract, add the admin key as signer
 export const ADMIN_KEY = Keypair.fromSecretKey(
   Uint8Array.from([
@@ -955,45 +957,6 @@ export const getRemoveLiquidityAmountAndFee = async (
   };
 };
 
-export const getPnl = async (
-  program: Program<Perpetuals>,
-  {
-    position,
-    custody,
-  }: {
-    position: Position;
-    custody: Custody;
-  },
-) => {
-  const instruction = await program.methods
-    .getPnl({})
-    .accounts({
-      perpetuals,
-      pool: position.pool,
-      position: position.address,
-      custody: position.custody,
-      custodyOracleAccount: custody.oracle.oracleAccount,
-    })
-    .instruction();
-
-  const estimate = await getParsedSimulationResult<{
-    profit: BN;
-    loss: BN;
-  }>(program, instruction, "get_pnl");
-
-  if (estimate === undefined) {
-    return {
-      profit: BigInt(0),
-      loss: BigInt(0),
-    };
-  }
-
-  return {
-    profit: BigInt(estimate.profit.toString()),
-    loss: BigInt(estimate.loss.toString()),
-  };
-};
-
 export async function removeCollateral(
   programs: {
     perpetuals: Program<Perpetuals>;
@@ -1263,4 +1226,58 @@ export const getAssetsUnderManagement = async (
   }
 
   return BigInt(new BN(Buffer.from(data, "base64"), 10, "le").toString());
+};
+
+export const getPosition = async (
+  program: Program<Perpetuals>,
+  {
+    position,
+    custody,
+  }: {
+    position: Position;
+    custody: Custody;
+  },
+) => {
+  const instruction = await program.methods
+    .getPosition({})
+    .accounts({
+      perpetuals,
+      pool: position.pool,
+      position: position.address,
+      custody: position.custody,
+      custodyOracleAccount: custody.oracle.oracleAccount,
+    })
+    .instruction();
+
+  const estimate = await getParsedSimulationResult<{
+    leverage: BN;
+    liquidationPrice: BN;
+    liquidationState: boolean;
+    markPrice: BN;
+    loss: BN;
+    margin: BN;
+    profit: BN;
+  }>(program, instruction, "get_position");
+
+  if (estimate === undefined) {
+    return {
+      profit: BigInt(0),
+      loss: BigInt(0),
+      liquidationPrice: BigInt(0),
+      markPrice: BigInt(0),
+      leverage: BigInt(0),
+      margin: BigInt(0),
+      liquidationState: false,
+    };
+  }
+
+  return {
+    leverage: BigInt(estimate.leverage.toString()),
+    liquidationPrice: BigInt(estimate.liquidationPrice.toString()),
+    liquidationState: estimate.liquidationState,
+    loss: BigInt(estimate.loss.toString()),
+    margin: BigInt(estimate.margin.toString()),
+    markPrice: BigInt(estimate.markPrice.toString()),
+    profit: BigInt(estimate.profit.toString()),
+  };
 };

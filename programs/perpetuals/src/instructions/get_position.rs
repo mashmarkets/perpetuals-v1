@@ -1,18 +1,19 @@
-//! GetPnl instruction handler
-
 use {
-    crate::state::{
-        custody::Custody,
-        oracle::OraclePrice,
-        perpetuals::{Perpetuals, ProfitAndLoss},
-        pool::Pool,
-        position::{Position, Side},
+    crate::{
+        math,
+        state::{
+            custody::Custody,
+            oracle::OraclePrice,
+            perpetuals::Perpetuals,
+            pool::Pool,
+            position::{Position, Side},
+        },
     },
     anchor_lang::prelude::*,
 };
 
 #[derive(Accounts)]
-pub struct GetPnl<'info> {
+pub struct GetPosition<'info> {
     #[account(
         seeds = [b"perpetuals"],
         bump = perpetuals.perpetuals_bump
@@ -55,12 +56,23 @@ pub struct GetPnl<'info> {
 }
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct GetPnlParams {}
+pub struct GetPositionParams {}
 
-pub fn get_pnl<'info>(
-    ctx: Context<'_, '_, '_, 'info, GetPnl<'info>>,
-    _params: &GetPnlParams,
-) -> Result<ProfitAndLoss> {
+#[derive(AnchorSerialize, AnchorDeserialize)]
+pub struct GetPositionResult {
+    pub profit: u64,
+    pub loss: u64,
+    pub liquidation_price: u64,
+    pub liquidation_state: bool,
+    pub mark_price: u64,
+    pub leverage: u64,
+    pub margin: u64,
+}
+
+pub fn get_position<'info>(
+    ctx: Context<'_, '_, '_, 'info, GetPosition<'info>>,
+    _params: &GetPositionParams,
+) -> Result<GetPositionResult> {
     // get oracle prices
     let position = &ctx.accounts.position;
     let pool = &ctx.accounts.pool;
@@ -76,5 +88,36 @@ pub fn get_pnl<'info>(
     // compute pnl
     let (profit, loss, _) = pool.get_pnl_usd(position, &token_price, custody, curtime, false)?;
 
-    Ok(ProfitAndLoss { profit, loss })
+    let liquidation_price =
+        ctx.accounts
+            .pool
+            .get_liquidation_price(position, &token_price, custody, curtime)?;
+
+    let leverage = ctx
+        .accounts
+        .pool
+        .get_leverage(position, &token_price, custody, curtime)?;
+
+    let leverage_check = ctx.accounts.pool.check_leverage(
+        &ctx.accounts.position,
+        &token_price,
+        custody,
+        curtime,
+        false,
+    )?;
+
+    let margin = math::checked_as_u64(math::checked_div(
+        math::checked_mul(leverage as u128, Perpetuals::BPS_POWER)?,
+        ctx.accounts.custody.pricing.max_leverage as u128,
+    )?)?;
+
+    Ok(GetPositionResult {
+        profit,
+        loss,
+        liquidation_price,
+        liquidation_state: !leverage_check,
+        mark_price: token_price.price,
+        leverage,
+        margin,
+    })
 }

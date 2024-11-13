@@ -318,7 +318,7 @@ async function main() {
       .all()
       .then((x) => x.map(parsePosition));
     console.log("Refreshed positions to track");
-  }, 60 * 1000);
+  }, 5 * 1000);
 
   // Continuously check positions and liquidate
   while (true) {
@@ -331,8 +331,8 @@ async function main() {
       const custody = await getCustody(position.custody);
 
       await limiter.removeTokens(1);
-      const state = await program.methods
-        .getLiquidationState({})
+      const { liquidationState } = await program.methods
+        .getPosition({})
         .accounts({
           perpetuals: findPerpetualsAddressSync(program, "perpetuals"),
           pool: position.pool,
@@ -356,7 +356,7 @@ async function main() {
           throw error;
         });
 
-      if (state === 0) {
+      if (liquidationState === false) {
         continue;
       }
       count += 1;

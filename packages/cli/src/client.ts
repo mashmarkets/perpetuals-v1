@@ -820,37 +820,13 @@ export class PerpetualsClient {
       });
   };
 
-  getLiquidationState = async (
-    wallet: PublicKey,
-    poolName: string,
-    tokenMint: PublicKey,
-  ): Promise<number> => {
-    return this.program.methods
-      .getLiquidationState({})
-      .accounts({
-        perpetuals: this.perpetuals.publicKey,
-        pool: this.getPoolKey(poolName),
-        position: this.getPositionKey(wallet, poolName, tokenMint),
-        custody: this.getCustodyKey(poolName, tokenMint),
-        custodyOracleAccount: await this.getCustodyOracleAccountKey(
-          poolName,
-          tokenMint,
-        ),
-      })
-      .view()
-      .catch((err) => {
-        console.error(err);
-        throw err;
-      });
-  };
-
-  getPnl = async (
+  getPosition = async (
     wallet: PublicKey,
     poolName: string,
     tokenMint: PublicKey,
   ): Promise<ProfitAndLoss> => {
     return this.program.methods
-      .getPnl({})
+      .getPosition({})
       .accounts({
         perpetuals: this.perpetuals.publicKey,
         pool: this.getPoolKey(poolName),

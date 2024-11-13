@@ -188,6 +188,13 @@ export function TradePosition({
   const isLiquidityExceeded =
     price && positionAmount * price > availableLiquidity;
 
+  const leverage = positionAmount / (collateralAmount - fees * positionAmount);
+
+  const isLeverageAboveMax =
+    custody && leverage > Number(custody.pricing.maxInitialLeverage) / 10000;
+  const isLeverageBelowMin =
+    custody && leverage < Number(custody.pricing.minInitialLeverage) / 10000;
+
   return (
     <div className={className}>
       <div className="flex items-center justify-between text-sm">
@@ -234,7 +241,7 @@ export function TradePosition({
       /> */}
       <LeverageSlider
         className="mt-6"
-        value={positionAmount / (collateralAmount - fees * positionAmount)}
+        value={leverage}
         minLeverage={Number(custody.pricing.minInitialLeverage) / 10000}
         maxLeverage={Number(custody.pricing.maxInitialLeverage) / 10000}
         onChange={(l) => {
@@ -286,6 +293,16 @@ export function TradePosition({
       {isPositionAlreadyOpen && (
         <p className="mt-2 text-center text-xs text-orange-500">
           Position exists, modify or close current holding
+        </p>
+      )}
+      {isLeverageAboveMax && (
+        <p className="mt-2 text-center text-xs text-orange-500">
+          Leverage is too high
+        </p>
+      )}
+      {isLeverageBelowMin && (
+        <p className="mt-2 text-center text-xs text-orange-500">
+          Leverage is too low
         </p>
       )}
       <TradeDetails

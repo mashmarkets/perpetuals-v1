@@ -93,6 +93,22 @@ export const useEpochCountdown = () => {
   return countdown;
 };
 
+export const useIsCompetitionActive = () => {
+  const epoch = useCurrentEpoch();
+  const [isActive, setIsActive] = useState(true);
+  // For some reason doesn't work passing in Date object
+  const ms = epoch.getTime();
+  useEffect(() => {
+    const id = setInterval(() => {
+      setIsActive(() => Date.now() < epoch.getTime());
+    }, 500);
+
+    return () => clearInterval(id);
+  }, [ms]);
+
+  return isActive;
+};
+
 export const useCompetitionAccount = (epoch: Date) => {
   const { connection } = useConnection();
   const program = useReadFaucetProgram();

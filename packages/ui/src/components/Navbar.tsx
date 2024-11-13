@@ -13,6 +13,7 @@ import {
   useCompetitionMint,
   useCurrentEpoch,
   useEpochCountdown,
+  useIsCompetitionActive,
   usePrizePool,
 } from "@/hooks/competition";
 import { useBalance, useGetTokenInfo } from "@/hooks/token";
@@ -77,6 +78,7 @@ export const Navbar = () => {
   const { getTokenIcon } = useGetTokenInfo();
 
   const epoch = useCurrentEpoch();
+  const isCompetitionActive = useIsCompetitionActive();
   const { data: prize } = usePrizePool(epoch);
   const countdown = useEpochCountdown();
 
@@ -143,17 +145,21 @@ export const Navbar = () => {
           (sol !== undefined && sol === BigInt(0) ? (
             <AirdropButton mint={NATIVE_MINT.toString() as Address} />
           ) : (
-            <BuyInModal>
-              <button className="flex flex-row gap-2 rounded-md px-4 py-2 text-blue-400">
-                Buy in
-                {usdc !== undefined && usdc > BigInt(0) && (
-                  <p className="gap flex items-center gap-2 pr-2 text-blue-400">
-                    {getTokenIcon(competitionMint)}
-                    {formatNumber(Number(usdc) / 10 ** 6)}
-                  </p>
-                )}
-              </button>
-            </BuyInModal>
+            <>
+              {isCompetitionActive && (
+                <BuyInModal>
+                  <button className="flex flex-row gap-2 rounded-md py-2 text-blue-400">
+                    Buy in
+                  </button>
+                </BuyInModal>
+              )}
+              {usdc !== undefined && usdc > BigInt(0) && (
+                <p className="gap flex items-center gap-2 pr-2 text-blue-400">
+                  {getTokenIcon(competitionMint)}
+                  {formatNumber(Number(usdc) / 10 ** 6)}
+                </p>
+              )}
+            </>
           ))}
         <WalletMultiButtonDynamic />
       </div>

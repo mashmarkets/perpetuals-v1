@@ -662,47 +662,6 @@ export type Perpetuals = {
       "returns": "u64"
     },
     {
-      "name": "getLiquidationState",
-      "discriminator": [
-        127,
-        126,
-        199,
-        117,
-        90,
-        89,
-        29,
-        50
-      ],
-      "accounts": [
-        {
-          "name": "perpetuals"
-        },
-        {
-          "name": "pool"
-        },
-        {
-          "name": "position"
-        },
-        {
-          "name": "custody"
-        },
-        {
-          "name": "custodyOracleAccount"
-        }
-      ],
-      "args": [
-        {
-          "name": "params",
-          "type": {
-            "defined": {
-              "name": "getLiquidationStateParams"
-            }
-          }
-        }
-      ],
-      "returns": "u8"
-    },
-    {
       "name": "getLpTokenPrice",
       "discriminator": [
         71,
@@ -776,16 +735,16 @@ export type Perpetuals = {
       "returns": "u64"
     },
     {
-      "name": "getPnl",
+      "name": "getPosition",
       "discriminator": [
-        106,
-        212,
-        3,
-        250,
-        195,
-        224,
-        64,
-        160
+        180,
+        163,
+        144,
+        54,
+        113,
+        248,
+        101,
+        122
       ],
       "accounts": [
         {
@@ -809,14 +768,14 @@ export type Perpetuals = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "getPnlParams"
+              "name": "getPositionParams"
             }
           }
         }
       ],
       "returns": {
         "defined": {
-          "name": "profitAndLoss"
+          "name": "getPositionResult"
         }
       }
     },
@@ -2405,13 +2364,6 @@ export type Perpetuals = {
       }
     },
     {
-      "name": "getLiquidationStateParams",
-      "type": {
-        "kind": "struct",
-        "fields": []
-      }
-    },
-    {
       "name": "getLpTokenPriceParams",
       "type": {
         "kind": "struct",
@@ -2426,10 +2378,46 @@ export type Perpetuals = {
       }
     },
     {
-      "name": "getPnlParams",
+      "name": "getPositionParams",
       "type": {
         "kind": "struct",
         "fields": []
+      }
+    },
+    {
+      "name": "getPositionResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "profit",
+            "type": "u64"
+          },
+          {
+            "name": "loss",
+            "type": "u64"
+          },
+          {
+            "name": "liquidationPrice",
+            "type": "u64"
+          },
+          {
+            "name": "liquidationState",
+            "type": "bool"
+          },
+          {
+            "name": "markPrice",
+            "type": "u64"
+          },
+          {
+            "name": "leverage",
+            "type": "u64"
+          },
+          {
+            "name": "margin",
+            "type": "u64"
+          }
+        ]
       }
     },
     {
@@ -3026,22 +3014,6 @@ export type Perpetuals = {
           },
           {
             "name": "maxTotalLockedUsd",
-            "type": "u64"
-          }
-        ]
-      }
-    },
-    {
-      "name": "profitAndLoss",
-      "type": {
-        "kind": "struct",
-        "fields": [
-          {
-            "name": "profit",
-            "type": "u64"
-          },
-          {
-            "name": "loss",
             "type": "u64"
           }
         ]

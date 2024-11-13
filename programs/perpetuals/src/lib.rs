@@ -11,7 +11,7 @@ pub mod state;
 use {
     anchor_lang::prelude::*,
     instructions::*,
-    state::perpetuals::{AmountAndFee, NewPositionPricesAndFee, PriceAndFee, ProfitAndLoss},
+    state::perpetuals::{AmountAndFee, NewPositionPricesAndFee, PriceAndFee},
 };
 
 solana_security_txt::security_txt! {
@@ -213,11 +213,11 @@ pub mod perpetuals {
         instructions::get_exit_price_and_fee(ctx, &params)
     }
 
-    pub fn get_pnl<'info>(
-        ctx: Context<'_, '_, '_, 'info, GetPnl<'info>>,
-        params: GetPnlParams,
-    ) -> Result<ProfitAndLoss> {
-        instructions::get_pnl(ctx, &params)
+    pub fn get_position<'info>(
+        ctx: Context<'_, '_, '_, 'info, GetPosition<'info>>,
+        params: GetPositionParams,
+    ) -> Result<GetPositionResult> {
+        instructions::get_position(ctx, &params)
     }
 
     pub fn get_liquidation_price<'info>(
@@ -225,13 +225,6 @@ pub mod perpetuals {
         params: GetLiquidationPriceParams,
     ) -> Result<u64> {
         instructions::get_liquidation_price(ctx, &params)
-    }
-
-    pub fn get_liquidation_state<'info>(
-        ctx: Context<'_, '_, '_, 'info, GetLiquidationState<'info>>,
-        params: GetLiquidationStateParams,
-    ) -> Result<u8> {
-        instructions::get_liquidation_state(ctx, &params)
     }
 
     pub fn get_oracle_price<'info>(
