@@ -111,12 +111,17 @@ pub fn get_position<'info>(
         ctx.accounts.custody.pricing.max_leverage as u128,
     )?)?;
 
+    // Convert to price decimals
+    let mark_price = token_price
+        .scale_to_exponent(-(Perpetuals::PRICE_DECIMALS as i32))?
+        .price;
+
     Ok(GetPositionResult {
         profit,
         loss,
         liquidation_price,
         liquidation_state: !leverage_check,
-        mark_price: token_price.price,
+        mark_price,
         leverage,
         margin,
     })

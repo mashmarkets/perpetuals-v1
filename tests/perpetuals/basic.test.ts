@@ -675,7 +675,7 @@ describe("perpetuals", async () => {
       liquidationPrice: BigInt("109143171429"),
       liquidationState: false,
       loss: BigInt("25916100000"),
-      markPrice: BigInt("123000"),
+      markPrice: BigInt("123000000000"),
       margin: BigInt("895"),
       profit: BigInt("0"),
     });
