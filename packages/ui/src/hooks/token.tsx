@@ -130,7 +130,7 @@ export const useBalance = (
     mint === NATIVE_MINT.toString()
       ? (data as AccountInfo<Buffer>)?.lamports
         ? BigInt((data as AccountInfo<Buffer>).lamports)
-        : undefined
+        : BigInt(0)
       : (data as Account)?.amount;
 
   return { ...rest, data: balance };

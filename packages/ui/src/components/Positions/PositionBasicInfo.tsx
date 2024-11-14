@@ -71,7 +71,7 @@ export default function PositionBasicInfo({
       <PositionColumn num={2}>
         <div className="text-sm text-white">
           {getPosition
-            ? (Number(getPosition.leverage) / BPS_POWER).toFixed(3)
+            ? (Number(getPosition.leverage) / BPS_POWER).toFixed(2)
             : "-"}
           x
         </div>

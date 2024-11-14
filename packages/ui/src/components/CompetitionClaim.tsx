@@ -53,7 +53,7 @@ export function CompetitionClaim({ epoch }: { epoch: Date }) {
       disabled={!publicKey || claim.isPending}
       onClick={(e) => {
         e.preventDefault();
-        claim.mutate();
+        return claim.mutateAsync();
       }}
     >
       Claim

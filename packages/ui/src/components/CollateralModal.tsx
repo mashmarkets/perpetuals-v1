@@ -323,7 +323,7 @@ export function CollateralModal({
                   }
                   onClick={(e) => {
                     e.preventDefault();
-                    changeCollateral.mutate();
+                    return changeCollateral.mutateAsync();
                   }}
                 >
                   {tab === Tab.Add ? "Add Collateral" : "Remove Collateral"}

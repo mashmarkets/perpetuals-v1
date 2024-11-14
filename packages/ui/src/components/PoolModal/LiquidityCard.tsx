@@ -288,7 +288,7 @@ export default function LiquidityCard({
         </div>
         <SolidButton
           className="mt-4 w-full"
-          onClick={() => changeLiquidityMutation.mutate()}
+          onClick={() => changeLiquidityMutation.mutateAsync()}
           disabled={!publicKey || (tokenAmount === 0 && liqAmount === 0)}
         >
           {tab == Tab.Add ? "Add" : "Remove"} Liquidity

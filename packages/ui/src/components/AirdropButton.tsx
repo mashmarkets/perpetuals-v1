@@ -20,7 +20,7 @@ export default function AirdropButton({ mint }: { mint: Address }) {
     onSuccess: () => {
       queryClient.invalidateQueries({
         queryKey: [
-          "balance",
+          "account",
           provider?.publicKey?.toString(),
           mint?.toString(),
         ],
@@ -50,7 +50,7 @@ export default function AirdropButton({ mint }: { mint: Address }) {
   return (
     <SolidButton
       className="bg-slate-500 hover:bg-slate-200"
-      onClick={() => airdropMutation.mutate()}
+      onClick={() => airdropMutation.mutateAsync()}
     >
       Airdrop {getTokenSymbol(mint)}
     </SolidButton>

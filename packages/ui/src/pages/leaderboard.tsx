@@ -15,7 +15,7 @@ import {
   usePositions,
 } from "@/hooks/perpetuals";
 import { usePrices } from "@/hooks/pyth";
-import { useAllMintHolders, useBalances } from "@/hooks/token";
+import { useAllMintHolders, useBalances, useMint } from "@/hooks/token";
 import {
   getCompetitionMint,
   getNextEpoch,
@@ -31,7 +31,9 @@ const useLeaderboardData = (epoch: Date) => {
   const currentEpoch = useCurrentEpoch();
   const { data: currentPositionsMapping } = useAllPositions();
   const mint = getCompetitionMint(epoch);
+  const { data: prizePool } = usePrizePool(epoch);
   const { data: holders } = useAllMintHolders(mint);
+  const { data: mintAccount } = useMint(mint);
 
   // Positions only apply to current epoch
   const positionsMapping =
@@ -87,6 +89,10 @@ const useLeaderboardData = (epoch: Date) => {
         equity: balance + equityFromPositions,
         equityFromPositions,
         positions: positions,
+        prize:
+          mintAccount && prizePool
+            ? (balance * prizePool) / mintAccount.supply
+            : undefined,
       };
     })
     .sort((a, b) => Number(b.equity) - Number(a.equity));
@@ -148,7 +154,10 @@ function Leaderboard({ epoch }: { epoch: Date }) {
       </div>
       <div className="shadow">
         {leaderboard.map(
-          ({ user, balance, equity, positions, equityFromPositions }, i) => (
+          (
+            { user, balance, equity, positions, equityFromPositions, prize },
+            i,
+          ) => (
             <div
               key={user}
               className={twMerge(
@@ -174,6 +183,7 @@ function Leaderboard({ epoch }: { epoch: Date }) {
                   </p>
                   <span className="text-gray-600">
                     {formatNumber(Number(equity) / 10 ** decimals)} {symbol}
+                    {prize && ` / ${(Number(prize) / 10 ** 9).toFixed(4)} SOL`}
                   </span>
                 </div>
                 {expandedUsers.has(user) ? (

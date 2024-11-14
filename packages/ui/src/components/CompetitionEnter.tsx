@@ -128,7 +128,7 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
                   }
                   onClick={(e) => {
                     e.preventDefault();
-                    buyIn.mutate();
+                    return buyIn.mutateAsync();
                   }}
                 >
                   Enter

@@ -181,7 +181,7 @@ export function PositionAdditionalInfo({
       </div>
       <SolidButton
         className="h-9 w-36"
-        onClick={() => closePositionMutation.mutate()}
+        onClick={() => closePositionMutation.mutateAsync()}
       >
         <CloseIcon className="mr-2 h-4 w-4" />
         <div>Close Position</div>

@@ -195,6 +195,12 @@ export function TradePosition({
   const isLeverageBelowMin =
     custody && leverage < Number(custody.pricing.minInitialLeverage) / 10000;
 
+  const isAboveMaxPositionSize =
+    custody &&
+    price &&
+    positionAmount * Number(price) >
+      Number(custody.pricing.maxPositionLockedUsd) / 10 ** custody.decimals;
+
   return (
     <div className={className}>
       <div className="flex items-center justify-between text-sm">
@@ -241,7 +247,7 @@ export function TradePosition({
       /> */}
       <LeverageSlider
         className="mt-6"
-        value={leverage}
+        value={Math.max(leverage, 0)}
         minLeverage={Number(custody.pricing.minInitialLeverage) / 10000}
         maxLeverage={Number(custody.pricing.maxInitialLeverage) / 10000}
         onChange={(l) => {
@@ -254,7 +260,7 @@ export function TradePosition({
       />
       <SolidButton
         className="mt-6 w-full bg-emerald-500 font-medium text-black"
-        onClick={() => openPositionMutation.mutate()}
+        onClick={() => openPositionMutation.mutateAsync()}
         disabled={
           !publicKey ||
           payAmount === 0 ||
@@ -265,9 +271,6 @@ export function TradePosition({
       >
         Place Long
       </SolidButton>
-      {/* <p className="mt-2 text-center text-xs text-orange-500">
-        Leverage current only works until 25x due to immediate loss from fees
-      </p> */}
       {!publicKey && (
         <p className="mt-2 text-center text-xs text-orange-500">
           Connect wallet to execute order
@@ -303,6 +306,11 @@ export function TradePosition({
       {isLeverageBelowMin && (
         <p className="mt-2 text-center text-xs text-orange-500">
           Leverage is too low
+        </p>
+      )}
+      {isAboveMaxPositionSize && (
+        <p className="mt-2 text-center text-xs text-orange-500">
+          This position exceeds the maximum position size
         </p>
       )}
       <TradeDetails
