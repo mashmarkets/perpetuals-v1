@@ -718,7 +718,8 @@ export async function openPositionWithSwap(
       .instruction(),
 
     // Close the token_account
-    createCloseAccountInstruction(tokenAccountOut, publicKey, publicKey),
+    // TODO: Enable closing this once bug where liquidation doesn't completely empty the colateral account is fixed
+    // createCloseAccountInstruction(tokenAccountOut, publicKey, publicKey),
   ];
 
   return sendInstructions(program.provider, instructions);
@@ -1260,15 +1261,7 @@ export const getPosition = async (
   }>(program, instruction, "get_position");
 
   if (estimate === undefined) {
-    return {
-      profit: BigInt(0),
-      loss: BigInt(0),
-      liquidationPrice: BigInt(0),
-      markPrice: BigInt(0),
-      leverage: BigInt(0),
-      margin: BigInt(0),
-      liquidationState: false,
-    };
+    throw new Error("Unable to get position");
   }
 
   return {

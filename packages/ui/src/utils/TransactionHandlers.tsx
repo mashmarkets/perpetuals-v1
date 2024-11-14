@@ -1,3 +1,4 @@
+import { WalletSignTransactionError } from "@solana/wallet-adapter-base";
 import {
   Connection,
   SendTransactionError,
@@ -88,6 +89,9 @@ export const wrapTransactionWithNotification = async (
       },
       error: {
         render({ data }) {
+          if (data instanceof WalletSignTransactionError) {
+            return "Rejected by user";
+          }
           // When the promise reject, data will contains the error
           console.log("Transaction failed with: ", data);
           let message = messages.error;
@@ -95,7 +99,10 @@ export const wrapTransactionWithNotification = async (
             data instanceof SendTransactionError &&
             data.message.includes("Transaction simulation failed")
           ) {
-            message = "Transaction simulation failed";
+            const m = JSON.stringify(data.logs).match(
+              /Error Message\: ([\w ]+)/,
+            )?.[1];
+            message = "Simulation failed" + (m ? `: ${m}` : "");
           }
           return (
             <div>

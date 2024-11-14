@@ -25,6 +25,7 @@ export const SolidButton = forwardRef<HTMLButtonElement, Props>(
     return (
       <button
         {...rest}
+        disabled={loading || rest.disabled}
         ref={ref}
         className={twMerge(
           "flex",

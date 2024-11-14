@@ -196,10 +196,8 @@ export function TradePosition({
     custody && leverage < Number(custody.pricing.minInitialLeverage) / 10000;
 
   const isAboveMaxPositionSize =
-    custody &&
-    price &&
     positionAmount * Number(price) >
-      Number(custody.pricing.maxPositionLockedUsd) / 10 ** custody.decimals;
+    Number(custody.pricing.maxPositionLockedUsd) / 10 ** custody.decimals;
 
   return (
     <div className={className}>
@@ -265,8 +263,11 @@ export function TradePosition({
           !publicKey ||
           payAmount === 0 ||
           isLiquidityExceeded ||
+          !isBalanceValid ||
           isPositionAlreadyOpen ||
-          !isBalanceValid
+          isLeverageAboveMax ||
+          isLeverageBelowMin ||
+          isAboveMaxPositionSize
         }
       >
         Place Long

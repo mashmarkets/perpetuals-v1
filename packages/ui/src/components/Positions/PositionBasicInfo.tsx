@@ -9,7 +9,6 @@ import { twMerge } from "tailwind-merge";
 import { CollateralModal } from "@/components/CollateralModal";
 import { PositionColumn } from "@/components/Positions/PositionColumn";
 import { useCustody, useGetPosition, usePosition } from "@/hooks/perpetuals";
-import { usePrice } from "@/hooks/pyth";
 import { useGetTokenInfo } from "@/hooks/token";
 import { BPS_POWER, PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
@@ -71,9 +70,8 @@ export default function PositionBasicInfo({
       <PositionColumn num={2}>
         <div className="text-sm text-white">
           {getPosition
-            ? (Number(getPosition.leverage) / BPS_POWER).toFixed(2)
+            ? (Number(getPosition.leverage) / BPS_POWER).toFixed(2) + "x"
             : "-"}
-          x
         </div>
         <div
           className={twMerge(

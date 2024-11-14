@@ -22,6 +22,9 @@ export function CompetitionClaim({ epoch }: { epoch: Date }) {
       queryClient.invalidateQueries({
         queryKey: ["account", publicKey?.toString(), NATIVE_MINT.toString()],
       });
+      queryClient.invalidateQueries({
+        queryKey: ["account", publicKey?.toString(), mint],
+      });
     },
     mutationFn: async () => {
       if (!program || !publicKey) {

@@ -126,10 +126,9 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
                   disabled={
                     !publicKey || depositAmount === 0 || buyIn.isPending
                   }
-                  onClick={(e) => {
-                    e.preventDefault();
-                    return buyIn.mutateAsync();
-                  }}
+                  // When rejecting the transaction, i get unhandled error error so added a catch.
+                  // Couldn't figure out why it doesn't happen elsewhere
+                  onClick={() => buyIn.mutateAsync().catch(() => {})}
                 >
                   Enter
                 </SolidButton>
