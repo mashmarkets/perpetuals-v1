@@ -336,41 +336,34 @@ export class TestClient {
   // instructions
 
   init = async () => {
-    try {
-      let programData = PublicKey.findProgramAddressSync(
-        [this.program.programId.toBuffer()],
-        new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111"),
-      )[0];
+    let programData = PublicKey.findProgramAddressSync(
+      [this.program.programId.toBuffer()],
+      new PublicKey("BPFLoaderUpgradeab1e11111111111111111111111"),
+    )[0];
 
-      await this.program.methods
-        .init({
-          minSignatures: 2,
-          allowAddLiquidity: true,
-          allowRemoveLiquidity: true,
-          allowOpenPosition: true,
-          allowClosePosition: true,
-          allowPnlWithdrawal: true,
-          allowCollateralWithdrawal: true,
-          allowSizeChange: true,
-        })
-        .accounts({
-          upgradeAuthority: this.provider.wallet.publicKey,
-          multisig: this.multisig.publicKey,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          perpetualsProgramData: programData,
-          perpetualsProgram: this.program.programId,
-          systemProgram: SystemProgram.programId,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .remainingAccounts(this.adminMetas)
-        .rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    await this.program.methods
+      .init({
+        minSignatures: 2,
+        allowAddLiquidity: true,
+        allowRemoveLiquidity: true,
+        allowOpenPosition: true,
+        allowClosePosition: true,
+        allowPnlWithdrawal: true,
+        allowCollateralWithdrawal: true,
+        allowSizeChange: true,
+      })
+      .accounts({
+        upgradeAuthority: this.provider.wallet.publicKey,
+        multisig: this.multisig.publicKey,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        perpetualsProgramData: programData,
+        perpetualsProgram: this.program.programId,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(this.adminMetas)
+      .rpc();
   };
 
   setAdminSigners = async (minSignatures: number) => {
@@ -378,24 +371,17 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .setAdminSigners({
-            minSignatures,
-          })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-          })
-          .remainingAccounts(this.adminMetas)
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .setAdminSigners({
+          minSignatures,
+        })
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+        })
+        .remainingAccounts(this.adminMetas)
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -404,22 +390,15 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .setPermissions(permissions)
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .setPermissions(permissions)
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -428,28 +407,21 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .addPool({ name })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            transferAuthority: this.authority.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-            pool: this.pool.publicKey,
-            lpTokenMint: this.lpToken.publicKey,
-            systemProgram: SystemProgram.programId,
-            tokenProgram: spl.TOKEN_PROGRAM_ID,
-            rent: SYSVAR_RENT_PUBKEY,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .addPool({ name })
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          transferAuthority: this.authority.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          pool: this.pool.publicKey,
+          lpTokenMint: this.lpToken.publicKey,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
 
     // set lp token accounts
@@ -478,25 +450,18 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .removePool({})
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            transferAuthority: this.authority.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-            pool: this.pool.publicKey,
-            systemProgram: SystemProgram.programId,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .removePool({})
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          transferAuthority: this.authority.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          pool: this.pool.publicKey,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -512,67 +477,53 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .addCustodyInit({
-            oracle: oracleConfig,
-            pricing,
-            permissions,
-            fees,
-            borrowRate,
-          })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            transferAuthority: this.authority.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-            pool: this.pool.publicKey,
-            custody: custody.custody,
-            custodyTokenMint: custody.mint.publicKey,
-            systemProgram: SystemProgram.programId,
-            tokenProgram: spl.TOKEN_PROGRAM_ID,
-            rent: SYSVAR_RENT_PUBKEY,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .addCustodyInit({
+          oracle: oracleConfig,
+          pricing,
+          permissions,
+          fees,
+          borrowRate,
+        })
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          transferAuthority: this.authority.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          pool: this.pool.publicKey,
+          custody: custody.custody,
+          custodyTokenMint: custody.mint.publicKey,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .addCustody({
-            oracle: oracleConfig,
-            pricing,
-            permissions,
-            fees,
-            borrowRate,
-          })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            transferAuthority: this.authority.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-            pool: this.pool.publicKey,
-            custody: custody.custody,
-            custodyTokenAccount: custody.tokenAccount,
-            custodyTokenMint: custody.mint.publicKey,
-            systemProgram: SystemProgram.programId,
-            tokenProgram: spl.TOKEN_PROGRAM_ID,
-            rent: SYSVAR_RENT_PUBKEY,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .addCustody({
+          oracle: oracleConfig,
+          pricing,
+          permissions,
+          fees,
+          borrowRate,
+        })
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          transferAuthority: this.authority.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          pool: this.pool.publicKey,
+          custody: custody.custody,
+          custodyTokenAccount: custody.tokenAccount,
+          custodyTokenMint: custody.mint.publicKey,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
+          rent: SYSVAR_RENT_PUBKEY,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -581,28 +532,21 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .removeCustody({})
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            transferAuthority: this.authority.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-            pool: this.pool.publicKey,
-            custody: custody.custody,
-            custodyTokenAccount: custody.tokenAccount,
-            systemProgram: SystemProgram.programId,
-            tokenProgram: spl.TOKEN_PROGRAM_ID,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .removeCustody({})
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          transferAuthority: this.authority.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          pool: this.pool.publicKey,
+          custody: custody.custody,
+          custodyTokenAccount: custody.tokenAccount,
+          systemProgram: SystemProgram.programId,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -618,29 +562,22 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .setCustodyConfig({
-            oracle: oracleConfig,
-            pricing,
-            permissions,
-            fees,
-            borrowRate,
-          })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            pool: this.pool.publicKey,
-            custody: custody.custody,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .setCustodyConfig({
+          oracle: oracleConfig,
+          pricing,
+          permissions,
+          fees,
+          borrowRate,
+        })
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          pool: this.pool.publicKey,
+          custody: custody.custody,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -649,30 +586,23 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .withdrawFees({
-            amount,
-          })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            transferAuthority: this.authority.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-            pool: this.pool.publicKey,
-            custody: custody.custody,
-            custodyTokenAccount: custody.tokenAccount,
-            receivingTokenAccount: receivingTokenAccount,
-            tokenProgram: spl.TOKEN_PROGRAM_ID,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .withdrawFees({
+          amount,
+        })
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          transferAuthority: this.authority.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          pool: this.pool.publicKey,
+          custody: custody.custody,
+          custodyTokenAccount: custody.tokenAccount,
+          receivingTokenAccount: receivingTokenAccount,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -681,26 +611,19 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .withdrawSolFees({
-            amount,
-          })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            transferAuthority: this.authority.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-            receivingAccount: receivingAccount,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .withdrawSolFees({
+          amount,
+        })
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          transferAuthority: this.authority.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          receivingAccount: receivingAccount,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -709,31 +632,24 @@ export class TestClient {
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
-      try {
-        await this.program.methods
-          .setCustomOraclePrice({
-            price: new BN(price * 1000),
-            expo: -3,
-            conf: new BN(0),
-            publishTime: new BN(await this.getTime()),
-          })
-          .accounts({
-            admin: this.admins[i].publicKey,
-            multisig: this.multisig.publicKey,
-            perpetuals: this.perpetuals.publicKey,
-            pool: this.pool.publicKey,
-            custody: custody.custody,
-            oracleAccount: custody.oracleAccount,
-            systemProgram: SystemProgram.programId,
-          })
-          .signers([this.admins[i]])
-          .rpc();
-      } catch (err) {
-        if (this.printErrors) {
-          console.log(err);
-        }
-        throw err;
-      }
+      await this.program.methods
+        .setCustomOraclePrice({
+          price: new BN(price * 1000),
+          expo: -3,
+          conf: new BN(0),
+          publishTime: new BN(await this.getTime()),
+        })
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          pool: this.pool.publicKey,
+          custody: custody.custody,
+          oracleAccount: custody.oracleAccount,
+          systemProgram: SystemProgram.programId,
+        })
+        .signers([this.admins[i]])
+        .rpc();
     }
   };
 
@@ -798,14 +714,7 @@ export class TestClient {
       ]);
     }
 
-    try {
-      await tx.rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    await tx.rpc();
   };
 
   addLiquidity = async (
@@ -815,34 +724,27 @@ export class TestClient {
     fundingAccount: PublicKey,
     custody,
   ) => {
-    try {
-      await this.program.methods
-        .addLiquidity({
-          amountIn,
-          minLpAmountOut,
-        })
-        .accounts({
-          owner: user.wallet.publicKey,
-          fundingAccount,
-          lpTokenAccount: user.lpTokenAccount,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-          custodyTokenAccount: custody.tokenAccount,
-          lpTokenMint: this.lpToken.publicKey,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .remainingAccounts(this.custodyMetas)
-        .signers([user.wallet])
-        .rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    await this.program.methods
+      .addLiquidity({
+        amountIn,
+        minLpAmountOut,
+      })
+      .accounts({
+        owner: user.wallet.publicKey,
+        fundingAccount,
+        lpTokenAccount: user.lpTokenAccount,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+        custodyTokenAccount: custody.tokenAccount,
+        lpTokenMint: this.lpToken.publicKey,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(this.custodyMetas)
+      .signers([user.wallet])
+      .rpc();
   };
 
   removeLiquidity = async (
@@ -852,37 +754,30 @@ export class TestClient {
     receivingAccount: PublicKey,
     custody,
   ) => {
-    try {
-      await this.program.methods
-        .removeLiquidity({
-          lpAmountIn,
-          minAmountOut,
-        })
-        .accounts({
-          owner: user.wallet.publicKey,
-          receivingAccount: receivingAccount,
-          lpTokenAccount: user.lpTokenAccount,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-          custodyTokenAccount: custody.tokenAccount,
-          lpTokenMint: this.lpToken.publicKey,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .remainingAccounts(this.custodyMetas)
-        .signers([user.wallet])
-        .rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    await this.program.methods
+      .removeLiquidity({
+        lpAmountIn,
+        minAmountOut,
+      })
+      .accounts({
+        owner: user.wallet.publicKey,
+        receivingAccount: receivingAccount,
+        lpTokenAccount: user.lpTokenAccount,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+        custodyTokenAccount: custody.tokenAccount,
+        lpTokenMint: this.lpToken.publicKey,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      })
+      .remainingAccounts(this.custodyMetas)
+      .signers([user.wallet])
+      .rpc();
   };
 
-  openPosition = async (
+  openPositionInstruction = async (
     price: number,
     collateral: BN,
     size: BN,
@@ -891,34 +786,27 @@ export class TestClient {
     positionAccount: PublicKey,
     custody,
   ) => {
-    try {
-      return await this.program.methods
-        .openPosition({
-          price: new BN(price * 10 ** 9),
-          collateral,
-          size,
-        })
-        .accounts({
-          owner: user.wallet.publicKey,
-          fundingAccount,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          position: positionAccount,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-          custodyTokenAccount: custody.tokenAccount,
-          systemProgram: SystemProgram.programId,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .signers([user.wallet])
-        .instruction();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    return await this.program.methods
+      .openPosition({
+        price: new BN(price * 10 ** 9),
+        collateral,
+        size,
+      })
+      .accounts({
+        owner: user.wallet.publicKey,
+        fundingAccount,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        position: positionAccount,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+        custodyTokenAccount: custody.tokenAccount,
+        systemProgram: SystemProgram.programId,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      })
+      .signers([user.wallet])
+      .instruction();
   };
 
   addCollateral = async (
@@ -928,31 +816,24 @@ export class TestClient {
     positionAccount: PublicKey,
     custody,
   ) => {
-    try {
-      await this.program.methods
-        .addCollateral({
-          collateral,
-        })
-        .accounts({
-          owner: user.wallet.publicKey,
-          fundingAccount,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          position: positionAccount,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-          custodyTokenAccount: custody.tokenAccount,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .signers([user.wallet])
-        .rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    await this.program.methods
+      .addCollateral({
+        collateral,
+      })
+      .accounts({
+        owner: user.wallet.publicKey,
+        fundingAccount,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        position: positionAccount,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+        custodyTokenAccount: custody.tokenAccount,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      })
+      .signers([user.wallet])
+      .rpc();
   };
 
   removeCollateral = async (
@@ -962,34 +843,27 @@ export class TestClient {
     positionAccount: PublicKey,
     custody,
   ) => {
-    try {
-      await this.program.methods
-        .removeCollateral({
-          collateralUsd,
-        })
-        .accounts({
-          owner: user.wallet.publicKey,
-          receivingAccount,
-          transferAuthority: this.authority.publicKey,
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          position: positionAccount,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-          custodyTokenAccount: custody.tokenAccount,
-          tokenProgram: spl.TOKEN_PROGRAM_ID,
-        })
-        .signers([user.wallet])
-        .rpc();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    await this.program.methods
+      .removeCollateral({
+        collateralUsd,
+      })
+      .accounts({
+        owner: user.wallet.publicKey,
+        receivingAccount,
+        transferAuthority: this.authority.publicKey,
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        position: positionAccount,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+        custodyTokenAccount: custody.tokenAccount,
+        tokenProgram: spl.TOKEN_PROGRAM_ID,
+      })
+      .signers([user.wallet])
+      .rpc();
   };
 
-  closePosition = async (
+  closePositionInstruction = async (
     price: number,
     user,
     receivingAccount,
@@ -1015,7 +889,7 @@ export class TestClient {
       .instruction();
   };
 
-  liquidate = async (
+  liquidateInstruction = async (
     user,
     tokenAccount: PublicKey,
     positionAccount: PublicKey,
@@ -1040,22 +914,15 @@ export class TestClient {
   };
 
   getEntryPriceAndFee = async (size: BN, custody) => {
-    try {
-      return await this.program.methods
-        .getEntryPriceAndFee({ size })
-        .accounts({
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-        })
-        .view();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    return await this.program.methods
+      .getEntryPriceAndFee({ size })
+      .accounts({
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+      })
+      .view();
   };
 
   getExitPriceAndFee = async (
@@ -1063,44 +930,30 @@ export class TestClient {
     positionAccount: PublicKey,
     custody,
   ) => {
-    try {
-      return await this.program.methods
-        .getExitPriceAndFee({
-          size,
-        })
-        .accounts({
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          position: positionAccount,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-        })
-        .view();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    return await this.program.methods
+      .getExitPriceAndFee({
+        size,
+      })
+      .accounts({
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        position: positionAccount,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+      })
+      .view();
   };
 
   getLiquidationPrice = async (positionAccount: PublicKey, custody) => {
-    try {
-      return await this.program.methods
-        .getLiquidationPrice({})
-        .accounts({
-          perpetuals: this.perpetuals.publicKey,
-          pool: this.pool.publicKey,
-          position: positionAccount,
-          custody: custody.custody,
-          custodyOracleAccount: custody.oracleAccount,
-        })
-        .view();
-    } catch (err) {
-      if (this.printErrors) {
-        console.log(err);
-      }
-      throw err;
-    }
+    return await this.program.methods
+      .getLiquidationPrice({})
+      .accounts({
+        perpetuals: this.perpetuals.publicKey,
+        pool: this.pool.publicKey,
+        position: positionAccount,
+        custody: custody.custody,
+        custodyOracleAccount: custody.oracleAccount,
+      })
+      .view();
   };
 }

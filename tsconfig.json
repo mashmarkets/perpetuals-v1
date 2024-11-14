@@ -4,13 +4,13 @@
 
   "compilerOptions": {
     "esModuleInterop": true,
-    "lib": ["es2015"],
+    "lib": ["es2023"],
     "module": "node16",
-    "moduleResolution": "Node16",
+    "moduleResolution": "node16",
     "outDir": "out",
     "resolveJsonModule": true,
     "skipLibCheck": true,
     "strict": true,
-    "target": "es6"
+    "target": "es2022"
   }
 }

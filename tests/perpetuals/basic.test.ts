@@ -10,6 +10,7 @@ import {
   VersionedTransaction,
 } from "@solana/web3.js";
 import { BankrunProvider } from "anchor-bankrun";
+import { deepmerge } from "deepmerge-ts";
 import {
   BanksTransactionMeta,
   BanksTransactionResultWithMeta,
@@ -104,102 +105,223 @@ describe("perpetuals", async () => {
     return program.coder.types.decode(typeName, Buffer.from(data!, "base64"));
   };
 
-  let tc: TestClient;
-  let oracleConfig;
-  let pricing;
-  let permissions;
-  let fees;
-  let borrowRate;
-  let perpetualsExpected;
-  let multisigExpected;
-  let tokenExpected;
-  let positionExpected;
+  const tc = new TestClient(context, program);
+  tc.printErrors = true;
+  // Setup
+  await tc.initFixture();
+  const admins = tc.admins;
 
-  let setClock: (epoch: number) => Promise<void>;
+  const oracleConfig = {
+    maxPriceError: new BN(10000),
+    maxPriceAgeSec: 60,
+    oracleType: { custom: {} },
+    oracleAccount: tc.custodies[0].oracleAccount,
+    oracleAuthority: tc.oracleAuthority.publicKey,
+  };
+  const pricing = {
+    useUnrealizedPnlInAum: true,
+    tradeSpreadLong: new BN(100),
+    tradeSpreadShort: new BN(100),
+    minInitialLeverage: new BN(10000),
+    maxInitialLeverage: new BN(1000000),
+    maxLeverage: new BN(1000000),
+    maxPayoffMult: new BN(10000),
+    maxUtilization: new BN(10000),
+    maxPositionLockedUsd: new BN(1000 * 10 ** USD_DECIMALS),
+    maxTotalLockedUsd: new BN(1000 * 10 ** USD_DECIMALS),
+  };
+  const permissions = {
+    allowAddLiquidity: true,
+    allowRemoveLiquidity: true,
+    allowOpenPosition: true,
+    allowClosePosition: true,
+    allowPnlWithdrawal: true,
+    allowCollateralWithdrawal: true,
+    allowSizeChange: true,
+  };
+  const fees = {
+    utilizationMult: new BN(20000),
+    addLiquidity: new BN(100),
+    removeLiquidity: new BN(100),
+    openPosition: new BN(100),
+    closePosition: new BN(100),
+    liquidation: new BN(100),
+    protocolShare: new BN(10),
+  };
+  const borrowRate = {
+    baseRate: new BN(0),
+    slope1: new BN(80000),
+    slope2: new BN(120000),
+    optimalUtilization: new BN(800000000),
+  };
+  const perpetualsExpected = {
+    permissions: {
+      allowAddLiquidity: true,
+      allowRemoveLiquidity: true,
+      allowOpenPosition: true,
+      allowClosePosition: true,
+      allowPnlWithdrawal: true,
+      allowCollateralWithdrawal: true,
+      allowSizeChange: true,
+    },
+    pools: [],
+    transferAuthorityBump: tc.authority.bump,
+    perpetualsBump: tc.perpetuals.bump,
+    inceptionTime: 0n,
+  };
+
+  const multisigExpected = {
+    numSigners: 2,
+    numSigned: 0,
+    minSignatures: 2,
+    instructionAccountsLen: 0,
+    instructionDataLen: 0,
+    instructionHash: 0n,
+    signers: [
+      tc.admins[0].publicKey.toString(),
+      tc.admins[1].publicKey.toString(),
+      PublicKey.default.toString(),
+      PublicKey.default.toString(),
+      PublicKey.default.toString(),
+      PublicKey.default.toString(),
+    ],
+    signed: [0, 0, 0, 0, 0, 0],
+    bump: tc.multisig.bump,
+  };
+
+  const tokenExpected = {
+    pool: tc.pool.publicKey.toString(),
+    mint: tc.custodies[0].mint.publicKey.toString(),
+    tokenAccount: tc.custodies[0].tokenAccount.toString(),
+    decimals: 9,
+    oracle: {
+      oracleAccount: tc.custodies[0].oracleAccount.toString(),
+      oracleType: { custom: {} },
+      oracleAuthority: tc.oracleAuthority.publicKey.toString(),
+      maxPriceError: 10000n,
+      maxPriceAgeSec: 60,
+    },
+    pricing: {
+      useUnrealizedPnlInAum: true,
+      tradeSpreadLong: 100n,
+      tradeSpreadShort: 100n,
+      minInitialLeverage: 10000n,
+      maxInitialLeverage: 1000000n,
+      maxLeverage: 1000000n,
+      maxPayoffMult: 10000n,
+      maxUtilization: 10000n,
+      maxPositionLockedUsd: 1000000000000n,
+      maxTotalLockedUsd: 1000000000000n,
+    },
+    permissions: {
+      allowAddLiquidity: true,
+      allowRemoveLiquidity: true,
+      allowOpenPosition: true,
+      allowClosePosition: true,
+      allowPnlWithdrawal: true,
+      allowCollateralWithdrawal: true,
+      allowSizeChange: true,
+    },
+    fees: {
+      utilizationMult: 20000n,
+      addLiquidity: 100n,
+      removeLiquidity: 100n,
+      openPosition: 100n,
+      closePosition: 100n,
+      liquidation: 100n,
+      protocolShare: 10n,
+    },
+    borrowRate: {
+      baseRate: 0n,
+      slope1: 80000n,
+      slope2: 120000n,
+      optimalUtilization: 800000000n,
+    },
+    assets: {
+      collateral: 0n,
+      protocolFees: 0n,
+      owned: 0n,
+      locked: 0n,
+    },
+    collectedFees: {
+      addLiquidityUsd: 0n,
+      removeLiquidityUsd: 0n,
+      openPositionUsd: 0n,
+      closePositionUsd: 0n,
+      liquidationUsd: 0n,
+    },
+    volumeStats: {
+      addLiquidityUsd: 0n,
+      removeLiquidityUsd: 0n,
+      openPositionUsd: 0n,
+      closePositionUsd: 0n,
+      liquidationUsd: 0n,
+    },
+    tradeStats: {
+      profitUsd: 0n,
+      lossUsd: 0n,
+      oiLongUsd: 0n,
+    },
+    longPositions: {
+      openPositions: 0n,
+      collateralUsd: 0n,
+      sizeUsd: 0n,
+      borrowSizeUsd: 0n,
+      lockedAmount: 0n,
+      weightedPrice: 0n,
+      totalQuantity: 0n,
+      cumulativeInterestUsd: 0n,
+      cumulativeInterestSnapshot: 0n,
+    },
+    borrowRateState: {
+      currentRate: 0n,
+      cumulativeInterest: 0n,
+      lastUpdate: 0n,
+    },
+    bump: expect.any(Number),
+    tokenAccountBump: expect.any(Number),
+  };
+
+  const setClock = async (ms: number) => {
+    const currentClock = await context.banksClient.getClock();
+    context.setClock(
+      new Clock(
+        currentClock.slot,
+        currentClock.epochStartTimestamp,
+        currentClock.epoch,
+        currentClock.leaderScheduleEpoch,
+        BigInt(ms),
+      ),
+    );
+  };
+
   it("init", async () => {
-    tc = new TestClient(context, program);
-    tc.printErrors = true;
-    await tc.initFixture();
-    setClock = async (ms: number) => {
-      const currentClock = await context.banksClient.getClock();
-      context.setClock(
-        new Clock(
-          currentClock.slot,
-          currentClock.epochStartTimestamp,
-          currentClock.epoch,
-          currentClock.leaderScheduleEpoch,
-          BigInt(ms),
-        ),
-      );
-    };
     await setClock(0);
     await tc.init();
 
-    // await expect(tc.init()).rejects.toThrow("already in use");
-    tc.printErrors = false;
-    await new Promise((r) => setTimeout(r, 10)); // Avoid transaction already processed
-    await expect(tc.init()).rejects.toThrow("already in use");
-    tc.printErrors = true;
-    // let err = await tc.ensureFails(tc.init());
-    // console.log(err.logs);
-    // expect(err.logs[3]).includes("already in use");
-
-    perpetualsExpected = {
-      permissions: {
-        allowAddLiquidity: true,
-        allowRemoveLiquidity: true,
-        allowOpenPosition: true,
-        allowClosePosition: true,
-        allowPnlWithdrawal: true,
-        allowCollateralWithdrawal: true,
-        allowSizeChange: true,
-      },
-      pools: [],
-      transferAuthorityBump: tc.authority.bump,
-      perpetualsBump: tc.perpetuals.bump,
-      inceptionTime: new BN(0),
-    };
-
-    multisigExpected = {
-      numSigners: 2,
-      numSigned: 0,
-      minSignatures: 2,
-      instructionAccountsLen: 0,
-      instructionDataLen: 0,
-      instructionHash: new anchor.BN(0),
-      signers: [
-        tc.admins[0].publicKey,
-        tc.admins[1].publicKey,
-        PublicKey.default,
-        PublicKey.default,
-        PublicKey.default,
-        PublicKey.default,
-      ],
-      signed: [0, 0, 0, 0, 0, 0],
-      bump: tc.multisig.bump,
-    };
-
-    let multisig = await tc.program.account.multisig.fetch(
+    const multisig = await tc.program.account.multisig.fetch(
       tc.multisig.publicKey,
     );
-    expect(JSON.stringify(multisig)).to.equal(JSON.stringify(multisigExpected));
+    expect(simplify(multisig)).toStrictEqual(multisigExpected);
 
-    let perpetuals = await tc.program.account.perpetuals.fetch(
+    const perpetuals = await tc.program.account.perpetuals.fetch(
       tc.perpetuals.publicKey,
     );
-    expect(JSON.stringify(perpetuals)).to.equal(
-      JSON.stringify(perpetualsExpected),
-    );
+    expect(simplify(perpetuals)).toStrictEqual(perpetualsExpected);
+  });
+
+  it("Can reject init twice", async () => {
+    await expect(tc.init()).rejects.toThrow("already in use");
   });
 
   it("setAdminSigners", async () => {
     await tc.setAdminSigners(1);
 
-    let multisig = await tc.program.account.multisig.fetch(
+    const multisig = await tc.program.account.multisig.fetch(
       tc.multisig.publicKey,
     );
     multisigExpected.minSignatures = 1;
-    expect(JSON.stringify(multisig)).to.equal(JSON.stringify(multisigExpected));
+    expect(simplify(multisig)).toStrictEqual(multisigExpected);
   });
 
   it("setPermissions", async () => {
@@ -214,78 +336,36 @@ describe("perpetuals", async () => {
     };
     await tc.setPermissions(perpetualsExpected.permissions);
 
-    let perpetuals = await tc.program.account.perpetuals.fetch(
+    const perpetuals = await tc.program.account.perpetuals.fetch(
       tc.perpetuals.publicKey,
     );
-    expect(JSON.stringify(perpetuals)).to.equal(
-      JSON.stringify(perpetualsExpected),
-    );
+    expect(simplify(perpetuals)).toStrictEqual(perpetualsExpected);
   });
 
   it("addAndRemovePool", async () => {
     await tc.addPool("test pool");
 
-    let pool = await tc.program.account.pool.fetch(tc.pool.publicKey);
-    let poolExpected = {
+    expect(
+      simplify(await tc.program.account.pool.fetch(tc.pool.publicKey)),
+    ).toStrictEqual({
       name: "test pool",
       custodies: [],
-      aumUsd: new BN(0),
+      aumUsd: 0n,
       bump: tc.pool.bump,
-      lpTokenBump: pool.lpTokenBump,
-      inceptionTime: new BN(0),
-    };
-    expect(JSON.stringify(pool)).to.equal(JSON.stringify(poolExpected));
+      lpTokenBump: expect.any(Number),
+      inceptionTime: 0n,
+    });
 
     await tc.removePool();
-    await tc.ensureFails(tc.program.account.pool.fetch(tc.pool.publicKey));
+
+    await expect(
+      tc.program.account.pool.fetch(tc.pool.publicKey),
+    ).rejects.toThrow("Could not find");
 
     await tc.addPool("test pool");
   });
 
   it("addAndRemoveCustody", async () => {
-    oracleConfig = {
-      maxPriceError: new BN(10000),
-      maxPriceAgeSec: 60,
-      oracleType: { custom: {} },
-      oracleAccount: tc.custodies[0].oracleAccount,
-      oracleAuthority: tc.oracleAuthority.publicKey,
-    };
-    pricing = {
-      useUnrealizedPnlInAum: true,
-      tradeSpreadLong: new BN(100),
-      tradeSpreadShort: new BN(100),
-      minInitialLeverage: new BN(10000),
-      maxInitialLeverage: new BN(1000000),
-      maxLeverage: new BN(1000000),
-      maxPayoffMult: new BN(10000),
-      maxUtilization: new BN(10000),
-      maxPositionLockedUsd: new BN(1000 * 10 ** USD_DECIMALS),
-      maxTotalLockedUsd: new BN(1000 * 10 ** USD_DECIMALS),
-    };
-    permissions = {
-      allowAddLiquidity: true,
-      allowRemoveLiquidity: true,
-      allowOpenPosition: true,
-      allowClosePosition: true,
-      allowPnlWithdrawal: true,
-      allowCollateralWithdrawal: true,
-      allowSizeChange: true,
-    };
-    fees = {
-      utilizationMult: new BN(20000),
-      addLiquidity: new BN(100),
-      removeLiquidity: new BN(100),
-      openPosition: new BN(100),
-      closePosition: new BN(100),
-      liquidation: new BN(100),
-      protocolShare: new BN(10),
-    };
-    borrowRate = {
-      baseRate: new BN(0),
-      slope1: new BN(80000),
-      slope2: new BN(120000),
-      optimalUtilization: new BN(800000000),
-    };
     await tc.addCustody(
       tc.custodies[0],
       oracleConfig,
@@ -295,105 +375,15 @@ describe("perpetuals", async () => {
       borrowRate,
     );
 
-    let token = await tc.program.account.custody.fetch(tc.custodies[0].custody);
-    tokenExpected = {
-      pool: tc.pool.publicKey,
-      mint: tc.custodies[0].mint.publicKey,
-      tokenAccount: tc.custodies[0].tokenAccount,
-      decimals: 9,
-      oracle: {
-        oracleAccount: tc.custodies[0].oracleAccount,
-        oracleType: { custom: {} },
-        oracleAuthority: tc.oracleAuthority.publicKey,
-        maxPriceError: "10000",
-        maxPriceAgeSec: 60,
-      },
-      pricing: {
-        useUnrealizedPnlInAum: true,
-        tradeSpreadLong: "100",
-        tradeSpreadShort: "100",
-        minInitialLeverage: "10000",
-        maxInitialLeverage: "1000000",
-        maxLeverage: "1000000",
-        maxPayoffMult: "10000",
-        maxUtilization: "10000",
-        maxPositionLockedUsd: "1000000000000",
-        maxTotalLockedUsd: "1000000000000",
-      },
-      permissions: {
-        allowAddLiquidity: true,
-        allowRemoveLiquidity: true,
-        allowOpenPosition: true,
-        allowClosePosition: true,
-        allowPnlWithdrawal: true,
-        allowCollateralWithdrawal: true,
-        allowSizeChange: true,
-      },
-      fees: {
-        utilizationMult: "20000",
-        addLiquidity: "100",
-        removeLiquidity: "100",
-        openPosition: "100",
-        closePosition: "100",
-        liquidation: "100",
-        protocolShare: "10",
-      },
-      borrowRate: {
-        baseRate: "0",
-        slope1: "80000",
-        slope2: "120000",
-        optimalUtilization: "800000000",
-      },
-      assets: {
-        collateral: "0",
-        protocolFees: "0",
-        owned: "0",
-        locked: "0",
-      },
-      collectedFees: {
-        addLiquidityUsd: "0",
-        removeLiquidityUsd: "0",
-        openPositionUsd: "0",
-        closePositionUsd: "0",
-        liquidationUsd: "0",
-      },
-      volumeStats: {
-        addLiquidityUsd: "0",
-        removeLiquidityUsd: "0",
-        openPositionUsd: "0",
-        closePositionUsd: "0",
-        liquidationUsd: "0",
-      },
-      tradeStats: {
-        profitUsd: "0",
-        lossUsd: "0",
-        oiLongUsd: "0",
-      },
-      longPositions: {
-        openPositions: "0",
-        collateralUsd: "0",
-        sizeUsd: "0",
-        borrowSizeUsd: "0",
-        lockedAmount: "0",
-        weightedPrice: "0",
-        totalQuantity: "0",
-        cumulativeInterestUsd: "0",
-        cumulativeInterestSnapshot: "0",
-      },
-      borrowRateState: {
-        currentRate: "0",
-        cumulativeInterest: "0",
-        lastUpdate: "0",
-      },
-      bump: token.bump,
-      tokenAccountBump: token.tokenAccountBump,
-    };
-    expect(JSON.stringify(token, null, 2)).to.equal(
-      JSON.stringify(tokenExpected, null, 2),
+    const token = await tc.program.account.custody.fetch(
+      tc.custodies[0].custody,
     );
+    expect(simplify(token)).toStrictEqual(tokenExpected);
 
-    let oracleConfig2 = Object.assign({}, oracleConfig);
-    oracleConfig2.oracleAccount = tc.custodies[1].oracleAccount;
+    const oracleConfig2 = deepmerge({}, oracleConfig, {
+      oracleAccount: tc.custodies[1].oracleAccount,
+    });
+
     await tc.addCustody(
       tc.custodies[1],
       oracleConfig2,
@@ -404,9 +394,10 @@ describe("perpetuals", async () => {
     );
 
     await tc.removeCustody(tc.custodies[1]);
-    await tc.ensureFails(
+
+    await expect(
       tc.program.account.custody.fetch(tc.custodies[1].custody),
-    );
+    ).rejects.toThrow("Could not find");
 
     await tc.addCustody(
       tc.custodies[1],
@@ -431,27 +422,37 @@ describe("perpetuals", async () => {
       borrowRate,
     );
 
-    let token = await tc.program.account.custody.fetch(tc.custodies[0].custody);
-    tokenExpected.oracle.maxPriceAgeSec = 90;
-    tokenExpected.permissions.allowPnlWithdrawal = false;
-    tokenExpected.fees.liquidation = "200";
-    expect(JSON.stringify(token)).to.equal(JSON.stringify(tokenExpected));
+    const token = await tc.program.account.custody.fetch(
+      tc.custodies[0].custody,
+    );
+    expect(simplify(token)).toStrictEqual(
+      deepmerge({}, tokenExpected, {
+        oracle: {
+          maxPriceAgeSec: 90,
+        },
+        permissions: {
+          allowPnlWithdrawal: false,
+        },
+        fees: {
+          liquidation: 200n,
+        },
+      }),
+    );
   });
 
   it("setCustomOraclePrice", async () => {
     await tc.setCustomOraclePrice(123, tc.custodies[0]);
     await tc.setCustomOraclePrice(200, tc.custodies[1]);
 
-    let oracle = await tc.program.account.customOracle.fetch(
+    const oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
     );
-    let oracleExpected = {
-      price: new BN(123000),
+    expect(simplify(oracle)).toStrictEqual({
+      price: 123000n,
       expo: -3,
-      conf: new BN(0),
-      publishTime: oracle.publishTime,
-    };
-    expect(JSON.stringify(oracle)).to.equal(JSON.stringify(oracleExpected));
+      conf: 0n,
+      publishTime: BigInt(oracle.publishTime),
+    });
   });
 
   it("setCustomOraclePricePermissionless", async () => {
@@ -468,13 +469,13 @@ describe("perpetuals", async () => {
     oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
     );
-    let oracleExpected = {
-      price: new BN(500000),
+
+    expect(simplify(oracle)).toStrictEqual({
+      conf: 10n,
       expo: -3,
-      conf: new BN(10),
-      publishTime: oracle.publishTime,
-    };
-    expect(JSON.stringify(oracle)).to.equal(JSON.stringify(oracleExpected));
+      price: 500000n,
+      publishTime: BigInt(oracle.publishTime),
+    });
 
     // Updating the permissionless price oracle with an older publish time should no-op.
     await tc.setCustomOraclePricePermissionless(
@@ -483,11 +484,18 @@ describe("perpetuals", async () => {
       tc.custodies[0],
       oracle.publishTime.sub(new BN(20)),
     );
+
+    // Oracle's value is still 500 instead of the attempted 400.
     oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
     );
-    // Oracle's value is still 500 instead of the attempted 400.
-    expect(JSON.stringify(oracle)).to.equal(JSON.stringify(oracleExpected));
+
+    expect(simplify(oracle)).toStrictEqual({
+      conf: 10n,
+      expo: -3,
+      price: 500000n,
+      publishTime: BigInt(oracle.publishTime),
+    });
 
     // Try permissionless oracle update with increased & priority compute.
     await tc.setCustomOraclePricePermissionless(
@@ -502,13 +510,13 @@ describe("perpetuals", async () => {
     oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
     );
-    expect(JSON.stringify(oracle)).to.equal(
-      JSON.stringify({
-        ...oracleExpected,
-        price: new BN(1000000),
-        publishTime: oracle.publishTime,
-      }),
-    );
+
+    expect(simplify(oracle)).toStrictEqual({
+      conf: 10n,
+      expo: -3,
+      price: 1000000n,
+      publishTime: BigInt(oracle.publishTime),
+    });
 
     // after test, set price back to the expected for other test cases.
     await tc.setCustomOraclePricePermissionless(
@@ -520,13 +528,12 @@ describe("perpetuals", async () => {
   });
 
   it("setCustomOraclePricePermissionless Errors", async () => {
-    tc.printErrors = false;
     const oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
     );
     const publishTime = oracle.publishTime.add(new BN(1));
     // Attempting to update with a payload signed by a bogus key should fail.
-    let bogusKeypair = Keypair.generate();
+    const bogusKeypair = Keypair.generate();
     await expect(
       tc.setCustomOraclePricePermissionless(
         bogusKeypair,
@@ -548,7 +555,7 @@ describe("perpetuals", async () => {
     ).rejects.toThrow(/PermissionlessOracleMissingSignature/);
 
     // Sending the permissionless update with malformed message should fail.
-    let randomMessage = Buffer.alloc(60);
+    const randomMessage = Buffer.alloc(60);
     randomMessage.fill(0xab);
     await expect(
       tc.setCustomOraclePricePermissionless(
@@ -560,7 +567,6 @@ describe("perpetuals", async () => {
         randomMessage,
       ),
     ).rejects.toThrow(/PermissionlessOracleMessageMismatch/);
-    tc.printErrors = true;
   });
 
   it("setTestTime", async () => {
@@ -603,7 +609,7 @@ describe("perpetuals", async () => {
   });
 
   it("openPosition", async () => {
-    const ix = await tc.openPosition(
+    const ix = await tc.openPositionInstruction(
       125,
       tc.toTokenAmount(1, tc.custodies[0].decimals),
       tc.toTokenAmount(7, tc.custodies[0].decimals),
@@ -617,43 +623,44 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          borrowSizeUsd: BigInt("869610000000"),
-          collateralAmount: BigInt("1000000000"),
-          collateralUsd: BigInt("123000000000"),
+          borrowSizeUsd: 869610000000n,
+          collateralAmount: 1000000000n,
+          collateralUsd: 123000000000n,
           custody: tc.custodies[0].custody.toString(),
-          lockedAmount: BigInt("7000000000"),
-          time: BigInt("111"),
+          lockedAmount: 7000000000n,
+          time: 111n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: BigInt("124230000000"),
-          sizeUsd: BigInt("869610000000"),
+          price: 124230000000n,
+          sizeUsd: 869610000000n,
         },
         name: "openPosition",
       },
     ]);
 
-    let position = await tc.program.account.position.fetch(
-      tc.users[0].positionAccountsLong[0],
-    );
-    positionExpected = {
-      owner: tc.users[0].wallet.publicKey.toBase58(),
-      pool: tc.pool.publicKey.toBase58(),
-      custody: tc.custodies[0].custody.toBase58(),
-      openTime: "111",
-      updateTime: "0",
-      price: "124230000000",
-      sizeUsd: "869610000000",
-      borrowSizeUsd: "869610000000",
-      collateralUsd: "123000000000",
-      unrealizedProfitUsd: "0",
-      unrealizedLossUsd: "0",
-      cumulativeInterestSnapshot: "0",
-      lockedAmount: "7000000000",
-      collateralAmount: "1000000000",
-      bump: position.bump,
-    };
-
-    expect(JSON.stringify(position)).to.equal(JSON.stringify(positionExpected));
+    expect(
+      simplify(
+        await tc.program.account.position.fetch(
+          tc.users[0].positionAccountsLong[0],
+        ),
+      ),
+    ).toStrictEqual({
+      owner: tc.users[0].wallet.publicKey.toString(),
+      pool: tc.pool.publicKey.toString(),
+      custody: tc.custodies[0].custody.toString(),
+      openTime: 111n,
+      updateTime: 0n,
+      price: 124230000000n,
+      sizeUsd: 869610000000n,
+      borrowSizeUsd: 869610000000n,
+      collateralUsd: 123000000000n,
+      unrealizedProfitUsd: 0n,
+      unrealizedLossUsd: 0n,
+      cumulativeInterestSnapshot: 0n,
+      lockedAmount: 7000000000n,
+      collateralAmount: 1000000000n,
+      bump: expect.any(Number),
+    });
   });
 
   it("getPosition", async () => {
@@ -671,13 +678,13 @@ describe("perpetuals", async () => {
     expect(
       simplify(parseResultFromLogs("getPositionResult", result)),
     ).toStrictEqual({
-      leverage: BigInt("89573"),
-      liquidationPrice: BigInt("109143171429"),
+      leverage: 89573n,
+      liquidationPrice: 109143171429n,
       liquidationState: false,
-      loss: BigInt("25916100000"),
-      markPrice: BigInt("123000000000"),
-      margin: BigInt("895"),
-      profit: BigInt("0"),
+      loss: 25916100000n,
+      markPrice: 123000000000n,
+      margin: 895n,
+      profit: 0n,
     });
   });
 
@@ -702,7 +709,7 @@ describe("perpetuals", async () => {
   });
 
   it("closePosition", async () => {
-    const ix = await tc.closePosition(
+    const ix = await tc.closePositionInstruction(
       1,
       tc.users[0],
       tc.users[0].tokenAccounts[0],
@@ -713,18 +720,18 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          collateralAmount: BigInt("1999991870"),
+          collateralAmount: 1999991870n,
           custody: tc.custodies[0].custody.toString(),
-          feeAmount: BigInt("70700000"),
-          lossUsd: BigInt("25916100000"),
+          feeAmount: 70700000n,
+          lossUsd: 25916100000n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: BigInt("121770000000"),
-          profitUsd: BigInt("0"),
-          protocolFee: BigInt("70700"),
-          sizeUsd: BigInt("869610000000"),
-          time: BigInt("111"),
-          transferAmount: BigInt("1789291869"),
+          price: 121770000000n,
+          profitUsd: 0n,
+          protocolFee: 70700n,
+          sizeUsd: 869610000000n,
+          time: 111n,
+          transferAmount: 1789291869n,
         },
         name: "closePosition",
       },
@@ -737,7 +744,7 @@ describe("perpetuals", async () => {
 
   it("liquidate", async () => {
     await processInstructions([
-      await tc.openPosition(
+      await tc.openPositionInstruction(
         125,
         tc.toTokenAmount(1, tc.custodies[0].decimals),
         tc.toTokenAmount(7, tc.custodies[0].decimals),
@@ -749,7 +756,7 @@ describe("perpetuals", async () => {
     ]);
 
     await tc.setCustomOraclePrice(80, tc.custodies[0]);
-    const ix = await tc.liquidate(
+    const ix = await tc.liquidateInstruction(
       tc.users[0],
       tc.users[0].tokenAccounts[0],
       tc.users[0].positionAccountsLong[0],
@@ -759,20 +766,20 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          collateralAmount: BigInt("1000000000"),
+          collateralAmount: 1000000000n,
           custody: tc.custodies[0].custody.toString(),
-          feeAmount: BigInt("217402500"),
-          lossUsd: BigInt("332602200000"),
+          feeAmount: 217402500n,
+          lossUsd: 332602200000n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: BigInt("80000"),
-          profitUsd: BigInt("0"),
-          protocolFee: BigInt("217403"),
-          rewardAmount: BigInt("0"),
+          price: 80000n,
+          profitUsd: 0n,
+          protocolFee: 217403n,
+          rewardAmount: 0n,
           signer: tc.users[0].wallet.publicKey.toString(),
-          sizeUsd: BigInt("869610000000"),
-          time: BigInt("111"),
-          transferAmount: BigInt("0"),
+          sizeUsd: 869610000000n,
+          time: 111n,
+          transferAmount: 0n,
         },
         name: "liquidatePosition",
       },
