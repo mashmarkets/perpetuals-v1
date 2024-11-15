@@ -21,6 +21,20 @@ import * as nacl from "tweetnacl";
 
 import { Perpetuals } from "../../target/types/perpetuals.js";
 
+type User = {
+  wallet: Keypair;
+  tokenAccounts: PublicKey[];
+  lpTokenAccount: PublicKey;
+  positionAccountsLong: PublicKey[];
+};
+
+type Custody = {
+  mint: Keypair;
+  tokenAccount: PublicKey;
+  oracleAccount: PublicKey;
+  custody: PublicKey;
+  decimals: number;
+};
 export class TestClient {
   context: ProgramTestContext;
   provider: anchor.AnchorProvider;
@@ -29,8 +43,12 @@ export class TestClient {
 
   admins: Keypair[];
   feesAccount: PublicKey;
-  adminMetas: AccountMeta[];
   oracleAuthority: Keypair;
+  adminMetas: AccountMeta[];
+
+  custodies: Custody[];
+  custodyMetas: AccountMeta[];
+  users: User[];
 
   // pdas
   multisig: { publicKey: PublicKey; bump: number };
@@ -38,22 +56,6 @@ export class TestClient {
   perpetuals: { publicKey: PublicKey; bump: number };
   pool: { publicKey: PublicKey; bump: number };
   lpToken: { publicKey: PublicKey; bump: number };
-
-  custodies: {
-    mint: Keypair;
-    tokenAccount: PublicKey;
-    oracleAccount: PublicKey;
-    custody: PublicKey;
-    decimals: number;
-  }[];
-  custodyMetas: AccountMeta[];
-
-  users: {
-    wallet: Keypair;
-    tokenAccounts: PublicKey[];
-    lpTokenAccount: PublicKey;
-    positionAccountsLong: PublicKey[];
-  }[];
 
   constructor(
     context: ProgramTestContext,
@@ -69,6 +71,15 @@ export class TestClient {
     anchor.BN.prototype.toJSON = function () {
       return this.toString(10);
     };
+
+    // pdas
+    this.multisig = this.findProgramAddress("multisig");
+    this.authority = this.findProgramAddress("transfer_authority");
+    this.perpetuals = this.findProgramAddress("perpetuals");
+    this.pool = this.findProgramAddress("pool", "test pool");
+    this.lpToken = this.findProgramAddress("lp_token_mint", [
+      this.pool.publicKey,
+    ]);
   }
 
   initFixture = async () => {
@@ -87,15 +98,6 @@ export class TestClient {
     }
 
     this.oracleAuthority = Keypair.generate();
-
-    // pdas
-    this.multisig = this.findProgramAddress("multisig");
-    this.authority = this.findProgramAddress("transfer_authority");
-    this.perpetuals = this.findProgramAddress("perpetuals");
-    this.pool = this.findProgramAddress("pool", "test pool");
-    this.lpToken = this.findProgramAddress("lp_token_mint", [
-      this.pool.publicKey,
-    ]);
 
     // custodies
     this.custodies = [];
@@ -244,19 +246,24 @@ export class TestClient {
     };
   };
 
-  findProgramAddress = (label: string, extraSeeds = null) => {
+  findProgramAddress = (
+    label: string,
+    extraSeeds: Array<Buffer | PublicKey | string> = [],
+  ) => {
     let seeds = [Buffer.from(anchor.utils.bytes.utf8.encode(label))];
-    if (extraSeeds) {
-      for (let extraSeed of extraSeeds) {
-        if (typeof extraSeed === "string") {
-          seeds.push(Buffer.from(anchor.utils.bytes.utf8.encode(extraSeed)));
-        } else if (Array.isArray(extraSeed)) {
-          seeds.push(Buffer.from(extraSeed));
-        } else {
-          seeds.push(extraSeed.toBuffer());
-        }
+
+    for (let extraSeed of extraSeeds) {
+      if (typeof extraSeed === "string") {
+        seeds.push(Buffer.from(anchor.utils.bytes.utf8.encode(extraSeed)));
+      } else if (Array.isArray(extraSeed)) {
+        seeds.push(Buffer.from(extraSeed));
+      } else if (extraSeed instanceof PublicKey) {
+        seeds.push(extraSeed.toBuffer());
+      } else {
+        seeds.push(extraSeed);
       }
     }
+
     let res = PublicKey.findProgramAddressSync(seeds, this.program.programId);
     return { publicKey: res[0], bump: res[1] };
   };
@@ -634,8 +641,8 @@ export class TestClient {
     for (let i = 0; i < multisig.minSignatures; ++i) {
       await this.program.methods
         .setCustomOraclePrice({
-          price: new BN(price * 1000),
-          expo: -3,
+          price: new BN(price * 1_000_000),
+          expo: -6,
           conf: new BN(0),
           publishTime: new BN(await this.getTime()),
         })
@@ -664,8 +671,8 @@ export class TestClient {
   ) => {
     let setCustomOraclePricePermissionlessParams = {
       custodyAccount: custody.custody,
-      price: new BN(price * 1000),
-      expo: -3,
+      price: new BN(price * 1_000_000),
+      expo: -6,
       conf: new BN(10),
       publishTime:
         publishTime != null ? new BN(publishTime) : new BN(this.getTime()),
@@ -777,15 +784,23 @@ export class TestClient {
       .rpc();
   };
 
-  openPositionInstruction = async (
-    price: number,
-    collateral: BN,
-    size: BN,
+  openPositionInstruction = async ({
+    price,
+    collateral,
+    size,
     user,
-    fundingAccount: PublicKey,
-    positionAccount: PublicKey,
+    fundingAccount,
+    positionAccount,
     custody,
-  ) => {
+  }: {
+    price: number;
+    collateral: BN;
+    size: BN;
+    user: User;
+    fundingAccount: PublicKey;
+    positionAccount: PublicKey;
+    custody: Custody;
+  }) => {
     return await this.program.methods
       .openPosition({
         price: new BN(price * 10 ** 9),
@@ -889,12 +904,17 @@ export class TestClient {
       .instruction();
   };
 
-  liquidateInstruction = async (
+  liquidateInstruction = async ({
     user,
-    tokenAccount: PublicKey,
-    positionAccount: PublicKey,
+    tokenAccount,
+    positionAccount,
     custody,
-  ) => {
+  }: {
+    user: User;
+    tokenAccount: PublicKey;
+    positionAccount: PublicKey;
+    custody: Custody;
+  }) => {
     return await this.program.methods
       .liquidate({})
       .accounts({

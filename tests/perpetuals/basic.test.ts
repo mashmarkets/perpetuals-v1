@@ -120,15 +120,15 @@ describe("perpetuals", async () => {
   };
   const pricing = {
     useUnrealizedPnlInAum: true,
-    tradeSpreadLong: new BN(100),
-    tradeSpreadShort: new BN(100),
-    minInitialLeverage: new BN(10000),
-    maxInitialLeverage: new BN(1000000),
-    maxLeverage: new BN(1000000),
-    maxPayoffMult: new BN(10000),
-    maxUtilization: new BN(10000),
-    maxPositionLockedUsd: new BN(1000 * 10 ** USD_DECIMALS),
-    maxTotalLockedUsd: new BN(1000 * 10 ** USD_DECIMALS),
+    tradeSpreadLong: new BN(0),
+    tradeSpreadShort: new BN(0),
+    minInitialLeverage: new BN(11_000),
+    maxInitialLeverage: new BN(10_000_000),
+    maxLeverage: new BN(20_000_000),
+    maxPayoffMult: new BN(10_000),
+    maxUtilization: new BN(9_000),
+    maxPositionLockedUsd: new BN(1_000_000 * 10 ** USD_DECIMALS),
+    maxTotalLockedUsd: new BN(1_000_000 * 10 ** USD_DECIMALS),
   };
   const permissions = {
     allowAddLiquidity: true,
@@ -140,13 +140,13 @@ describe("perpetuals", async () => {
     allowSizeChange: true,
   };
   const fees = {
-    utilizationMult: new BN(20000),
-    addLiquidity: new BN(100),
-    removeLiquidity: new BN(100),
-    openPosition: new BN(100),
-    closePosition: new BN(100),
-    liquidation: new BN(100),
-    protocolShare: new BN(10),
+    utilizationMult: new BN(10_000),
+    addLiquidity: new BN(0),
+    removeLiquidity: new BN(20),
+    openPosition: new BN(0),
+    closePosition: new BN(10),
+    liquidation: new BN(0),
+    protocolShare: new BN(2_000),
   };
   const borrowRate = {
     baseRate: new BN(0),
@@ -203,15 +203,15 @@ describe("perpetuals", async () => {
     },
     pricing: {
       useUnrealizedPnlInAum: true,
-      tradeSpreadLong: 100n,
-      tradeSpreadShort: 100n,
-      minInitialLeverage: 10000n,
-      maxInitialLeverage: 1000000n,
-      maxLeverage: 1000000n,
-      maxPayoffMult: 10000n,
-      maxUtilization: 10000n,
-      maxPositionLockedUsd: 1000000000000n,
-      maxTotalLockedUsd: 1000000000000n,
+      tradeSpreadLong: 0n,
+      tradeSpreadShort: 0n,
+      minInitialLeverage: 11_000n,
+      maxInitialLeverage: 10_000_000n,
+      maxLeverage: 20_000_000n,
+      maxPayoffMult: 10_000n,
+      maxUtilization: 9_000n,
+      maxPositionLockedUsd: 1_000_000_000_000_000n,
+      maxTotalLockedUsd: 1_000_000_000_000_000n,
     },
     permissions: {
       allowAddLiquidity: true,
@@ -223,13 +223,13 @@ describe("perpetuals", async () => {
       allowSizeChange: true,
     },
     fees: {
-      utilizationMult: 20000n,
-      addLiquidity: 100n,
-      removeLiquidity: 100n,
-      openPosition: 100n,
-      closePosition: 100n,
-      liquidation: 100n,
-      protocolShare: 10n,
+      utilizationMult: 10000n,
+      addLiquidity: 0n,
+      removeLiquidity: 20n,
+      openPosition: 0n,
+      closePosition: 10n,
+      liquidation: 0n,
+      protocolShare: 2_000n,
     },
     borrowRate: {
       baseRate: 0n,
@@ -448,8 +448,8 @@ describe("perpetuals", async () => {
       tc.custodies[0].oracleAccount,
     );
     expect(simplify(oracle)).toStrictEqual({
-      price: 123000n,
-      expo: -3,
+      price: 123_000_000n,
+      expo: -6,
       conf: 0n,
       publishTime: BigInt(oracle.publishTime),
     });
@@ -472,8 +472,8 @@ describe("perpetuals", async () => {
 
     expect(simplify(oracle)).toStrictEqual({
       conf: 10n,
-      expo: -3,
-      price: 500000n,
+      expo: -6,
+      price: 500_000_000n,
       publishTime: BigInt(oracle.publishTime),
     });
 
@@ -492,8 +492,8 @@ describe("perpetuals", async () => {
 
     expect(simplify(oracle)).toStrictEqual({
       conf: 10n,
-      expo: -3,
-      price: 500000n,
+      expo: -6,
+      price: 500_000_000n,
       publishTime: BigInt(oracle.publishTime),
     });
 
@@ -513,8 +513,8 @@ describe("perpetuals", async () => {
 
     expect(simplify(oracle)).toStrictEqual({
       conf: 10n,
-      expo: -3,
-      price: 1000000n,
+      expo: -6,
+      price: 1_000_000_000n,
       publishTime: BigInt(oracle.publishTime),
     });
 
@@ -576,14 +576,14 @@ describe("perpetuals", async () => {
 
   it("addLiquidity", async () => {
     await tc.addLiquidity(
-      tc.toTokenAmount(10, tc.custodies[0].decimals),
+      tc.toTokenAmount(100, tc.custodies[0].decimals),
       new BN(1),
       tc.users[0],
       tc.users[0].tokenAccounts[0],
       tc.custodies[0],
     );
     await tc.addLiquidity(
-      tc.toTokenAmount(10, tc.custodies[1].decimals),
+      tc.toTokenAmount(100, tc.custodies[1].decimals),
       new BN(1),
       tc.users[1],
       tc.users[1].tokenAccounts[1],
@@ -609,21 +609,21 @@ describe("perpetuals", async () => {
   });
 
   it("openPosition", async () => {
-    const ix = await tc.openPositionInstruction(
-      125,
-      tc.toTokenAmount(1, tc.custodies[0].decimals),
-      tc.toTokenAmount(7, tc.custodies[0].decimals),
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.users[0].positionAccountsLong[0],
-      tc.custodies[0],
-    );
+    const ix = await tc.openPositionInstruction({
+      price: 125,
+      collateral: tc.toTokenAmount(1, tc.custodies[0].decimals),
+      size: tc.toTokenAmount(7, tc.custodies[0].decimals),
+      user: tc.users[0],
+      fundingAccount: tc.users[0].tokenAccounts[0],
+      positionAccount: tc.users[0].positionAccountsLong[0],
+      custody: tc.custodies[0],
+    });
 
     const result = await processInstructions([ix]);
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          borrowSizeUsd: 869610000000n,
+          borrowSizeUsd: 861000000000n,
           collateralAmount: 1000000000n,
           collateralUsd: 123000000000n,
           custody: tc.custodies[0].custody.toString(),
@@ -631,8 +631,8 @@ describe("perpetuals", async () => {
           time: 111n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: 124230000000n,
-          sizeUsd: 869610000000n,
+          price: 123000000000n,
+          sizeUsd: 861000000000n,
         },
         name: "openPosition",
       },
@@ -645,21 +645,21 @@ describe("perpetuals", async () => {
         ),
       ),
     ).toStrictEqual({
+      borrowSizeUsd: 861000000000n,
+      bump: expect.any(Number),
+      collateralAmount: 1000000000n,
+      collateralUsd: 123000000000n,
+      cumulativeInterestSnapshot: 0n,
+      custody: tc.custodies[0].custody.toString(),
+      lockedAmount: 7000000000n,
+      openTime: 111n,
       owner: tc.users[0].wallet.publicKey.toString(),
       pool: tc.pool.publicKey.toString(),
-      custody: tc.custodies[0].custody.toString(),
-      openTime: 111n,
-      updateTime: 0n,
-      price: 124230000000n,
-      sizeUsd: 869610000000n,
-      borrowSizeUsd: 869610000000n,
-      collateralUsd: 123000000000n,
-      unrealizedProfitUsd: 0n,
+      price: 123000000000n,
+      sizeUsd: 861000000000n,
       unrealizedLossUsd: 0n,
-      cumulativeInterestSnapshot: 0n,
-      lockedAmount: 7000000000n,
-      collateralAmount: 1000000000n,
-      bump: expect.any(Number),
+      unrealizedProfitUsd: 0n,
+      updateTime: 0n,
     });
   });
 
@@ -678,12 +678,12 @@ describe("perpetuals", async () => {
     expect(
       simplify(parseResultFromLogs("getPositionResult", result)),
     ).toStrictEqual({
-      leverage: 89573n,
-      liquidationPrice: 109143171429n,
+      leverage: 70493n,
+      liquidationPrice: 105613071429n,
       liquidationState: false,
-      loss: 25916100000n,
+      loss: 861000000n,
       markPrice: 123000000000n,
-      margin: 895n,
+      margin: 35n,
       profit: 0n,
     });
   });
@@ -722,16 +722,16 @@ describe("perpetuals", async () => {
         data: {
           collateralAmount: 1999991870n,
           custody: tc.custodies[0].custody.toString(),
-          feeAmount: 70700000n,
-          lossUsd: 25916100000n,
+          feeAmount: 7000000n,
+          lossUsd: 861000000n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: 121770000000n,
+          price: 123000000000n,
           profitUsd: 0n,
-          protocolFee: 70700n,
-          sizeUsd: 869610000000n,
+          protocolFee: 1400000n,
+          sizeUsd: 861000000000n,
           time: 111n,
-          transferAmount: 1789291869n,
+          transferAmount: 1992991869n,
         },
         name: "closePosition",
       },
@@ -744,40 +744,43 @@ describe("perpetuals", async () => {
 
   it("liquidate", async () => {
     await processInstructions([
-      await tc.openPositionInstruction(
-        125,
-        tc.toTokenAmount(1, tc.custodies[0].decimals),
-        tc.toTokenAmount(7, tc.custodies[0].decimals),
-        tc.users[0],
-        tc.users[0].tokenAccounts[0],
-        tc.users[0].positionAccountsLong[0],
-        tc.custodies[0],
-      ),
+      await tc.openPositionInstruction({
+        price: 125,
+        collateral: tc.toTokenAmount(0.1, tc.custodies[0].decimals),
+        size: tc.toTokenAmount(50, tc.custodies[0].decimals),
+        user: tc.users[0],
+        fundingAccount: tc.users[0].tokenAccounts[0],
+        positionAccount: tc.users[0].positionAccountsLong[0],
+        custody: tc.custodies[0],
+      }),
     ]);
 
-    await tc.setCustomOraclePrice(80, tc.custodies[0]);
-    const ix = await tc.liquidateInstruction(
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.users[0].positionAccountsLong[0],
-      tc.custodies[0],
-    );
+    await tc.setCustomOraclePrice(122.8154499999, tc.custodies[0]);
+
+    const ix = await tc.liquidateInstruction({
+      user: tc.users[0],
+      tokenAccount: tc.users[0].tokenAccounts[0],
+      positionAccount: tc.users[0].positionAccountsLong[0],
+      custody: tc.custodies[0],
+    });
+
     const result = await processInstructions([ix]);
+
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          collateralAmount: 1000000000n,
+          collateralAmount: 100000000n,
           custody: tc.custodies[0].custody.toString(),
-          feeAmount: 217402500n,
-          lossUsd: 332602200000n,
+          feeAmount: 1001502670n,
+          lossUsd: 132227550090n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: 80000n,
+          price: 122815449n,
           profitUsd: 0n,
-          protocolFee: 217403n,
+          protocolFee: 200300534n,
           rewardAmount: 0n,
           signer: tc.users[0].wallet.publicKey.toString(),
-          sizeUsd: 869610000000n,
+          sizeUsd: 6150000000000n,
           time: 111n,
           transferAmount: 0n,
         },

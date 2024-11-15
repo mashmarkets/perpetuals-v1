@@ -42,9 +42,9 @@ pub struct Position {
     pub size_usd: u64,
     pub borrow_size_usd: u64,
     pub collateral_usd: u64,
-    pub unrealized_profit_usd: u64,
-    pub unrealized_loss_usd: u64,
-    pub cumulative_interest_snapshot: u128,
+    pub unrealized_profit_usd: u64, // I believe this is always 0
+    pub unrealized_loss_usd: u64,   // I believe this is always 0
+    pub cumulative_interest_snapshot: u128, // I believe this is never updated as position cannot be modified
     pub locked_amount: u64,
     pub collateral_amount: u64,
 

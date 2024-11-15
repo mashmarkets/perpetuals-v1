@@ -24,6 +24,29 @@ pub struct Pool {
     pub inception_time: i64,
 }
 
+fn get_pnl_before_fees_usd(size_usd: u64, entry: u64, exit: u64) -> Result<(u64, u64)> {
+    if exit > entry {
+        let price_diff_profit = math::checked_sub(exit, entry)?;
+        let profit_usd = math::checked_as_u64(math::checked_div(
+            math::checked_mul(size_usd as u128, price_diff_profit as u128)?,
+            entry as u128,
+        )?)?;
+        return Ok((profit_usd, 0));
+    }
+
+    if exit < entry {
+        let price_diff_loss = math::checked_sub(entry, exit)?;
+        let loss_usd = math::checked_as_u64(math::checked_ceil_div(
+            math::checked_mul(size_usd as u128, price_diff_loss as u128)?,
+            entry as u128,
+        )?)?;
+
+        return Ok((0, loss_usd));
+    }
+
+    // Prices are equal
+    Ok((0, 0))
+}
 /// Token Pool
 /// All returned prices are scaled to PRICE_DECIMALS.
 /// All returned amounts are scaled to corresponding custody decimals.
@@ -345,82 +368,52 @@ impl Pool {
             position.unrealized_loss_usd,
         )?;
 
-        let (price_diff_profit, price_diff_loss) = if exit_price > position.price {
-            (math::checked_sub(exit_price, position.price)?, 0u64)
+        let (potential_profit_usd, potential_loss_usd) =
+            get_pnl_before_fees_usd(position.size_usd, position.price, exit_price)?;
+
+        let max_profit_usd = if curtime <= position.open_time {
+            0
         } else {
-            (0u64, math::checked_sub(position.price, exit_price)?)
+            token_price.get_asset_amount_usd(position.locked_amount, custody.decimals)?
         };
 
-        let position_price = math::scale_to_exponent(
-            position.price,
-            -(Perpetuals::PRICE_DECIMALS as i32),
-            -(Perpetuals::USD_DECIMALS as i32),
-        )?;
-
-        if price_diff_profit > 0 {
-            let potential_profit_usd = math::checked_as_u64(math::checked_div(
-                math::checked_mul(position.size_usd as u128, price_diff_profit as u128)?,
-                position_price as u128,
-            )?)?;
-
+        if potential_profit_usd > 0 {
             let potential_profit_usd =
                 math::checked_add(potential_profit_usd, position.unrealized_profit_usd)?;
 
-            if potential_profit_usd >= unrealized_loss_usd {
-                let cur_profit_usd = math::checked_sub(potential_profit_usd, unrealized_loss_usd)?;
-                let min_collateral_price = token_price;
-
-                let max_profit_usd = if curtime <= position.open_time {
-                    0
-                } else {
-                    min_collateral_price
-                        .get_asset_amount_usd(position.locked_amount, custody.decimals)?
-                };
-                Ok((
-                    std::cmp::min(max_profit_usd, cur_profit_usd),
-                    0u64,
-                    exit_fee,
-                ))
-            } else {
-                Ok((
+            if potential_profit_usd < unrealized_loss_usd {
+                return Ok((
                     0u64,
                     math::checked_sub(unrealized_loss_usd, potential_profit_usd)?,
                     exit_fee,
-                ))
+                ));
             }
-        } else {
-            let potential_loss_usd = math::checked_as_u64(math::checked_ceil_div(
-                math::checked_mul(position.size_usd as u128, price_diff_loss as u128)?,
-                position_price as u128,
-            )?)?;
 
-            let potential_loss_usd = math::checked_add(potential_loss_usd, unrealized_loss_usd)?;
-
-            if potential_loss_usd >= position.unrealized_profit_usd {
-                Ok((
-                    0u64,
-                    math::checked_sub(potential_loss_usd, position.unrealized_profit_usd)?,
-                    exit_fee,
-                ))
-            } else {
-                let cur_profit_usd =
-                    math::checked_sub(position.unrealized_profit_usd, potential_loss_usd)?;
-
-                let min_collateral_price = token_price;
-
-                let max_profit_usd = if curtime <= position.open_time {
-                    0
-                } else {
-                    min_collateral_price
-                        .get_asset_amount_usd(position.locked_amount, custody.decimals)?
-                };
-                Ok((
-                    std::cmp::min(max_profit_usd, cur_profit_usd),
-                    0u64,
-                    exit_fee,
-                ))
-            }
+            let cur_profit_usd = math::checked_sub(potential_profit_usd, unrealized_loss_usd)?;
+            return Ok((
+                std::cmp::min(max_profit_usd, cur_profit_usd),
+                0u64,
+                exit_fee,
+            ));
         }
+
+        let potential_loss_usd = math::checked_add(potential_loss_usd, unrealized_loss_usd)?;
+
+        if potential_loss_usd >= position.unrealized_profit_usd {
+            return Ok((
+                0u64,
+                math::checked_sub(potential_loss_usd, position.unrealized_profit_usd)?,
+                exit_fee,
+            ));
+        }
+
+        let cur_profit_usd = math::checked_sub(position.unrealized_profit_usd, potential_loss_usd)?;
+
+        return Ok((
+            std::cmp::min(max_profit_usd, cur_profit_usd),
+            0u64,
+            exit_fee,
+        ));
     }
 
     pub fn get_assets_under_management_usd<'info>(
@@ -540,6 +533,7 @@ mod test {
             oracle::{OracleParams, OracleType},
             perpetuals::Permissions,
         },
+        test_case::test_case,
     };
 
     fn get_fixture() -> (Pool, Custody, Position, OraclePrice) {
@@ -881,6 +875,24 @@ mod test {
             )
             .unwrap()
         );
+    }
+
+    #[test_case(100, 1000, 1000, (0,0); "Prices are the same")]
+    #[test_case(100, 1000, 1100, (10,0); "In profit")]
+    #[test_case(100, 1000, 900, (0,10); "In loss")]
+    fn test_get_pnl_before_fees_usd(size_usd: u64, entry: u64, exit: u64, expected: (u64, u64)) {
+        assert_eq!(
+            get_pnl_before_fees_usd(
+                scale(size_usd, Perpetuals::USD_DECIMALS),
+                scale(entry, Perpetuals::PRICE_DECIMALS),
+                scale(exit, Perpetuals::PRICE_DECIMALS),
+            )
+            .unwrap(),
+            (
+                scale(expected.0, Perpetuals::USD_DECIMALS),
+                scale(expected.1, Perpetuals::USD_DECIMALS),
+            )
+        )
     }
 
     #[test]
