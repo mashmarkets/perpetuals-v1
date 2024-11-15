@@ -528,6 +528,7 @@ export const useGetLiquidationPrice = ({
 };
 
 export const useGetPosition = (position: Position | undefined) => {
+  const queryClient = useQueryClient();
   const program = useWritePerpetualsProgram();
   const { data: custody } = useCustody(position?.custody);
 
@@ -536,7 +537,15 @@ export const useGetPosition = (position: Position | undefined) => {
     refetchInterval: 5 * 1000,
     enabled: !!program && !!position && !!custody,
     queryFn: () =>
-      getPosition(program!, { position: position!, custody: custody! }),
+      getPosition(program!, { position: position!, custody: custody! }).catch(
+        (error) => {
+          // Position might have been closed, refresh
+          queryClient.invalidateQueries({
+            queryKey: ["position", position?.address],
+          });
+          throw error;
+        },
+      ),
   });
 };
 
