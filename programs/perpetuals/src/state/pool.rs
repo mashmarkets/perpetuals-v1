@@ -1,7 +1,7 @@
 use {
     crate::{
         error::PerpetualsError,
-        math,
+        math::{self},
         state::{
             custody::Custody,
             oracle::OraclePrice,
@@ -22,6 +22,20 @@ pub struct Pool {
     pub bump: u8,
     pub lp_token_bump: u8,
     pub inception_time: i64,
+}
+
+// Normalizes such that (at least) one of profit or loss is zero
+fn normalize_pnl(profit: u64, loss: u64) -> Result<(u64, u64)> {
+    if profit == 0 || loss == 0 {
+        // Already normalized
+        return Ok((profit, loss));
+    }
+
+    if profit >= loss {
+        Ok((math::checked_sub(profit, loss)?, 0))
+    } else {
+        Ok((0, math::checked_sub(loss, profit)?))
+    }
 }
 
 fn get_pnl_before_fees_usd(size_usd: u64, entry: u64, exit: u64) -> Result<(u64, u64)> {
@@ -363,13 +377,18 @@ impl Pool {
 
         let exit_fee_usd = token_price.get_asset_amount_usd(exit_fee, custody.decimals)?;
         let interest_usd = custody.get_interest_amount_usd(position, curtime)?;
-        let unrealized_loss_usd = math::checked_add(
-            math::checked_add(exit_fee_usd, interest_usd)?,
-            position.unrealized_loss_usd,
-        )?;
+        let total_fees_usd = math::checked_add(exit_fee_usd, interest_usd)?;
 
-        let (potential_profit_usd, potential_loss_usd) =
+        let (profit_usd, loss_usd) =
             get_pnl_before_fees_usd(position.size_usd, position.price, exit_price)?;
+
+        let (profit_usd, loss_usd) = normalize_pnl(
+            math::checked_add(profit_usd, position.unrealized_profit_usd)?,
+            math::checked_add(
+                loss_usd,
+                math::checked_add(position.unrealized_loss_usd, total_fees_usd)?,
+            )?,
+        )?;
 
         let max_profit_usd = if curtime <= position.open_time {
             0
@@ -377,43 +396,11 @@ impl Pool {
             token_price.get_asset_amount_usd(position.locked_amount, custody.decimals)?
         };
 
-        if potential_profit_usd > 0 {
-            let potential_profit_usd =
-                math::checked_add(potential_profit_usd, position.unrealized_profit_usd)?;
-
-            if potential_profit_usd < unrealized_loss_usd {
-                return Ok((
-                    0u64,
-                    math::checked_sub(unrealized_loss_usd, potential_profit_usd)?,
-                    exit_fee,
-                ));
-            }
-
-            let cur_profit_usd = math::checked_sub(potential_profit_usd, unrealized_loss_usd)?;
-            return Ok((
-                std::cmp::min(max_profit_usd, cur_profit_usd),
-                0u64,
-                exit_fee,
-            ));
-        }
-
-        let potential_loss_usd = math::checked_add(potential_loss_usd, unrealized_loss_usd)?;
-
-        if potential_loss_usd >= position.unrealized_profit_usd {
-            return Ok((
-                0u64,
-                math::checked_sub(potential_loss_usd, position.unrealized_profit_usd)?,
-                exit_fee,
-            ));
-        }
-
-        let cur_profit_usd = math::checked_sub(position.unrealized_profit_usd, potential_loss_usd)?;
-
-        return Ok((
-            std::cmp::min(max_profit_usd, cur_profit_usd),
-            0u64,
+        Ok((
+            std::cmp::min(max_profit_usd, profit_usd),
+            loss_usd,
             exit_fee,
-        ));
+        ))
     }
 
     pub fn get_assets_under_management_usd<'info>(
@@ -877,6 +864,14 @@ mod test {
         );
     }
 
+    #[test_case(0, 0, (0,0); "No Profit or loss")]
+    #[test_case(100, 0, (100,0); "Only Profit")]
+    #[test_case(0, 100, (0,100); "Only Loss")]
+    #[test_case(200, 100, (100,0); "More profit than loss")]
+    #[test_case(100, 150, (0,50); "More loss than profit")]
+    fn test_normalize_pnl(profit: u64, loss: u64, expected: (u64, u64)) {
+        assert_eq!(normalize_pnl(profit, loss).unwrap(), expected)
+    }
     #[test_case(100, 1000, 1000, (0,0); "Prices are the same")]
     #[test_case(100, 1000, 1100, (10,0); "In profit")]
     #[test_case(100, 1000, 900, (0,10); "In loss")]
