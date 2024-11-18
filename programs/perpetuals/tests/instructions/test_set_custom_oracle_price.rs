@@ -13,7 +13,6 @@ use {
     tokio::sync::RwLock,
 };
 
-#[allow(clippy::too_many_arguments)]
 pub async fn test_set_custom_oracle_price(
     program_test_ctx: &RwLock<ProgramTestContext>,
     admin: &Keypair,

@@ -295,25 +295,25 @@ mod test {
     #[test]
     fn test_checked_as_f64() {
         let price = OraclePrice::new(12300, -3);
-        assert_eq!(12.3, price.checked_as_f64().unwrap());
+        assert_eq!(price.checked_as_f64().unwrap(), 12.3);
 
         let price = OraclePrice::new(12300, 3);
-        assert_eq!(12300000.0, price.checked_as_f64().unwrap());
+        assert_eq!(price.checked_as_f64().unwrap(), 12300000.0);
     }
 
     #[test]
     fn test_scale_to_exponent() {
         let price = OraclePrice::new(12300, -3);
         let scaled = price.scale_to_exponent(-6).unwrap();
-        assert_eq!(12300000, scaled.price);
-        assert_eq!(-6, scaled.exponent);
+        assert_eq!(scaled.price, 12300000);
+        assert_eq!(scaled.exponent, -6,);
 
         let scaled = price.scale_to_exponent(-1).unwrap();
-        assert_eq!(123, scaled.price);
-        assert_eq!(-1, scaled.exponent);
+        assert_eq!(scaled.price, 123);
+        assert_eq!(scaled.exponent, -1);
 
         let scaled = price.scale_to_exponent(1).unwrap();
-        assert_eq!(1, scaled.price);
-        assert_eq!(1, scaled.exponent);
+        assert_eq!(scaled.price, 1);
+        assert_eq!(scaled.exponent, 1);
     }
 }
