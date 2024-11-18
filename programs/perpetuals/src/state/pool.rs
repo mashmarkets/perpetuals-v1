@@ -61,6 +61,20 @@ fn get_pnl_before_fees_usd(size_usd: u64, entry: u64, exit: u64) -> Result<(u64,
     // Prices are equal
     Ok((0, 0))
 }
+
+// Does it matter if its usd or tokens as long as its consistent?
+fn get_exit_fee_usd(_size: u64, profit: u64) -> Result<u64> {
+    if profit <= 0 {
+        return Ok(0);
+    }
+
+    // Take 1% of profit as exit fee
+    Ok(math::checked_ceil_div(
+        math::checked_mul(profit, 100)?,
+        10u64.pow(Perpetuals::BPS_DECIMALS as u32),
+    )?)
+}
+
 /// Token Pool
 /// All returned prices are scaled to PRICE_DECIMALS.
 /// All returned amounts are scaled to corresponding custody decimals.
@@ -156,10 +170,6 @@ impl Pool {
         Ok(price
             .scale_to_exponent(-(Perpetuals::PRICE_DECIMALS as i32))?
             .price)
-    }
-
-    pub fn get_exit_fee(&self, size: u64, custody: &Custody) -> Result<u64> {
-        Self::get_fee_amount(custody.fees.close_position, size)
     }
 
     #[allow(clippy::too_many_arguments)]
@@ -291,7 +301,6 @@ impl Pool {
     pub fn get_liquidation_price(
         &self,
         position: &Position,
-        token_price: &OraclePrice,
         custody: &Custody,
         curtime: i64,
     ) -> Result<u64> {
@@ -301,9 +310,7 @@ impl Pool {
             return Ok(0);
         }
 
-        let size = token_price.get_token_amount(position.size_usd, custody.decimals)?;
-        let exit_fee_tokens = self.get_exit_fee(size, custody)?;
-        let exit_fee_usd = token_price.get_asset_amount_usd(exit_fee_tokens, custody.decimals)?;
+        let exit_fee_usd = 0; // With PNL mode, in liquidation there will be no exit fees
         let interest_usd = custody.get_interest_amount_usd(position, curtime)?;
         let unrealized_loss_usd = math::checked_add(
             math::checked_add(exit_fee_usd, interest_usd)?,
@@ -366,29 +373,7 @@ impl Pool {
         }
 
         let exit_price = self.get_exit_price(token_price, custody)?;
-
         let size = token_price.get_token_amount(position.size_usd, custody.decimals)?;
-
-        let exit_fee = if liquidation {
-            self.get_liquidation_fee(size, custody)?
-        } else {
-            self.get_exit_fee(size, custody)?
-        };
-
-        let exit_fee_usd = token_price.get_asset_amount_usd(exit_fee, custody.decimals)?;
-        let interest_usd = custody.get_interest_amount_usd(position, curtime)?;
-        let total_fees_usd = math::checked_add(exit_fee_usd, interest_usd)?;
-
-        let (profit_usd, loss_usd) =
-            get_pnl_before_fees_usd(position.size_usd, position.price, exit_price)?;
-
-        let (profit_usd, loss_usd) = normalize_pnl(
-            math::checked_add(profit_usd, position.unrealized_profit_usd)?,
-            math::checked_add(
-                loss_usd,
-                math::checked_add(position.unrealized_loss_usd, total_fees_usd)?,
-            )?,
-        )?;
 
         let max_profit_usd = if curtime <= position.open_time {
             0
@@ -396,10 +381,34 @@ impl Pool {
             token_price.get_asset_amount_usd(position.locked_amount, custody.decimals)?
         };
 
+        let (profit_usd, loss_usd) =
+            get_pnl_before_fees_usd(position.size_usd, position.price, exit_price)?;
+
+        // Add unrealized and interest costs to pnl
+        let interest_usd = custody.get_interest_amount_usd(position, curtime)?;
+        let (profit_usd, loss_usd) = normalize_pnl(
+            math::checked_add(profit_usd, position.unrealized_profit_usd)?,
+            math::checked_add(
+                loss_usd,
+                math::checked_add(position.unrealized_loss_usd, interest_usd)?,
+            )?,
+        )?;
+
+        let exit_fee_usd = if liquidation {
+            let exit_fee = self.get_liquidation_fee(size, custody)?;
+            token_price.get_asset_amount_usd(exit_fee, custody.decimals)?
+        } else {
+            get_exit_fee_usd(position.size_usd, profit_usd)?
+        };
+
+        // Recalculate PNL now including exit fee
+        let (profit_usd, loss_usd) =
+            normalize_pnl(profit_usd, math::checked_add(loss_usd, exit_fee_usd)?)?;
+
         Ok((
             std::cmp::min(max_profit_usd, profit_usd),
             loss_usd,
-            exit_fee,
+            token_price.get_token_amount(exit_fee_usd, custody.decimals)?,
         ))
     }
 
@@ -608,6 +617,9 @@ mod test {
     }
 
     fn scale_f64(amount: f64, decimals: u8) -> u64 {
+        if amount == f64::MAX {
+            return u64::MAX;
+        }
         math::checked_as_u64(
             math::checked_float_mul(amount, 10u64.pow(decimals as u32) as f64).unwrap(),
         )
@@ -619,25 +631,25 @@ mod test {
         let (pool, custody, _position, token_price) = get_fixture();
 
         assert_eq!(
+            pool.get_price(&token_price, Side::Long, custody.pricing.trade_spread_long,)
+                .unwrap(),
             OraclePrice {
                 price: 25_250_000,
                 exponent: -3
             },
-            pool.get_price(&token_price, Side::Long, custody.pricing.trade_spread_long,)
-                .unwrap()
         );
 
         assert_eq!(
-            OraclePrice {
-                price: 24_750_000,
-                exponent: -3
-            },
             pool.get_price(
                 &token_price,
                 Side::Short,
                 custody.pricing.trade_spread_short,
             )
-            .unwrap()
+            .unwrap(),
+            OraclePrice {
+                price: 24_750_000,
+                exponent: -3
+            },
         );
     }
 
@@ -650,58 +662,58 @@ mod test {
         custody.borrow_rate.optimal_utilization = 500_000_000;
 
         assert_eq!(
-            0,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 0,
                 custody.get_locked_amount(0).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            0,
         );
 
         assert_eq!(
-            1_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 100_000,
                 custody.get_locked_amount(100_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            1_000,
         );
 
         assert_eq!(
-            3_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 150_000,
                 custody.get_locked_amount(150_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            3_000,
         );
 
         assert_eq!(
-            6_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 200_000,
                 custody.get_locked_amount(200_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            6_000,
         );
 
         assert_eq!(
-            9_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 300_000,
                 custody.get_locked_amount(300_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            9_000,
         );
 
         custody.fees.utilization_mult = 10_000;
@@ -709,140 +721,140 @@ mod test {
         custody.borrow_rate.optimal_utilization = 500_000_000;
 
         assert_eq!(
-            1_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 100_000,
                 custody.get_locked_amount(100_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            1_000,
         );
 
         assert_eq!(
-            2_250,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 150_000,
                 custody.get_locked_amount(150_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            2_250,
         );
 
         assert_eq!(
-            4_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 200_000,
                 custody.get_locked_amount(200_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            4_000,
         );
 
         assert_eq!(
-            6_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 300_000,
                 custody.get_locked_amount(300_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            6_000,
         );
 
         custody.fees.utilization_mult = 5_000;
 
         assert_eq!(
-            1_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 100_000,
                 custody.get_locked_amount(100_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            1_000,
         );
 
         assert_eq!(
-            1_875,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 150_000,
                 custody.get_locked_amount(150_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            1_875,
         );
 
         assert_eq!(
-            3_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 200_000,
                 custody.get_locked_amount(200_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            3_000,
         );
 
         assert_eq!(
-            4_500,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 300_000,
                 custody.get_locked_amount(300_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            4_500,
         );
 
         custody.fees.utilization_mult = 20_000;
         custody.borrow_rate.optimal_utilization = 1_000_000_000;
 
         assert_eq!(
-            1_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 100_000,
                 custody.get_locked_amount(100_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            1_000,
         );
 
         assert_eq!(
-            1_500,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 150_000,
                 custody.get_locked_amount(150_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            1_500,
         );
 
         assert_eq!(
-            2_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 200_000,
                 custody.get_locked_amount(200_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            2_000,
         );
 
         assert_eq!(
-            3_000,
             pool.get_entry_fee(
                 custody.fees.open_position,
                 300_000,
                 custody.get_locked_amount(300_000).unwrap(),
                 &custody
             )
-            .unwrap()
+            .unwrap(),
+            3_000,
         );
     }
 
@@ -851,7 +863,6 @@ mod test {
         let (pool, custody, _position, token_price) = get_fixture();
 
         assert_eq!(
-            scale_f64(0.2, custody.decimals),
             pool.get_fee(
                 0,
                 100,
@@ -860,7 +871,8 @@ mod test {
                 &custody,
                 &token_price
             )
-            .unwrap()
+            .unwrap(),
+            scale_f64(0.2, custody.decimals),
         );
     }
 
@@ -872,6 +884,7 @@ mod test {
     fn test_normalize_pnl(profit: u64, loss: u64, expected: (u64, u64)) {
         assert_eq!(normalize_pnl(profit, loss).unwrap(), expected)
     }
+
     #[test_case(100, 1000, 1000, (0,0); "Prices are the same")]
     #[test_case(100, 1000, 1100, (10,0); "In profit")]
     #[test_case(100, 1000, 900, (0,10); "In loss")]
@@ -890,138 +903,103 @@ mod test {
         )
     }
 
+    #[test_case(100_000_000_000, 0, 0; "Break even")]
+    #[test_case(100_000_000_000, 0, 0; "At a loss")]
+    #[test_case(100_000_000_000, 1_000_000, 10_000; "In profit")]
+    #[test_case(100_000_000_000, 90, 1; "Minor profit is rounded up")]
+    fn test_get_exit_fee_for_pnl_mode_usd(size_usd: u64, profit_usd: u64, expected: u64) {
+        assert_eq!(get_exit_fee_usd(size_usd, profit_usd).unwrap(), expected)
+    }
     #[test]
     fn test_get_pnl_usd() {
         let (pool, custody, mut position, token_price) = get_fixture();
 
         // initial PnL at loss
         assert_eq!(
-            (0, scale(1_000, Perpetuals::USD_DECIMALS), 0),
             pool.get_pnl_usd(&position, &token_price, &custody, 1, false)
-                .unwrap()
+                .unwrap(),
+            (0, scale(1_000, Perpetuals::USD_DECIMALS), 0),
         );
 
         // losing position (opening price higher than current price)
         position.price = scale(25_400, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
-            (0, scale_f64(2_559.055118111, Perpetuals::USD_DECIMALS), 0),
             pool.get_pnl_usd(&position, &token_price, &custody, 1, false)
-                .unwrap()
+                .unwrap(),
+            (0, scale_f64(2_559.055118111, Perpetuals::USD_DECIMALS), 0),
         );
 
         // winning position (opening price lower than current price)
         position.price = scale(24_500, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
-            (scale_f64(1_020.408163265, Perpetuals::USD_DECIMALS), 0, 0),
             pool.get_pnl_usd(&position, &token_price, &custody, 1, false)
-                .unwrap()
+                .unwrap(),
+            (
+                scale_f64(1010.204081632, Perpetuals::USD_DECIMALS),
+                0,
+                scale_f64(0.000408163, Perpetuals::USD_DECIMALS)
+            )
         );
     }
 
-    #[test]
-    fn test_get_leverage() {
+    #[test_case(25_000, 4.1666; "Default leverage")]
+    #[test_case(20_000, 2.0613; "Lower price should lower leverage for long position 1")]
+    #[test_case(15_000, 1.1191; "Lower price should lower leverage for long position 2")]
+    #[test_case(27_000, 6.0000; "Higher price should increase leverage for long position 1")]
+    #[test_case(32_000, 42.6666; "Higher price should increase leverage for long position 2")]
+    #[test_case(0, 4.000; "No Price should return raw leverage")]
+    #[test_case(40_000, f64::MAX; "Leverage out of limit")]
+    fn test_get_leverage(price: u64, expected_leverage: f64) {
         let (pool, custody, mut position, token_price) = get_fixture();
 
-        // default leverage
+        position.price = scale(price, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
-            scale_f64(4.1666, Perpetuals::BPS_DECIMALS),
             pool.get_leverage(&position, &token_price, &custody, 1)
-                .unwrap()
-        );
-
-        // lower price should lower leverage for long position
-        position.price = scale(20_000, Perpetuals::PRICE_DECIMALS);
-        assert_eq!(
-            scale_f64(2.0512, Perpetuals::BPS_DECIMALS),
-            pool.get_leverage(&position, &token_price, &custody, 1)
-                .unwrap()
-        );
-
-        position.price = scale(15_000, Perpetuals::PRICE_DECIMALS);
-        assert_eq!(
-            scale_f64(1.1111, Perpetuals::BPS_DECIMALS),
-            pool.get_leverage(&position, &token_price, &custody, 1)
-                .unwrap()
-        );
-
-        // higher price should increase leverage for long position
-        position.price = scale(27_000, Perpetuals::PRICE_DECIMALS);
-        assert_eq!(
-            scale_f64(6.0000, Perpetuals::BPS_DECIMALS),
-            pool.get_leverage(&position, &token_price, &custody, 1)
-                .unwrap()
-        );
-
-        position.price = scale(32_000, Perpetuals::PRICE_DECIMALS);
-        assert_eq!(
-            scale_f64(42.6666, Perpetuals::BPS_DECIMALS),
-            pool.get_leverage(&position, &token_price, &custody, 1)
-                .unwrap()
-        );
-
-        // no price should return raw leverage
-        position.price = scale(0, Perpetuals::PRICE_DECIMALS);
-        assert_eq!(
-            scale(4, Perpetuals::BPS_DECIMALS),
-            pool.get_leverage(&position, &token_price, &custody, 1)
-                .unwrap()
-        );
-
-        // leverage out of limit
-        position.price = scale(40_000, Perpetuals::PRICE_DECIMALS);
-        assert_eq!(
-            u64::MAX,
-            pool.get_leverage(&position, &token_price, &custody, 1)
-                .unwrap()
+                .unwrap(),
+            scale_f64(expected_leverage, Perpetuals::BPS_DECIMALS),
         );
     }
 
     #[test]
     fn test_get_liquidation_price() {
-        let (pool, custody, mut position, token_price) = get_fixture();
+        let (pool, custody, mut position, _) = get_fixture();
 
         assert_eq!(
+            pool.get_liquidation_price(&position, &custody, 1).unwrap(),
             scale(21_250, Perpetuals::PRICE_DECIMALS),
-            pool.get_liquidation_price(&position, &token_price, &custody, 1)
-                .unwrap()
         );
 
         // lower price should lower liquidation price
         position.price = scale(24_500, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
+            pool.get_liquidation_price(&position, &custody, 1).unwrap(),
             scale(20_825, Perpetuals::PRICE_DECIMALS),
-            pool.get_liquidation_price(&position, &token_price, &custody, 1)
-                .unwrap()
         );
 
         position.price = scale(20_000, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
+            pool.get_liquidation_price(&position, &custody, 1).unwrap(),
             scale(17_000, Perpetuals::PRICE_DECIMALS),
-            pool.get_liquidation_price(&position, &token_price, &custody, 1)
-                .unwrap()
         );
 
         // higher price should increase liquidation price
         position.price = scale(26_000, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
+            pool.get_liquidation_price(&position, &custody, 1).unwrap(),
             scale(22_100, Perpetuals::PRICE_DECIMALS),
-            pool.get_liquidation_price(&position, &token_price, &custody, 1)
-                .unwrap()
         );
 
         position.price = scale(35_000, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
+            pool.get_liquidation_price(&position, &custody, 1).unwrap(),
             scale(29_750, Perpetuals::PRICE_DECIMALS),
-            pool.get_liquidation_price(&position, &token_price, &custody, 1)
-                .unwrap()
         );
 
         // dead price
         position.price = scale(0, Perpetuals::PRICE_DECIMALS);
         assert_eq!(
+            pool.get_liquidation_price(&position, &custody, 1).unwrap(),
             scale_f64(0.0, Perpetuals::PRICE_DECIMALS),
-            pool.get_liquidation_price(&position, &token_price, &custody, 1)
-                .unwrap()
         );
     }
 
@@ -1030,14 +1008,14 @@ mod test {
         let (pool, custody, position, token_price) = get_fixture();
 
         assert_eq!(
+            pool.get_close_amount(&position, &token_price, &custody, 1, false)
+                .unwrap(),
             (
                 scale_f64(0.960000000, custody.decimals),
                 0,
                 0,
                 scale(1_000, Perpetuals::USD_DECIMALS)
             ),
-            pool.get_close_amount(&position, &token_price, &custody, 1, false)
-                .unwrap()
         );
     }
 

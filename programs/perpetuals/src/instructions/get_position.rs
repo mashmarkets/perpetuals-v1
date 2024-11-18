@@ -88,10 +88,10 @@ pub fn get_position<'info>(
     // compute pnl
     let (profit, loss, _) = pool.get_pnl_usd(position, &token_price, custody, curtime, false)?;
 
-    let liquidation_price =
-        ctx.accounts
-            .pool
-            .get_liquidation_price(position, &token_price, custody, curtime)?;
+    let liquidation_price = ctx
+        .accounts
+        .pool
+        .get_liquidation_price(position, custody, curtime)?;
 
     let leverage = ctx
         .accounts

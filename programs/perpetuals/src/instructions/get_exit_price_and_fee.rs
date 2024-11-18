@@ -75,9 +75,7 @@ pub fn get_exit_price_and_fee<'info>(
 
     let price = pool.get_exit_price(&token_price, custody)?;
 
-    let size = token_price.get_token_amount(position.size_usd, custody.decimals)?;
-
-    let fee = pool.get_exit_fee(size, custody)?;
+    let (_, _, fee) = pool.get_pnl_usd(position, &token_price, custody, curtime, false)?;
 
     Ok(PriceAndFee { price, fee })
 }

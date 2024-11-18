@@ -88,8 +88,7 @@ pub fn get_entry_price_and_fee<'info>(
         ..Position::default()
     };
 
-    let liquidation_price =
-        pool.get_liquidation_price(&position, &token_price, custody, curtime)?;
+    let liquidation_price = pool.get_liquidation_price(&position, custody, curtime)?;
 
     let fee = pool.get_entry_fee(
         custody.fees.open_position,

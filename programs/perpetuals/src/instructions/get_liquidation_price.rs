@@ -101,5 +101,5 @@ pub fn get_liquidation_price<'info>(
 
     ctx.accounts
         .pool
-        .get_liquidation_price(&position, &token_price, custody, curtime)
+        .get_liquidation_price(&position, custody, curtime)
 }
