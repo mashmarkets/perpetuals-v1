@@ -14,7 +14,7 @@ import {
 import { findFaucetAddressSync } from "@/actions/faucet";
 import { getCompetitionMint, getCurrentEpoch } from "@/lib/Token";
 
-import { connectionBatcher } from "./accounts";
+import { connectionBatcher } from "./connection";
 import { useBalance } from "./token";
 import { useReadFaucetProgram } from "./useProgram";
 

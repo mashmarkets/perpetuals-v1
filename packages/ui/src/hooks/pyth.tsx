@@ -7,7 +7,7 @@ import { useQueries, useQuery } from "@tanstack/react-query";
 import { queryClient } from "@/utils/queryClient";
 
 import { IDL, PythSolanaReceiver } from "../idls/pythSolanaReceiver";
-import { connectionBatcher } from "./accounts";
+import { connectionBatcher } from "./connection";
 import { fromBN } from "./perpetuals";
 import { useGetTokenInfo } from "./token";
 

@@ -7,6 +7,7 @@ import { useRouter } from "next/router";
 import { findPerpetualsAddressSync } from "@/actions/perpetuals";
 import { ChartCurrency } from "@/components/Chart/ChartCurrency";
 import { DailyStats } from "@/components/Chart/DailyStats";
+import { OrderHistory } from "@/components/OrderHistory";
 import { ExistingPositions } from "@/components/Positions/ExistingPositions";
 import { TradeSidebar } from "@/components/TradeSidebar";
 import { usePool, usePoolCustodies } from "@/hooks/perpetuals";
@@ -78,11 +79,15 @@ export default function Page() {
           <TradeSidebar mint={mint} poolAddress={poolAddress} />
         </div>
       </div>
-      <div className="mx-auto px-4 lg:px-16">
+      <div className="mx-auto px-4 py-8 lg:px-16">
         <header className="space-x-46 mb-5 mt-20 flex items-center">
           <div className="font-medium text-white">My Positions</div>
         </header>
         <ExistingPositions />
+        <header className="space-x-46 mb-5 mt-20 flex items-center">
+          <div className="font-medium text-white">Trade History </div>
+        </header>
+        <OrderHistory poolAddress={poolAddress} />
       </div>
     </>
   );

@@ -18,6 +18,8 @@ import {
   startAnchor,
 } from "solana-bankrun";
 
+import { PRICE_DECIMALS } from "../../packages/ui/src/lib/types";
+import { parseUnits } from "../../packages/ui/src/utils/viem";
 import IDL from "../../target/idl/perpetuals.json";
 import { Perpetuals } from "../../target/types/perpetuals.js";
 import { TestClient } from "./test_client.js";
@@ -775,7 +777,7 @@ describe("perpetuals", async () => {
           lossUsd: 132227550090n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: 122815449n,
+          price: parseUnits("122.815449", PRICE_DECIMALS),
           profitUsd: 0n,
           protocolFee: 200300534n,
           rewardAmount: 0n,

@@ -123,7 +123,7 @@ export function TradePosition({
     : undefined;
 
   const openPositionMutation = useMutation({
-    onSuccess: () => {
+    onSuccess: (sig) => {
       // Collateral Balance
       queryClient.invalidateQueries({
         queryKey: ["account", publicKey?.toString(), payToken.toString()],
@@ -133,18 +133,21 @@ export function TradePosition({
         queryKey: ["pool", poolAddress?.toString()],
       });
 
+      const position = findPerpetualsPositionAddressSync(
+        publicKey!,
+        poolAddress,
+        custody.address,
+      );
       // Add position, so its fetched
       queryClient.setQueryData(
         ["positions", publicKey?.toString()],
-        (p: Address[] | undefined) =>
-          dedupe([
-            ...(p ?? []),
-            findPerpetualsPositionAddressSync(
-              publicKey!,
-              poolAddress,
-              custody.address,
-            ),
-          ]),
+        (p: Address[] | undefined) => dedupe([...(p ?? []), position]),
+      );
+
+      // Add signature to position address for order history
+      queryClient.setQueryData(
+        ["getSignaturesForAddress", position],
+        (sigs: string[] | undefined) => dedupe([...(sigs ?? []), sig]),
       );
     },
     mutationFn: async () => {

@@ -17,6 +17,7 @@ import {
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatPrice, formatUsd } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
+import { dedupe } from "@/utils/utils";
 
 export function PositionAdditionalInfo({
   className,
@@ -41,7 +42,7 @@ export function PositionAdditionalInfo({
   const faucet = useWriteFaucetProgram();
 
   const closePositionMutation = useMutation({
-    onSuccess: () => {
+    onSuccess: (sig) => {
       // Receive Balance
       queryClient.invalidateQueries({
         queryKey: ["account", publicKey?.toString(), receiveMint],
@@ -59,6 +60,12 @@ export function PositionAdditionalInfo({
         ["positions", publicKey?.toString()],
         (p: Address[] | undefined) =>
           (p ?? []).filter((x) => x !== position?.address),
+      );
+
+      // Add signature to position address for order history
+      queryClient.setQueryData(
+        ["getSignaturesForAddress", position?.address],
+        (sigs: string[] | undefined) => dedupe([...(sigs ?? []), sig]),
       );
     },
     mutationFn: async () => {

@@ -14,8 +14,8 @@ import { useMemo } from "react";
 
 import { getTokenInfo, getTokenList } from "@/lib/Token";
 
-import { connectionBatcher } from "./accounts";
 import { useCurrentEpoch } from "./competition";
+import { connectionBatcher } from "./connection";
 
 const ONE_MINUTE = 60 * 1000;
 export const useMint = (mint: Address | undefined) => {

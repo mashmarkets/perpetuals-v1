@@ -14,13 +14,15 @@ import {
 import { Perpetuals } from "@/target/perpetuals";
 import { queryClient } from "@/utils/queryClient";
 
-import { connectionBatcher } from "./accounts";
+import { connectionBatcher } from "./connection";
 import {
   useReadPerpetualsProgram,
   useWritePerpetualsProgram,
 } from "./useProgram";
 
 export const fromBN = (v: BN) => BigInt(v.toString());
+export const fromEpoch = (v: BN) => new Date(v.toNumber() * 1000);
+export const fromPublicKey = (v: PublicKey) => v.toString() as Address;
 
 const parsePool = (data: ProgramAccount<IdlAccounts<Perpetuals>["pool"]>) => {
   const p = data.account;

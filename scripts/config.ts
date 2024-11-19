@@ -88,7 +88,7 @@ export const getCustodyParam = (symbol: string): CustodyParams => {
       addLiquidity: new BN(0), // 0%
       removeLiquidity: new BN(20), // 0.2%
       openPosition: new BN(0), // 0%
-      closePosition: new BN(10), // 0.1%
+      closePosition: new BN(0), // Not in use
       liquidation: new BN(0), // 0%
       protocolShare: new BN(2_000), // 20%
     },

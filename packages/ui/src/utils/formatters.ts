@@ -48,6 +48,19 @@ export function formatUsd(num: number) {
   });
   return "$" + formatter.format(num);
 }
+
+export function formatUsdWithSign(num: number) {
+  const formatter = Intl.NumberFormat("en", {
+    maximumFractionDigits: 2,
+    minimumFractionDigits: 2,
+    roundingPriority: "lessPrecision",
+    trailingZeroDisplay: "auto",
+    signDisplay: "always",
+  });
+  const s = formatter.format(num);
+  return s[0] + "$" + s.slice(1);
+}
+
 export function formatPrice(num: number) {
   const formatter = Intl.NumberFormat("en", {
     maximumFractionDigits: PRICE_DECIMALS,

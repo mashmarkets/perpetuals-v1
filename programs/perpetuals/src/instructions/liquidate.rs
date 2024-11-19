@@ -219,7 +219,7 @@ pub fn liquidate<'info>(
         custody: position.custody,
         owner: position.owner,
         pool: position.pool,
-        price: token_price.price,
+        price: pool.get_exit_price(&token_price, &custody)?,
         size_usd: position.size_usd,
         time: position.open_time,
 

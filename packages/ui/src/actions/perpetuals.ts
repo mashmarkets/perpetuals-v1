@@ -1,4 +1,4 @@
-import { BN, Program, utils } from "@coral-xyz/anchor";
+import { BN, Event, EventParser, Program, utils } from "@coral-xyz/anchor";
 import { Address, isAddress } from "@solana/addresses";
 import {
   createAssociatedTokenAccountIdempotentInstruction,
@@ -16,6 +16,7 @@ import {
   TransactionInstruction,
   TransactionMessage,
   VersionedTransaction,
+  VersionedTransactionResponse,
 } from "@solana/web3.js";
 
 import { AddCustodyParams } from "@/components/FormListAsset";
@@ -1273,4 +1274,18 @@ export const getPosition = async (
     markPrice: BigInt(estimate.markPrice.toString()),
     profit: BigInt(estimate.profit.toString()),
   };
+};
+
+export const getPerpetualsEvents = async (
+  program: Program<Perpetuals>,
+  tx: VersionedTransactionResponse | null,
+): Promise<Array<Event & VersionedTransactionResponse>> => {
+  if (tx === null || tx === undefined) {
+    return [];
+  }
+
+  const coder = new EventParser(program.programId, program.coder);
+  const events = await coder.parseLogs(tx.meta?.logMessages ?? []);
+  // Convert generator to array
+  return Array.from(events).map((x) => ({ ...x, ...tx }));
 };
