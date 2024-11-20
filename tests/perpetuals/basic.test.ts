@@ -18,7 +18,7 @@ import {
   startAnchor,
 } from "solana-bankrun";
 
-import { PRICE_DECIMALS } from "../../packages/ui/src/lib/types";
+import { BPS_DECIMALS, PRICE_DECIMALS } from "../../packages/ui/src/lib/types";
 import { parseUnits } from "../../packages/ui/src/utils/viem";
 import IDL from "../../target/idl/perpetuals.json";
 import { Perpetuals } from "../../target/types/perpetuals.js";
@@ -191,6 +191,7 @@ describe("perpetuals", async () => {
     bump: tc.multisig.bump,
   };
 
+  const CUSTODY_DECIMALS = 9;
   const tokenExpected = {
     pool: tc.pool.publicKey.toString(),
     mint: tc.custodies[0].mint.publicKey.toString(),
@@ -450,7 +451,7 @@ describe("perpetuals", async () => {
       tc.custodies[0].oracleAccount,
     );
     expect(simplify(oracle)).toStrictEqual({
-      price: 123_000_000n,
+      price: parseUnits("123.0", 6),
       expo: -6,
       conf: 0n,
       publishTime: BigInt(oracle.publishTime),
@@ -475,7 +476,7 @@ describe("perpetuals", async () => {
     expect(simplify(oracle)).toStrictEqual({
       conf: 10n,
       expo: -6,
-      price: 500_000_000n,
+      price: parseUnits("500.0", 6),
       publishTime: BigInt(oracle.publishTime),
     });
 
@@ -495,7 +496,7 @@ describe("perpetuals", async () => {
     expect(simplify(oracle)).toStrictEqual({
       conf: 10n,
       expo: -6,
-      price: 500_000_000n,
+      price: parseUnits("500.0", 6),
       publishTime: BigInt(oracle.publishTime),
     });
 
@@ -516,7 +517,7 @@ describe("perpetuals", async () => {
     expect(simplify(oracle)).toStrictEqual({
       conf: 10n,
       expo: -6,
-      price: 1_000_000_000n,
+      price: parseUnits("1000.0", 6),
       publishTime: BigInt(oracle.publishTime),
     });
 
@@ -625,16 +626,16 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          borrowSizeUsd: 861000000000n,
-          collateralAmount: 1000000000n,
-          collateralUsd: 123000000000n,
+          borrowSizeUsd: parseUnits("861.000000000", USD_DECIMALS),
+          collateralAmount: parseUnits("1.000000000", CUSTODY_DECIMALS),
+          collateralUsd: parseUnits("123.000000000", USD_DECIMALS),
           custody: tc.custodies[0].custody.toString(),
-          lockedAmount: 7000000000n,
+          lockedAmount: parseUnits("7.000000000", CUSTODY_DECIMALS),
           time: 111n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: 123000000000n,
-          sizeUsd: 861000000000n,
+          price: parseUnits("123.000000000", PRICE_DECIMALS),
+          sizeUsd: parseUnits("861.000000000", USD_DECIMALS),
         },
         name: "openPosition",
       },
@@ -647,20 +648,20 @@ describe("perpetuals", async () => {
         ),
       ),
     ).toStrictEqual({
-      borrowSizeUsd: 861000000000n,
+      borrowSizeUsd: parseUnits("861.000000000", USD_DECIMALS),
       bump: expect.any(Number),
-      collateralAmount: 1000000000n,
-      collateralUsd: 123000000000n,
+      collateralAmount: parseUnits("1.000000000", CUSTODY_DECIMALS),
+      collateralUsd: parseUnits("123.000000000", USD_DECIMALS),
       cumulativeInterestSnapshot: 0n,
       custody: tc.custodies[0].custody.toString(),
-      lockedAmount: 7000000000n,
+      lockedAmount: parseUnits("7.000000000", CUSTODY_DECIMALS),
       openTime: 111n,
       owner: tc.users[0].wallet.publicKey.toString(),
       pool: tc.pool.publicKey.toString(),
-      price: 123000000000n,
-      sizeUsd: 861000000000n,
-      unrealizedLossUsd: 0n,
-      unrealizedProfitUsd: 0n,
+      price: parseUnits("123.000000000", PRICE_DECIMALS),
+      sizeUsd: parseUnits("861.000000000", USD_DECIMALS),
+      unrealizedLossUsd: parseUnits("0", USD_DECIMALS),
+      unrealizedProfitUsd: parseUnits("0", USD_DECIMALS),
       updateTime: 0n,
     });
   });
@@ -680,13 +681,13 @@ describe("perpetuals", async () => {
     expect(
       simplify(parseResultFromLogs("getPositionResult", result)),
     ).toStrictEqual({
-      leverage: 70000n,
-      liquidationPrice: 105490071429n,
+      leverage: parseUnits("7.0000", BPS_DECIMALS),
+      liquidationPrice: parseUnits("105.490071429", PRICE_DECIMALS),
       liquidationState: false,
-      loss: 0n,
-      markPrice: 123000000000n,
-      margin: 35n,
-      profit: 0n,
+      loss: parseUnits("0", USD_DECIMALS),
+      markPrice: parseUnits("123.000000000", PRICE_DECIMALS),
+      margin: parseUnits("0.0035", BPS_DECIMALS),
+      profit: parseUnits("0", USD_DECIMALS),
     });
   });
 
@@ -722,18 +723,18 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          collateralAmount: 1999991870n,
+          collateralAmount: parseUnits("1.999991870", CUSTODY_DECIMALS),
           custody: tc.custodies[0].custody.toString(),
-          feeAmount: 0n,
-          lossUsd: 0n,
+          feeAmount: parseUnits("0", CUSTODY_DECIMALS),
+          lossUsd: parseUnits("0", USD_DECIMALS),
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: 123000000000n,
-          profitUsd: 0n,
-          protocolFee: 0n,
-          sizeUsd: 861000000000n,
+          price: parseUnits("123.000000000", PRICE_DECIMALS),
+          profitUsd: parseUnits("0", USD_DECIMALS),
+          protocolFee: parseUnits("0", CUSTODY_DECIMALS),
+          sizeUsd: parseUnits("861.000000000", USD_DECIMALS),
           time: 111n,
-          transferAmount: 1999991869n,
+          transferAmount: parseUnits("1.999991869", CUSTODY_DECIMALS),
         },
         name: "closePosition",
       },
@@ -771,20 +772,20 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          collateralAmount: 100000000n,
+          collateralAmount: parseUnits("0.100000000", CUSTODY_DECIMALS),
           custody: tc.custodies[0].custody.toString(),
-          feeAmount: 1001502669n,
-          lossUsd: 132227550090n,
+          feeAmount: parseUnits("1.001502669", USD_DECIMALS),
+          lossUsd: parseUnits("132.227550090", USD_DECIMALS),
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
           price: parseUnits("122.815449", PRICE_DECIMALS),
-          profitUsd: 0n,
-          protocolFee: 200300534n,
-          rewardAmount: 0n,
+          profitUsd: parseUnits("0", USD_DECIMALS),
+          protocolFee: parseUnits("0.200300534", CUSTODY_DECIMALS),
+          rewardAmount: parseUnits("0", CUSTODY_DECIMALS),
           signer: tc.users[0].wallet.publicKey.toString(),
-          sizeUsd: 6150000000000n,
+          sizeUsd: parseUnits("6150.000000000", USD_DECIMALS),
           time: 111n,
-          transferAmount: 0n,
+          transferAmount: parseUnits("0", CUSTODY_DECIMALS),
         },
         name: "liquidatePosition",
       },
