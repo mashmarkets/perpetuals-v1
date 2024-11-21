@@ -14,6 +14,7 @@ import {
   windowedFiniteBatchScheduler,
 } from "@yornaath/batshit";
 import { memoize } from "lodash-es";
+import PQueue from "p-queue";
 
 export const connectionBatcher = memoize(
   (connection: Connection) =>
@@ -70,6 +71,13 @@ export const useSignaturesForAddress = (address: Address | undefined) => {
   });
 };
 
+// Limit is 40 per 10 seconds
+const useTransactionsQueue = new PQueue({
+  concurrency: 1,
+  intervalCap: 30,
+  interval: 1000 * 10,
+});
+
 export const useTransactions = (signatures: string[]) => {
   const { connection } = useConnection();
 
@@ -80,8 +88,13 @@ export const useTransactions = (signatures: string[]) => {
         staleTime: Infinity,
         gcTime: Infinity,
         enabled: true,
-        queryFn: () =>
-          connection.getTransaction(sig, { maxSupportedTransactionVersion: 0 }),
+        queryFn: async () => {
+          return await useTransactionsQueue.add(async () => {
+            return await connection.getTransaction(sig, {
+              maxSupportedTransactionVersion: 0,
+            });
+          });
+        },
       };
     }),
     combine: (results) => {

@@ -16,14 +16,14 @@ import { ToastContainer } from "react-toastify";
 
 import "react-toastify/dist/ReactToastify.css";
 
-import { QueryClientProvider } from "@tanstack/react-query";
-
 import { Navbar } from "@/components/Navbar";
 
 import "@/styles/wallet-adapter.css";
 
+import { PersistQueryClientProvider } from "@tanstack/react-query-persist-client";
+
 import { CurrentEpochProvider } from "@/hooks/competition";
-import { queryClient } from "@/utils/queryClient";
+import { persister, queryClient } from "@/utils/queryClient";
 
 // If loading a variable font, you don't need to specify the font weight
 const inter = Inter({ subsets: ["latin"] });
@@ -45,7 +45,10 @@ const ReactQueryProvider = ({ children }: { children: ReactNode }) => {
     window.toggleDevtools = () => setShowDevtools((old) => !old);
   }, []);
   return (
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{ persister }}
+    >
       {children}
       <ReactQueryDevtools initialIsOpen={false} />
       {showDevtools && (
@@ -53,7 +56,7 @@ const ReactQueryProvider = ({ children }: { children: ReactNode }) => {
           <ReactQueryDevtoolsProduction />
         </React.Suspense>
       )}
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   );
 };
 
