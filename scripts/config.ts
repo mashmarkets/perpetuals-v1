@@ -52,6 +52,7 @@ export const getCustodyParam = (symbol: string): CustodyParams => {
     ? 10_000_000 // 1_000x
     : 1_000_000; // 100x
 
+  const maxLeverage = maxInitialLeverage * 2;
   const MAX_U64 = "18446744073709551615";
   return {
     oracle: {
@@ -68,7 +69,7 @@ export const getCustodyParam = (symbol: string): CustodyParams => {
       tradeSpreadShort: new BN(0), // 0%
       minInitialLeverage: new BN(11_000), // 1.1
       maxInitialLeverage: new BN(maxInitialLeverage),
-      maxLeverage: new BN(maxInitialLeverage * 2),
+      maxLeverage: new BN(maxLeverage),
       maxPayoffMult: new BN(10_000), // 100%
       maxUtilization: new BN(9_000), // 90%
       maxPositionLockedUsd: new BN(1_000_000 * 10 ** 9), // 1M USD
@@ -89,7 +90,7 @@ export const getCustodyParam = (symbol: string): CustodyParams => {
       removeLiquidity: new BN(20), // 0.2%
       openPosition: new BN(0), // 0%
       closePosition: new BN(0), // Not in use
-      liquidation: new BN(0), // 0%
+      liquidation: new BN(100_000_000 / maxLeverage), // 0.05% at 2000x, 0.5% at 200x
       protocolShare: new BN(2_000), // 20%
     },
     borrowRate: {

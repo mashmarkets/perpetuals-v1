@@ -29,6 +29,7 @@ import {
 import { PRICE_POWER, USD_POWER } from "@/lib/types";
 import { formatNumberCommas, formatPrice } from "@/utils/formatters";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
+import { dedupe } from "@/utils/utils";
 
 import { Tab } from "./ui/SidebarTab";
 
@@ -88,7 +89,7 @@ export function CollateralModal({
     : BigInt(0);
 
   const changeCollateral = useMutation({
-    onSuccess: () => {
+    onSuccess: (sig) => {
       if (tab === Tab.Add) {
         setDepositAmount(0);
       } else {
@@ -107,6 +108,12 @@ export function CollateralModal({
       queryClient.invalidateQueries({
         queryKey: ["pool", position?.pool?.toString()],
       });
+      //
+      // Add signature to position address for order history
+      queryClient.setQueryData(
+        ["getSignaturesForAddress", position?.address],
+        (sigs: string[] | undefined) => dedupe([...(sigs ?? []), sig]),
+      );
     },
     mutationFn: async () => {
       if (
@@ -143,7 +150,7 @@ export function CollateralModal({
             );
       //receive
 
-      return wrapTransactionWithNotification(
+      return await wrapTransactionWithNotification(
         perpetuals.provider.connection,
         promise,
         {

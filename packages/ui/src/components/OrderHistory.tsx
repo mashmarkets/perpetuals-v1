@@ -19,11 +19,16 @@ import { TRX_URL } from "@/utils/TransactionHandlers";
 
 const parseOrderHistory = (event: VersionedTransactionResponse & Event) => {
   if (
-    !["openPosition", "closePosition", "liquidatePosition"].includes(event.name)
+    ![
+      "openPosition",
+      "closePosition",
+      "liquidatePosition",
+      "addCollateral",
+      "removeCollateral",
+    ].includes(event.name)
   ) {
     return undefined;
   }
-  const isOpen = event.name === "openPosition";
 
   return {
     blockTime: new Date(Number(event.blockTime) * 1000),
@@ -31,21 +36,29 @@ const parseOrderHistory = (event: VersionedTransactionResponse & Event) => {
     owner: event.data.owner.toString(),
     pool: event.data.pool.toString(),
     custody: event.data.custody.toString(),
-    action: event.name.replace("Position", ""),
+    action: {
+      addCollateral: "Add Collateral",
+      closePosition: "Close",
+      liquidatePosition: "Liquidation",
+      openPosition: "Open",
+      removeCollateral: "Remove Collateral",
+    }[event.name],
     sizeUsd: BigInt(event.data.sizeUsd.toString()),
 
-    pnlUsd: isOpen
-      ? undefined
-      : BigInt(event.data.profitUsd.toString()) -
-        BigInt(event.data.lossUsd.toString()),
+    pnlUsd: ["liquidatePosition", "closePosition"].includes(event.name)
+      ? BigInt(event.data.profitUsd.toString()) -
+        BigInt(event.data.lossUsd.toString())
+      : undefined,
 
     price: BigInt(event.data.price.toString()),
 
-    fee: isOpen ? undefined : BigInt(event.data.feeAmount.toString()),
+    fee: ["liquidatePosition", "closePosition"].includes(event.name)
+      ? BigInt(event.data.feeAmount.toString())
+      : undefined,
 
-    transfer: isOpen
-      ? BigInt(event.data.collateralAmount.toString()) * -1n
-      : BigInt(event.data.transferAmount.toString()),
+    transferAmount:
+      BigInt(event.data.transferAmount.toString()) *
+      (["addCollateral", "openPosition"].includes(event.name) ? -1n : 1n),
   };
 };
 
@@ -120,7 +133,7 @@ export function OrderHistory({ poolAddress }: { poolAddress: Address }) {
               );
             };
             const feeUsd = toUsd(h.fee);
-            const transferUsd = toUsd(h.transfer);
+            const transferUsd = toUsd(h.transferAmount);
 
             return (
               <tr
@@ -131,7 +144,7 @@ export function OrderHistory({ poolAddress }: { poolAddress: Address }) {
                 <td className="px-4 py-3 text-left">
                   {h.blockTime.toLocaleString()}
                 </td>
-                <td className="px-4 py-3 text-center capitalize">{h.action}</td>
+                <td className="px-4 py-3 text-left capitalize">{h.action}</td>
                 <td className="px-4 py-3">
                   {"$" + formatPrice(Number(h.price) / PRICE_POWER)}
                 </td>

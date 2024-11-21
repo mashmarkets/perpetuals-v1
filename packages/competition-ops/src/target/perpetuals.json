@@ -1662,6 +1662,19 @@
   ],
   "events": [
     {
+      "name": "AddCollateral",
+      "discriminator": [
+        100,
+        133,
+        9,
+        5,
+        101,
+        125,
+        162,
+        68
+      ]
+    },
+    {
       "name": "ClosePosition",
       "discriminator": [
         46,
@@ -1698,6 +1711,19 @@
         176,
         142,
         115
+      ]
+    },
+    {
+      "name": "RemoveCollateral",
+      "discriminator": [
+        134,
+        255,
+        86,
+        250,
+        22,
+        245,
+        208,
+        38
       ]
     }
   ],
@@ -1844,6 +1870,46 @@
     }
   ],
   "types": [
+    {
+      "name": "AddCollateral",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collateral_amount",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "size_usd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "transfer_amount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
     {
       "name": "AddCollateralParams",
       "type": {
@@ -2650,6 +2716,10 @@
             "type": "i64"
           },
           {
+            "name": "transfer_amount",
+            "type": "u64"
+          },
+          {
             "name": "borrow_size_usd",
             "type": "u64"
           },
@@ -3008,6 +3078,46 @@
           },
           {
             "name": "max_total_locked_usd",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "RemoveCollateral",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collateral_amount",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "size_usd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "transfer_amount",
             "type": "u64"
           }
         ]

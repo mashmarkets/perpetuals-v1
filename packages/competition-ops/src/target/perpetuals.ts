@@ -1668,6 +1668,19 @@ export type Perpetuals = {
   ],
   "events": [
     {
+      "name": "addCollateral",
+      "discriminator": [
+        100,
+        133,
+        9,
+        5,
+        101,
+        125,
+        162,
+        68
+      ]
+    },
+    {
       "name": "closePosition",
       "discriminator": [
         46,
@@ -1704,6 +1717,19 @@ export type Perpetuals = {
         176,
         142,
         115
+      ]
+    },
+    {
+      "name": "removeCollateral",
+      "discriminator": [
+        134,
+        255,
+        86,
+        250,
+        22,
+        245,
+        208,
+        38
       ]
     }
   ],
@@ -1850,6 +1876,46 @@ export type Perpetuals = {
     }
   ],
   "types": [
+    {
+      "name": "addCollateral",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collateralAmount",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "sizeUsd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "transferAmount",
+            "type": "u64"
+          }
+        ]
+      }
+    },
     {
       "name": "addCollateralParams",
       "type": {
@@ -2656,6 +2722,10 @@ export type Perpetuals = {
             "type": "i64"
           },
           {
+            "name": "transferAmount",
+            "type": "u64"
+          },
+          {
             "name": "borrowSizeUsd",
             "type": "u64"
           },
@@ -3014,6 +3084,46 @@ export type Perpetuals = {
           },
           {
             "name": "maxTotalLockedUsd",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "removeCollateral",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "collateralAmount",
+            "type": "u64"
+          },
+          {
+            "name": "custody",
+            "type": "pubkey"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "pool",
+            "type": "pubkey"
+          },
+          {
+            "name": "price",
+            "type": "u64"
+          },
+          {
+            "name": "sizeUsd",
+            "type": "u64"
+          },
+          {
+            "name": "time",
+            "type": "i64"
+          },
+          {
+            "name": "transferAmount",
             "type": "u64"
           }
         ]

@@ -245,11 +245,12 @@ pub fn open_position<'info>(
         collateral_usd: position.collateral_usd,
         custody: position.custody,
         locked_amount: position.locked_amount,
-        time: position.open_time,
         owner: position.owner,
         pool: position.pool,
         price: position.price,
         size_usd: position.size_usd,
+        time: position.open_time,
+        transfer_amount: position.collateral_amount,
     });
 
     Ok(())

@@ -3,7 +3,7 @@
 use {
     crate::{
         error::PerpetualsError,
-        math,
+        events, math,
         state::{
             custody::Custody,
             oracle::OraclePrice,
@@ -159,6 +159,19 @@ pub fn remove_collateral<'info>(
     // update custody stats
     msg!("Update custody stats");
     custody.assets.collateral = math::checked_sub(custody.assets.collateral, collateral)?;
+
+    emit!(events::RemoveCollateral {
+        collateral_amount: position.collateral_amount,
+        custody: position.custody,
+        owner: position.owner,
+        pool: position.pool,
+        price: token_price
+            .scale_to_exponent(-(Perpetuals::PRICE_DECIMALS as i32))?
+            .price,
+        size_usd: position.size_usd,
+        time: curtime,
+        transfer_amount: collateral,
+    });
 
     Ok(())
 }

@@ -558,7 +558,7 @@ export class TestClient {
   };
 
   setCustodyConfig = async (
-    custody,
+    custody: Custody,
     oracleConfig,
     pricing,
     permissions,
@@ -634,14 +634,14 @@ export class TestClient {
     }
   };
 
-  setCustomOraclePrice = async (price: number, custody) => {
+  setCustomOraclePrice = async (price: bigint, custody) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       await this.program.methods
         .setCustomOraclePrice({
-          price: new BN(price * 1_000_000),
+          price: new BN(price.toString()),
           expo: -6,
           conf: new BN(0),
           publishTime: new BN(await this.getTime()),
@@ -663,7 +663,7 @@ export class TestClient {
   setCustomOraclePricePermissionless = async (
     oracleAuthority: Keypair,
     price: number,
-    custody,
+    custody: Custody,
     publishTime?,
     noSignatureVerification?,
     messageOverwrite?,
@@ -727,9 +727,9 @@ export class TestClient {
   addLiquidity = async (
     amountIn: BN,
     minLpAmountOut: BN,
-    user,
+    user: User,
     fundingAccount: PublicKey,
-    custody,
+    custody: Custody,
   ) => {
     await this.program.methods
       .addLiquidity({
@@ -757,9 +757,9 @@ export class TestClient {
   removeLiquidity = async (
     lpAmountIn: BN,
     minAmountOut: BN,
-    user,
+    user: User,
     receivingAccount: PublicKey,
-    custody,
+    custody: Custody,
   ) => {
     await this.program.methods
       .removeLiquidity({
@@ -824,14 +824,20 @@ export class TestClient {
       .instruction();
   };
 
-  addCollateral = async (
-    collateral: BN,
+  addCollateralInstruction = async ({
+    collateral,
     user,
-    fundingAccount: PublicKey,
-    positionAccount: PublicKey,
+    fundingAccount,
+    positionAccount,
     custody,
-  ) => {
-    await this.program.methods
+  }: {
+    collateral: BN;
+    user: User;
+    fundingAccount: PublicKey;
+    positionAccount: PublicKey;
+    custody: Custody;
+  }) => {
+    return await this.program.methods
       .addCollateral({
         collateral,
       })
@@ -848,17 +854,23 @@ export class TestClient {
         tokenProgram: spl.TOKEN_PROGRAM_ID,
       })
       .signers([user.wallet])
-      .rpc();
+      .instruction();
   };
 
-  removeCollateral = async (
-    collateralUsd: BN,
+  removeCollateralInstruction = async ({
+    collateralUsd,
     user,
-    receivingAccount: PublicKey,
-    positionAccount: PublicKey,
+    receivingAccount,
+    positionAccount,
     custody,
-  ) => {
-    await this.program.methods
+  }: {
+    collateralUsd: BN;
+    user: User;
+    receivingAccount: PublicKey;
+    positionAccount: PublicKey;
+    custody: Custody;
+  }) => {
+    return await this.program.methods
       .removeCollateral({
         collateralUsd,
       })
@@ -875,7 +887,7 @@ export class TestClient {
         tokenProgram: spl.TOKEN_PROGRAM_ID,
       })
       .signers([user.wallet])
-      .rpc();
+      .instruction();
   };
 
   closePositionInstruction = async (
@@ -948,7 +960,7 @@ export class TestClient {
   getExitPriceAndFee = async (
     size: BN,
     positionAccount: PublicKey,
-    custody,
+    custody: Custody,
   ) => {
     return await this.program.methods
       .getExitPriceAndFee({
@@ -964,7 +976,10 @@ export class TestClient {
       .view();
   };
 
-  getLiquidationPrice = async (positionAccount: PublicKey, custody) => {
+  getLiquidationPrice = async (
+    positionAccount: PublicKey,
+    custody: Custody,
+  ) => {
     return await this.program.methods
       .getLiquidationPrice({})
       .accounts({

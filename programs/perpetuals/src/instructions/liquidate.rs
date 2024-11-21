@@ -221,7 +221,7 @@ pub fn liquidate<'info>(
         pool: position.pool,
         price: pool.get_exit_price(&token_price, &custody)?,
         size_usd: position.size_usd,
-        time: position.open_time,
+        time: curtime,
 
         // Common with Close position
         fee_amount,

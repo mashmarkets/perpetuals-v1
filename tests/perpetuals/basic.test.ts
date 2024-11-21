@@ -147,7 +147,7 @@ describe("perpetuals", async () => {
     removeLiquidity: new BN(20),
     openPosition: new BN(0),
     closePosition: new BN(10),
-    liquidation: new BN(0),
+    liquidation: new BN(5), // 0.05%. Enough to fully clear collateral at 2000x leverage (1/2000)
     protocolShare: new BN(2_000),
   };
   const borrowRate = {
@@ -231,7 +231,7 @@ describe("perpetuals", async () => {
       removeLiquidity: 20n,
       openPosition: 0n,
       closePosition: 10n,
-      liquidation: 0n,
+      liquidation: 5n,
       protocolShare: 2_000n,
     },
     borrowRate: {
@@ -415,7 +415,6 @@ describe("perpetuals", async () => {
   it("setCustodyConfig", async () => {
     oracleConfig.maxPriceAgeSec = 90;
     permissions.allowPnlWithdrawal = false;
-    fees.liquidation = new BN(200);
     await tc.setCustodyConfig(
       tc.custodies[0],
       oracleConfig,
@@ -436,16 +435,13 @@ describe("perpetuals", async () => {
         permissions: {
           allowPnlWithdrawal: false,
         },
-        fees: {
-          liquidation: 200n,
-        },
       }),
     );
   });
 
   it("setCustomOraclePrice", async () => {
-    await tc.setCustomOraclePrice(123, tc.custodies[0]);
-    await tc.setCustomOraclePrice(200, tc.custodies[1]);
+    await tc.setCustomOraclePrice(parseUnits("123", 6), tc.custodies[0]);
+    await tc.setCustomOraclePrice(parseUnits("200", 6), tc.custodies[1]);
 
     const oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
@@ -631,11 +627,12 @@ describe("perpetuals", async () => {
           collateralUsd: parseUnits("123.000000000", USD_DECIMALS),
           custody: tc.custodies[0].custody.toString(),
           lockedAmount: parseUnits("7.000000000", CUSTODY_DECIMALS),
-          time: 111n,
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
           price: parseUnits("123.000000000", PRICE_DECIMALS),
           sizeUsd: parseUnits("861.000000000", USD_DECIMALS),
+          time: 111n,
+          transferAmount: parseUnits("1.000000000", CUSTODY_DECIMALS),
         },
         name: "openPosition",
       },
@@ -692,23 +689,56 @@ describe("perpetuals", async () => {
   });
 
   it("addCollateral", async () => {
-    await tc.addCollateral(
-      tc.toTokenAmount(1, tc.custodies[0].decimals),
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.users[0].positionAccountsLong[0],
-      tc.custodies[0],
-    );
+    const ix = await tc.addCollateralInstruction({
+      collateral: tc.toTokenAmount(1, tc.custodies[0].decimals),
+      user: tc.users[0],
+      fundingAccount: tc.users[0].tokenAccounts[0],
+      positionAccount: tc.users[0].positionAccountsLong[0],
+      custody: tc.custodies[0],
+    });
+    const result = await processInstructions([ix]);
+    expect(simplify(await getEvents(result))).toStrictEqual([
+      {
+        data: {
+          collateralAmount: parseUnits("2.000000000", CUSTODY_DECIMALS),
+          custody: tc.custodies[0].custody.toString(),
+          owner: tc.users[0].wallet.publicKey.toString(),
+          pool: tc.pool.publicKey.toString(),
+          price: parseUnits("123.000000000", PRICE_DECIMALS),
+          sizeUsd: parseUnits("861.000000000", USD_DECIMALS),
+          time: 111n,
+          transferAmount: parseUnits("1.000000000", CUSTODY_DECIMALS),
+        },
+        name: "addCollateral",
+      },
+    ]);
   });
 
   it("removeCollateral", async () => {
-    await tc.removeCollateral(
-      tc.toTokenAmount(1, 6),
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.users[0].positionAccountsLong[0],
-      tc.custodies[0],
-    );
+    const ix = await tc.removeCollateralInstruction({
+      collateralUsd: tc.toTokenAmount(1, 6),
+      user: tc.users[0],
+      receivingAccount: tc.users[0].tokenAccounts[0],
+      positionAccount: tc.users[0].positionAccountsLong[0],
+      custody: tc.custodies[0],
+    });
+
+    const result = await processInstructions([ix]);
+    expect(simplify(await getEvents(result))).toStrictEqual([
+      {
+        data: {
+          collateralAmount: parseUnits("1.999991870", CUSTODY_DECIMALS),
+          custody: tc.custodies[0].custody.toString(),
+          owner: tc.users[0].wallet.publicKey.toString(),
+          pool: tc.pool.publicKey.toString(),
+          price: parseUnits("123.000000000", PRICE_DECIMALS),
+          sizeUsd: parseUnits("861.000000000", USD_DECIMALS),
+          time: 111n,
+          transferAmount: parseUnits("0.000008130", CUSTODY_DECIMALS),
+        },
+        name: "removeCollateral",
+      },
+    ]);
   });
 
   it("closePosition", async () => {
@@ -746,11 +776,12 @@ describe("perpetuals", async () => {
   });
 
   it("liquidate", async () => {
+    await tc.setCustomOraclePrice(parseUnits("125.0", 6), tc.custodies[0]);
     await processInstructions([
       await tc.openPositionInstruction({
         price: 125,
-        collateral: tc.toTokenAmount(0.1, tc.custodies[0].decimals),
-        size: tc.toTokenAmount(50, tc.custodies[0].decimals),
+        collateral: tc.toTokenAmount(0.01, tc.custodies[0].decimals),
+        size: tc.toTokenAmount(10, tc.custodies[0].decimals),
         user: tc.users[0],
         fundingAccount: tc.users[0].tokenAccounts[0],
         positionAccount: tc.users[0].positionAccountsLong[0],
@@ -758,7 +789,33 @@ describe("perpetuals", async () => {
       }),
     ]);
 
-    await tc.setCustomOraclePrice(122.8154499999, tc.custodies[0]);
+    await tc.setCustomOraclePrice(
+      parseUnits("124.9375", 6) - 1n,
+      tc.custodies[0],
+    );
+    const getPosition = await simulateInstruction(
+      await program.methods
+        .getPosition({})
+        .accounts({
+          perpetuals: tc.perpetuals.publicKey,
+          pool: tc.pool.publicKey,
+          position: tc.users[0].positionAccountsLong[0],
+          custody: tc.custodies[0].custody,
+          custodyOracleAccount: tc.custodies[0].oracleAccount,
+        })
+        .instruction(),
+    );
+    expect(
+      simplify(parseResultFromLogs("getPositionResult", getPosition)),
+    ).toStrictEqual({
+      leverage: parseUnits("2000.0320", BPS_DECIMALS),
+      liquidationPrice: parseUnits("124.937500000", PRICE_DECIMALS),
+      liquidationState: true,
+      loss: parseUnits("0.62501", USD_DECIMALS),
+      markPrice: parseUnits("124.937499000", PRICE_DECIMALS),
+      margin: parseUnits("1.00", BPS_DECIMALS),
+      profit: parseUnits("0", USD_DECIMALS),
+    });
 
     const ix = await tc.liquidateInstruction({
       user: tc.users[0],
@@ -772,18 +829,18 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          collateralAmount: parseUnits("0.100000000", CUSTODY_DECIMALS),
+          collateralAmount: parseUnits("0.0100000000", CUSTODY_DECIMALS),
           custody: tc.custodies[0].custody.toString(),
-          feeAmount: parseUnits("1.001502669", USD_DECIMALS),
-          lossUsd: parseUnits("132.227550090", USD_DECIMALS),
+          feeAmount: parseUnits("0.005002501", CUSTODY_DECIMALS),
+          lossUsd: parseUnits("1.250010088", USD_DECIMALS),
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: parseUnits("122.815449", PRICE_DECIMALS),
+          price: parseUnits("124.937499", PRICE_DECIMALS),
           profitUsd: parseUnits("0", USD_DECIMALS),
-          protocolFee: parseUnits("0.200300534", CUSTODY_DECIMALS),
+          protocolFee: parseUnits("0.001000501", CUSTODY_DECIMALS),
           rewardAmount: parseUnits("0", CUSTODY_DECIMALS),
           signer: tc.users[0].wallet.publicKey.toString(),
-          sizeUsd: parseUnits("6150.000000000", USD_DECIMALS),
+          sizeUsd: parseUnits("1250.000000000", USD_DECIMALS),
           time: 111n,
           transferAmount: parseUnits("0", CUSTODY_DECIMALS),
         },
