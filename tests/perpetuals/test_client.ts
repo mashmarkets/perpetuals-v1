@@ -19,7 +19,22 @@ import {
 } from "spl-token-bankrun";
 import * as nacl from "tweetnacl";
 
+import {
+  BorrowRateParams,
+  Fees,
+  OracleParams,
+  Permissions,
+  PricingParams,
+} from "../../packages/cli/src/types.js";
 import { Perpetuals } from "../../target/types/perpetuals.js";
+
+interface CustodyParams {
+  oracle: OracleParams;
+  pricing: PricingParams;
+  permissions: Permissions;
+  fees: Fees;
+  borrowRate: BorrowRateParams;
+}
 
 type User = {
   wallet: Keypair;
@@ -319,26 +334,6 @@ export class TestClient {
     return new BN(uiAmount * 10 ** decimals);
   }
 
-  toUiAmount(token_amount: number, decimals: number) {
-    return token_amount / 10 ** decimals;
-  }
-
-  ensureFails = async (promise, message = null) => {
-    let printErrors = this.printErrors;
-    this.printErrors = false;
-    let res = null;
-    try {
-      await promise;
-    } catch (err) {
-      res = err;
-    }
-    this.printErrors = printErrors;
-    if (!res) {
-      throw new Error(message ? message : "Call should've failed");
-    }
-    return res;
-  };
-
   ///////
   // instructions
 
@@ -373,7 +368,7 @@ export class TestClient {
       .rpc();
   };
 
-  setAdminSigners = async (minSignatures: number) => {
+  setAdminSigners = async ({ minSignatures }: { minSignatures: number }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
@@ -392,7 +387,11 @@ export class TestClient {
     }
   };
 
-  setPermissions = async (permissions) => {
+  setPermissions = async ({
+    permissions,
+  }: {
+    permissions: CustodyParams["permissions"];
+  }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
@@ -409,7 +408,7 @@ export class TestClient {
     }
   };
 
-  addPool = async (name) => {
+  addPool = async ({ name }: { name: string }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
@@ -472,21 +471,28 @@ export class TestClient {
     }
   };
 
-  addCustody = async (
+  addCustody = async ({
     custody,
-    oracleConfig,
+    oracle,
     pricing,
     permissions,
     fees,
     borrowRate,
-  ) => {
+  }: {
+    custody: Custody;
+    oracle: CustodyParams["oracle"];
+    pricing: CustodyParams["pricing"];
+    permissions: CustodyParams["permissions"];
+    fees: CustodyParams["fees"];
+    borrowRate: CustodyParams["borrowRate"];
+  }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       await this.program.methods
         .addCustodyInit({
-          oracle: oracleConfig,
+          oracle,
           pricing,
           permissions,
           fees,
@@ -510,7 +516,7 @@ export class TestClient {
     for (let i = 0; i < multisig.minSignatures; ++i) {
       await this.program.methods
         .addCustody({
-          oracle: oracleConfig,
+          oracle,
           pricing,
           permissions,
           fees,
@@ -534,7 +540,7 @@ export class TestClient {
     }
   };
 
-  removeCustody = async (custody) => {
+  removeCustody = async ({ custody }: { custody: Custody }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
@@ -557,21 +563,28 @@ export class TestClient {
     }
   };
 
-  setCustodyConfig = async (
-    custody: Custody,
-    oracleConfig,
+  setCustodyConfig = async ({
+    custody,
+    oracle,
     pricing,
     permissions,
     fees,
     borrowRate,
-  ) => {
+  }: {
+    custody: Custody;
+    oracle: CustodyParams["oracle"];
+    pricing: CustodyParams["pricing"];
+    permissions: CustodyParams["permissions"];
+    fees: CustodyParams["fees"];
+    borrowRate: CustodyParams["borrowRate"];
+  }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
     for (let i = 0; i < multisig.minSignatures; ++i) {
       await this.program.methods
         .setCustodyConfig({
-          oracle: oracleConfig,
+          oracle,
           pricing,
           permissions,
           fees,
@@ -588,7 +601,15 @@ export class TestClient {
     }
   };
 
-  withdrawFees = async (amount: BN, custody, receivingTokenAccount) => {
+  withdrawFees = async ({
+    amount,
+    custody,
+    receivingTokenAccount,
+  }: {
+    amount: BN;
+    custody: Custody;
+    receivingTokenAccount: PublicKey;
+  }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
@@ -613,7 +634,15 @@ export class TestClient {
     }
   };
 
-  withdrawSolFees = async (amount: BN, custody, receivingAccount) => {
+  withdrawSolFees = async ({
+    amount,
+    custody,
+    receivingAccount,
+  }: {
+    amount: BN;
+    custody: Custody;
+    receivingAccount: PublicKey;
+  }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
@@ -634,7 +663,13 @@ export class TestClient {
     }
   };
 
-  setCustomOraclePrice = async (price: bigint, custody) => {
+  setCustomOraclePrice = async ({
+    price,
+    custody,
+  }: {
+    price: bigint;
+    custody: Custody;
+  }) => {
     let multisig = await this.program.account.multisig.fetch(
       this.multisig.publicKey,
     );
@@ -660,31 +695,38 @@ export class TestClient {
     }
   };
 
-  setCustomOraclePricePermissionless = async (
-    oracleAuthority: Keypair,
-    price: number,
-    custody: Custody,
-    publishTime?,
-    noSignatureVerification?,
-    messageOverwrite?,
-    increaseComputeLimits?,
-  ) => {
+  setCustomOraclePricePermissionless = async ({
+    oracleAuthority,
+    price,
+    custody,
+    publishTime,
+    shouldIncludeSignatureVerification = true,
+    messageOverwrite,
+    shouldIncreaseComputeLimits,
+  }: {
+    oracleAuthority: Keypair;
+    price: bigint;
+    custody: Custody;
+    publishTime?: BN;
+    shouldIncludeSignatureVerification?: boolean;
+    messageOverwrite?: Buffer;
+    shouldIncreaseComputeLimits?: boolean;
+  }) => {
     let setCustomOraclePricePermissionlessParams = {
       custodyAccount: custody.custody,
-      price: new BN(price * 1_000_000),
+      price: new BN(price.toString()),
       expo: -6,
       conf: new BN(10),
       publishTime:
         publishTime != null ? new BN(publishTime) : new BN(this.getTime()),
     };
 
-    let message =
-      messageOverwrite != null
-        ? messageOverwrite
-        : this.program.coder.types.encode(
-            "setCustomOraclePricePermissionlessParams",
-            setCustomOraclePricePermissionlessParams,
-          );
+    let message = messageOverwrite
+      ? messageOverwrite
+      : this.program.coder.types.encode(
+          "setCustomOraclePricePermissionlessParams",
+          setCustomOraclePricePermissionlessParams,
+        );
 
     const signature = nacl.sign.detached(message, oracleAuthority.secretKey);
 
@@ -701,7 +743,7 @@ export class TestClient {
         ixSysvar: anchor.web3.SYSVAR_INSTRUCTIONS_PUBKEY,
       });
 
-    if (noSignatureVerification == null) {
+    if (shouldIncludeSignatureVerification) {
       tx = tx.preInstructions([
         anchor.web3.Ed25519Program.createInstructionWithPublicKey({
           publicKey: oracleAuthority.publicKey.toBytes(),
@@ -710,7 +752,7 @@ export class TestClient {
         }),
       ]);
     }
-    if (increaseComputeLimits != null) {
+    if (shouldIncreaseComputeLimits) {
       tx = tx.preInstructions([
         anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
           units: 1000000,
@@ -724,13 +766,19 @@ export class TestClient {
     await tx.rpc();
   };
 
-  addLiquidity = async (
-    amountIn: BN,
-    minLpAmountOut: BN,
-    user: User,
-    fundingAccount: PublicKey,
-    custody: Custody,
-  ) => {
+  addLiquidity = async ({
+    amountIn,
+    minLpAmountOut,
+    user,
+    fundingAccount,
+    custody,
+  }: {
+    amountIn: BN;
+    minLpAmountOut: BN;
+    user: User;
+    fundingAccount: PublicKey;
+    custody: Custody;
+  }) => {
     await this.program.methods
       .addLiquidity({
         amountIn,
@@ -754,13 +802,19 @@ export class TestClient {
       .rpc();
   };
 
-  removeLiquidity = async (
-    lpAmountIn: BN,
-    minAmountOut: BN,
-    user: User,
-    receivingAccount: PublicKey,
-    custody: Custody,
-  ) => {
+  removeLiquidity = async ({
+    lpAmountIn,
+    minAmountOut,
+    user,
+    receivingAccount,
+    custody,
+  }: {
+    lpAmountIn: BN;
+    minAmountOut: BN;
+    user: User;
+    receivingAccount: PublicKey;
+    custody: Custody;
+  }) => {
     await this.program.methods
       .removeLiquidity({
         lpAmountIn,
@@ -890,13 +944,19 @@ export class TestClient {
       .instruction();
   };
 
-  closePositionInstruction = async (
-    price: number,
+  closePositionInstruction = async ({
+    price,
     user,
     receivingAccount,
     positionAccount,
     custody,
-  ) => {
+  }: {
+    price: number;
+    user: User;
+    receivingAccount: PublicKey;
+    positionAccount: PublicKey;
+    custody: Custody;
+  }) => {
     return await this.program.methods
       .closePosition({
         price: new BN(price),
@@ -945,7 +1005,13 @@ export class TestClient {
       .instruction();
   };
 
-  getEntryPriceAndFee = async (size: BN, custody) => {
+  getEntryPriceAndFee = async ({
+    size,
+    custody,
+  }: {
+    size: BN;
+    custody: Custody;
+  }) => {
     return await this.program.methods
       .getEntryPriceAndFee({ size })
       .accounts({
@@ -957,11 +1023,15 @@ export class TestClient {
       .view();
   };
 
-  getExitPriceAndFee = async (
-    size: BN,
-    positionAccount: PublicKey,
-    custody: Custody,
-  ) => {
+  getExitPriceAndFee = async ({
+    size,
+    positionAccount,
+    custody,
+  }: {
+    size: BN;
+    positionAccount: PublicKey;
+    custody: Custody;
+  }) => {
     return await this.program.methods
       .getExitPriceAndFee({
         size,
@@ -976,10 +1046,13 @@ export class TestClient {
       .view();
   };
 
-  getLiquidationPrice = async (
-    positionAccount: PublicKey,
-    custody: Custody,
-  ) => {
+  getLiquidationPrice = async ({
+    positionAccount,
+    custody,
+  }: {
+    positionAccount: PublicKey;
+    custody: Custody;
+  }) => {
     return await this.program.methods
       .getLiquidationPrice({})
       .accounts({

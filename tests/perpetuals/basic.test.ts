@@ -318,7 +318,7 @@ describe("perpetuals", async () => {
   });
 
   it("setAdminSigners", async () => {
-    await tc.setAdminSigners(1);
+    await tc.setAdminSigners({ minSignatures: 1 });
 
     const multisig = await tc.program.account.multisig.fetch(
       tc.multisig.publicKey,
@@ -337,7 +337,7 @@ describe("perpetuals", async () => {
       allowCollateralWithdrawal: true,
       allowSizeChange: true,
     };
-    await tc.setPermissions(perpetualsExpected.permissions);
+    await tc.setPermissions({ permissions: perpetualsExpected.permissions });
 
     const perpetuals = await tc.program.account.perpetuals.fetch(
       tc.perpetuals.publicKey,
@@ -346,7 +346,7 @@ describe("perpetuals", async () => {
   });
 
   it("addAndRemovePool", async () => {
-    await tc.addPool("test pool");
+    await tc.addPool({ name: "test pool" });
 
     expect(
       simplify(await tc.program.account.pool.fetch(tc.pool.publicKey)),
@@ -365,18 +365,18 @@ describe("perpetuals", async () => {
       tc.program.account.pool.fetch(tc.pool.publicKey),
     ).rejects.toThrow("Could not find");
 
-    await tc.addPool("test pool");
+    await tc.addPool({ name: "test pool" });
   });
 
   it("addAndRemoveCustody", async () => {
-    await tc.addCustody(
-      tc.custodies[0],
-      oracleConfig,
+    await tc.addCustody({
+      custody: tc.custodies[0],
+      oracle: oracleConfig,
       pricing,
       permissions,
       fees,
       borrowRate,
-    );
+    });
 
     const token = await tc.program.account.custody.fetch(
       tc.custodies[0].custody,
@@ -387,42 +387,42 @@ describe("perpetuals", async () => {
       oracleAccount: tc.custodies[1].oracleAccount,
     });
 
-    await tc.addCustody(
-      tc.custodies[1],
-      oracleConfig2,
+    await tc.addCustody({
+      custody: tc.custodies[1],
+      oracle: oracleConfig2,
       pricing,
       permissions,
       fees,
       borrowRate,
-    );
+    });
 
-    await tc.removeCustody(tc.custodies[1]);
+    await tc.removeCustody({ custody: tc.custodies[1] });
 
     await expect(
       tc.program.account.custody.fetch(tc.custodies[1].custody),
     ).rejects.toThrow("Could not find");
 
-    await tc.addCustody(
-      tc.custodies[1],
-      oracleConfig2,
+    await tc.addCustody({
+      custody: tc.custodies[1],
+      oracle: oracleConfig2,
       pricing,
       permissions,
       fees,
       borrowRate,
-    );
+    });
   });
 
   it("setCustodyConfig", async () => {
     oracleConfig.maxPriceAgeSec = 90;
     permissions.allowPnlWithdrawal = false;
-    await tc.setCustodyConfig(
-      tc.custodies[0],
-      oracleConfig,
+    await tc.setCustodyConfig({
+      custody: tc.custodies[0],
+      oracle: oracleConfig,
       pricing,
       permissions,
       fees,
       borrowRate,
-    );
+    });
 
     const token = await tc.program.account.custody.fetch(
       tc.custodies[0].custody,
@@ -440,8 +440,14 @@ describe("perpetuals", async () => {
   });
 
   it("setCustomOraclePrice", async () => {
-    await tc.setCustomOraclePrice(parseUnits("123", 6), tc.custodies[0]);
-    await tc.setCustomOraclePrice(parseUnits("200", 6), tc.custodies[1]);
+    await tc.setCustomOraclePrice({
+      price: parseUnits("123", 6),
+      custody: tc.custodies[0],
+    });
+    await tc.setCustomOraclePrice({
+      price: parseUnits("200", 6),
+      custody: tc.custodies[1],
+    });
 
     const oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
@@ -458,12 +464,12 @@ describe("perpetuals", async () => {
     let oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
     );
-    await tc.setCustomOraclePricePermissionless(
-      tc.oracleAuthority,
-      500,
-      tc.custodies[0],
-      oracle.publishTime.add(new BN(1)),
-    );
+    await tc.setCustomOraclePricePermissionless({
+      oracleAuthority: tc.oracleAuthority,
+      price: parseUnits("500", 6),
+      custody: tc.custodies[0],
+      publishTime: oracle.publishTime.add(new BN(1)),
+    });
 
     oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
@@ -477,12 +483,12 @@ describe("perpetuals", async () => {
     });
 
     // Updating the permissionless price oracle with an older publish time should no-op.
-    await tc.setCustomOraclePricePermissionless(
-      tc.oracleAuthority,
-      400,
-      tc.custodies[0],
-      oracle.publishTime.sub(new BN(20)),
-    );
+    await tc.setCustomOraclePricePermissionless({
+      oracleAuthority: tc.oracleAuthority,
+      price: parseUnits("400", 6),
+      custody: tc.custodies[0],
+      publishTime: oracle.publishTime.sub(new BN(20)),
+    });
 
     // Oracle's value is still 500 instead of the attempted 400.
     oracle = await tc.program.account.customOracle.fetch(
@@ -497,15 +503,13 @@ describe("perpetuals", async () => {
     });
 
     // Try permissionless oracle update with increased & priority compute.
-    await tc.setCustomOraclePricePermissionless(
-      tc.oracleAuthority,
-      1000,
-      tc.custodies[0],
-      oracle.publishTime.add(new BN(10)),
-      null,
-      null,
-      true,
-    );
+    await tc.setCustomOraclePricePermissionless({
+      oracleAuthority: tc.oracleAuthority,
+      price: parseUnits("1000", 6),
+      custody: tc.custodies[0],
+      publishTime: oracle.publishTime.add(new BN(10)),
+      shouldIncreaseComputeLimits: true,
+    });
     oracle = await tc.program.account.customOracle.fetch(
       tc.custodies[0].oracleAccount,
     );
@@ -518,12 +522,12 @@ describe("perpetuals", async () => {
     });
 
     // after test, set price back to the expected for other test cases.
-    await tc.setCustomOraclePricePermissionless(
-      tc.oracleAuthority,
-      123,
-      tc.custodies[0],
-      tc.getTime() + 20,
-    );
+    await tc.setCustomOraclePricePermissionless({
+      oracleAuthority: tc.oracleAuthority,
+      price: parseUnits("123", 6),
+      custody: tc.custodies[0],
+      publishTime: tc.getTime() + 20,
+    });
   });
 
   it("setCustomOraclePricePermissionless Errors", async () => {
@@ -534,37 +538,36 @@ describe("perpetuals", async () => {
     // Attempting to update with a payload signed by a bogus key should fail.
     const bogusKeypair = Keypair.generate();
     await expect(
-      tc.setCustomOraclePricePermissionless(
-        bogusKeypair,
-        100,
-        tc.custodies[1],
+      tc.setCustomOraclePricePermissionless({
+        oracleAuthority: bogusKeypair,
+        price: parseUnits("100", 6),
+        custody: tc.custodies[1],
         publishTime,
-      ),
+      }),
     ).rejects.toThrow("PermissionlessOracleSignerMismatch");
 
     // Sending the permissionless update without signature verification should fail.
     await expect(
-      tc.setCustomOraclePricePermissionless(
-        tc.oracleAuthority,
-        100,
-        tc.custodies[1],
+      tc.setCustomOraclePricePermissionless({
+        oracleAuthority: tc.oracleAuthority,
+        price: parseUnits("100", 6),
+        custody: tc.custodies[1],
         publishTime,
-        true,
-      ),
+        shouldIncludeSignatureVerification: false,
+      }),
     ).rejects.toThrow(/PermissionlessOracleMissingSignature/);
 
     // Sending the permissionless update with malformed message should fail.
     const randomMessage = Buffer.alloc(60);
     randomMessage.fill(0xab);
     await expect(
-      tc.setCustomOraclePricePermissionless(
-        tc.oracleAuthority,
-        100,
-        tc.custodies[1],
+      tc.setCustomOraclePricePermissionless({
+        oracleAuthority: tc.oracleAuthority,
+        price: parseUnits("100", 6),
+        custody: tc.custodies[1],
         publishTime,
-        null,
-        randomMessage,
-      ),
+        messageOverwrite: randomMessage,
+      }),
     ).rejects.toThrow(/PermissionlessOracleMessageMismatch/);
   });
 
@@ -574,37 +577,37 @@ describe("perpetuals", async () => {
   });
 
   it("addLiquidity", async () => {
-    await tc.addLiquidity(
-      tc.toTokenAmount(100, tc.custodies[0].decimals),
-      new BN(1),
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.custodies[0],
-    );
-    await tc.addLiquidity(
-      tc.toTokenAmount(100, tc.custodies[1].decimals),
-      new BN(1),
-      tc.users[1],
-      tc.users[1].tokenAccounts[1],
-      tc.custodies[1],
-    );
+    await tc.addLiquidity({
+      amountIn: tc.toTokenAmount(100, tc.custodies[0].decimals),
+      minLpAmountOut: new BN(1),
+      user: tc.users[0],
+      fundingAccount: tc.users[0].tokenAccounts[0],
+      custody: tc.custodies[0],
+    });
+    await tc.addLiquidity({
+      amountIn: tc.toTokenAmount(100, tc.custodies[1].decimals),
+      minLpAmountOut: new BN(1),
+      user: tc.users[1],
+      fundingAccount: tc.users[1].tokenAccounts[1],
+      custody: tc.custodies[1],
+    });
   });
 
   it("removeLiquidity", async () => {
-    await tc.removeLiquidity(
-      tc.toTokenAmount(1, 6),
-      new BN(1),
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.custodies[0],
-    );
-    await tc.removeLiquidity(
-      tc.toTokenAmount(1, 6),
-      new BN(1),
-      tc.users[1],
-      tc.users[1].tokenAccounts[1],
-      tc.custodies[1],
-    );
+    await tc.removeLiquidity({
+      lpAmountIn: tc.toTokenAmount(1, 6),
+      minAmountOut: new BN(1),
+      user: tc.users[0],
+      receivingAccount: tc.users[0].tokenAccounts[0],
+      custody: tc.custodies[0],
+    });
+    await tc.removeLiquidity({
+      lpAmountIn: tc.toTokenAmount(1, 6),
+      minAmountOut: new BN(1),
+      user: tc.users[1],
+      receivingAccount: tc.users[1].tokenAccounts[1],
+      custody: tc.custodies[1],
+    });
   });
 
   it("openPosition", async () => {
@@ -742,13 +745,13 @@ describe("perpetuals", async () => {
   });
 
   it("closePosition", async () => {
-    const ix = await tc.closePositionInstruction(
-      1,
-      tc.users[0],
-      tc.users[0].tokenAccounts[0],
-      tc.users[0].positionAccountsLong[0],
-      tc.custodies[0],
-    );
+    const ix = await tc.closePositionInstruction({
+      price: 1,
+      user: tc.users[0],
+      receivingAccount: tc.users[0].tokenAccounts[0],
+      positionAccount: tc.users[0].positionAccountsLong[0],
+      custody: tc.custodies[0],
+    });
     const result = await processInstructions([ix]);
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
@@ -776,7 +779,10 @@ describe("perpetuals", async () => {
   });
 
   it("liquidate", async () => {
-    await tc.setCustomOraclePrice(parseUnits("125.0", 6), tc.custodies[0]);
+    await tc.setCustomOraclePrice({
+      price: parseUnits("125.0", 6),
+      custody: tc.custodies[0],
+    });
     await processInstructions([
       await tc.openPositionInstruction({
         price: 125,
@@ -789,10 +795,10 @@ describe("perpetuals", async () => {
       }),
     ]);
 
-    await tc.setCustomOraclePrice(
-      parseUnits("124.8875", 6) - 1n,
-      tc.custodies[0],
-    );
+    await tc.setCustomOraclePrice({
+      price: parseUnits("124.8875", 6) - 1n,
+      custody: tc.custodies[0],
+    });
     const getPosition = await simulateInstruction(
       await program.methods
         .getPosition({})
