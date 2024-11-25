@@ -126,7 +126,7 @@ describe("perpetuals", async () => {
     tradeSpreadShort: new BN(0),
     minInitialLeverage: new BN(11_000),
     maxInitialLeverage: new BN(10_000_000),
-    maxLeverage: new BN(20_000_000),
+    maxLeverage: new BN(100_000_000),
     maxPayoffMult: new BN(10_000),
     maxUtilization: new BN(9_000),
     maxPositionLockedUsd: new BN(1_000_000 * 10 ** USD_DECIMALS),
@@ -147,7 +147,7 @@ describe("perpetuals", async () => {
     removeLiquidity: new BN(20),
     openPosition: new BN(0),
     closePosition: new BN(10),
-    liquidation: new BN(5), // 0.05%. Enough to fully clear collateral at 2000x leverage (1/2000)
+    liquidation: new BN(1),
     protocolShare: new BN(2_000),
   };
   const borrowRate = {
@@ -210,7 +210,7 @@ describe("perpetuals", async () => {
       tradeSpreadShort: 0n,
       minInitialLeverage: 11_000n,
       maxInitialLeverage: 10_000_000n,
-      maxLeverage: 20_000_000n,
+      maxLeverage: 100_000_000n,
       maxPayoffMult: 10_000n,
       maxUtilization: 9_000n,
       maxPositionLockedUsd: 1_000_000_000_000_000n,
@@ -231,7 +231,7 @@ describe("perpetuals", async () => {
       removeLiquidity: 20n,
       openPosition: 0n,
       closePosition: 10n,
-      liquidation: 5n,
+      liquidation: 1n,
       protocolShare: 2_000n,
     },
     borrowRate: {
@@ -679,11 +679,11 @@ describe("perpetuals", async () => {
       simplify(parseResultFromLogs("getPositionResult", result)),
     ).toStrictEqual({
       leverage: parseUnits("7.0000", BPS_DECIMALS),
-      liquidationPrice: parseUnits("105.490071429", PRICE_DECIMALS),
+      liquidationPrice: parseUnits("105.440871429", PRICE_DECIMALS),
       liquidationState: false,
       loss: parseUnits("0", USD_DECIMALS),
       markPrice: parseUnits("123.000000000", PRICE_DECIMALS),
-      margin: parseUnits("0.0035", BPS_DECIMALS),
+      margin: parseUnits("0.0007", BPS_DECIMALS),
       profit: parseUnits("0", USD_DECIMALS),
     });
   });
@@ -790,7 +790,7 @@ describe("perpetuals", async () => {
     ]);
 
     await tc.setCustomOraclePrice(
-      parseUnits("124.9375", 6) - 1n,
+      parseUnits("124.8875", 6) - 1n,
       tc.custodies[0],
     );
     const getPosition = await simulateInstruction(
@@ -808,11 +808,11 @@ describe("perpetuals", async () => {
     expect(
       simplify(parseResultFromLogs("getPositionResult", getPosition)),
     ).toStrictEqual({
-      leverage: parseUnits("2000.0320", BPS_DECIMALS),
-      liquidationPrice: parseUnits("124.937500000", PRICE_DECIMALS),
+      leverage: parseUnits("10000.8000", BPS_DECIMALS),
+      liquidationPrice: parseUnits("124.8875", PRICE_DECIMALS),
       liquidationState: true,
-      loss: parseUnits("0.62501", USD_DECIMALS),
-      markPrice: parseUnits("124.937499000", PRICE_DECIMALS),
+      loss: parseUnits("1.12501", USD_DECIMALS),
+      markPrice: parseUnits("124.88749900", PRICE_DECIMALS),
       margin: parseUnits("1.00", BPS_DECIMALS),
       profit: parseUnits("0", USD_DECIMALS),
     });
@@ -831,13 +831,13 @@ describe("perpetuals", async () => {
         data: {
           collateralAmount: parseUnits("0.0100000000", CUSTODY_DECIMALS),
           custody: tc.custodies[0].custody.toString(),
-          feeAmount: parseUnits("0.005002501", CUSTODY_DECIMALS),
-          lossUsd: parseUnits("1.250010088", USD_DECIMALS),
+          feeAmount: parseUnits("0.00100090", CUSTODY_DECIMALS),
+          lossUsd: parseUnits("1.250010022", USD_DECIMALS),
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
-          price: parseUnits("124.937499", PRICE_DECIMALS),
+          price: parseUnits("124.88749900", PRICE_DECIMALS),
           profitUsd: parseUnits("0", USD_DECIMALS),
-          protocolFee: parseUnits("0.001000501", CUSTODY_DECIMALS),
+          protocolFee: parseUnits("0.000200180", CUSTODY_DECIMALS),
           rewardAmount: parseUnits("0", CUSTODY_DECIMALS),
           signer: tc.users[0].wallet.publicKey.toString(),
           sizeUsd: parseUnits("1250.000000000", USD_DECIMALS),
