@@ -1,7 +1,5 @@
 import ChartCandlestickIcon from "@carbon/icons-react/lib/ChartCandlestick";
 import UserAdmin from "@carbon/icons-react/lib/UserAdmin";
-import { Address } from "@solana/addresses";
-import { NATIVE_MINT } from "@solana/spl-token";
 import { useWallet } from "@solana/wallet-adapter-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
@@ -17,6 +15,7 @@ import {
   usePrizePool,
 } from "@/hooks/competition";
 import { useBalance, useGetTokenInfo } from "@/hooks/token";
+import { SOL_MINT } from "@/lib/Token";
 import { formatNumber } from "@/utils/formatters";
 
 import AirdropButton from "./AirdropButton";
@@ -84,10 +83,7 @@ export const Navbar = () => {
 
   const competitionMint = useCompetitionMint();
   const { data: usdc } = useBalance(competitionMint, publicKey);
-  const { data: sol } = useBalance(
-    NATIVE_MINT.toString() as Address,
-    publicKey,
-  );
+  const { data: sol } = useBalance(SOL_MINT, publicKey);
 
   return (
     <nav
@@ -143,7 +139,7 @@ export const Navbar = () => {
       <div className="flex flex-row items-center gap-4">
         {publicKey &&
           (sol !== undefined && sol === BigInt(0) ? (
-            <AirdropButton mint={NATIVE_MINT.toString() as Address} />
+            <AirdropButton mint={SOL_MINT} />
           ) : (
             <>
               {isCompetitionActive && (

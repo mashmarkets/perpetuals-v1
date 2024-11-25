@@ -57,27 +57,30 @@ const useLeaderboardData = (epoch: Date) => {
   return users
     .map((user) => {
       const balance = balances[user] ?? BigInt(0);
-      const positions = (positionsMapping?.[user] ?? []).map((address) => {
-        const p = allPositions[address];
-        const c = custodies[p.custody];
 
-        const mark =
-          c && prices[c.mint]
-            ? BigInt(Math.round(prices[c.mint] * USD_POWER))
-            : BigInt(0);
+      const positions = (positionsMapping?.[user] ?? [])
+        .filter((address) => allPositions[address])
+        .map((address) => {
+          const p = allPositions[address];
+          const c = custodies[p.custody];
 
-        // TODO:- Need to incorporate borrow fees
-        const pnl = (p.sizeUsd * (mark - p.price)) / p.price;
+          const mark =
+            c && prices[c.mint]
+              ? BigInt(Math.round(prices[c.mint] * USD_POWER))
+              : BigInt(0);
 
-        return {
-          mint: c?.mint,
-          sizeUsd: p.sizeUsd,
-          price: p.price,
-          mark,
-          pnl: pnl,
-          netValue: p.collateralUsd + pnl,
-        };
-      });
+          // TODO:- Need to incorporate borrow fees
+          const pnl = (p.sizeUsd * (mark - p.price)) / p.price;
+
+          return {
+            mint: c?.mint,
+            sizeUsd: p.sizeUsd,
+            price: p.price,
+            mark,
+            pnl: pnl,
+            netValue: p.collateralUsd + pnl,
+          };
+        });
 
       const equityFromPositions =
         positions.reduce((acc, x) => acc + x.netValue, BigInt(0)) /
@@ -91,7 +94,7 @@ const useLeaderboardData = (epoch: Date) => {
         positions: positions,
         prize:
           mintAccount && prizePool
-            ? (balance * prizePool) / mintAccount.supply
+            ? (balance * prizePool) / (mintAccount.supply + BigInt(1)) // Avoid division by 0
             : undefined,
       };
     })
@@ -127,7 +130,7 @@ function Leaderboard({ epoch }: { epoch: Date }) {
 
   const { publicKey } = useWallet();
   const leaderboard = useLeaderboardData(epoch);
-  const { data: prize } = usePrizePool(epoch);
+  const { data: prizePool } = usePrizePool(epoch);
   const competitionMint = getCompetitionMint(epoch);
 
   const toggleUser = (userId: string) => {
@@ -146,7 +149,7 @@ function Leaderboard({ epoch }: { epoch: Date }) {
     <div className="">
       <p className="text-lg font-bold text-gray-200">
         Prize Pool:
-        {(Number(prize ?? 0) / 10 ** 9).toFixed(2)} SOL
+        {(Number(prizePool ?? 0) / 10 ** 9).toFixed(2)} SOL
       </p>
 
       <div className="mx-auto max-w-lg py-6">

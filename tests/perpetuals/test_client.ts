@@ -885,7 +885,7 @@ export class TestClient {
     positionAccount,
     custody,
   }: {
-    collateral: BN;
+    collateral: bigint;
     user: User;
     fundingAccount: PublicKey;
     positionAccount: PublicKey;
@@ -893,7 +893,7 @@ export class TestClient {
   }) => {
     return await this.program.methods
       .addCollateral({
-        collateral,
+        collateral: new BN(collateral.toString()),
       })
       .accounts({
         owner: user.wallet.publicKey,
@@ -926,7 +926,7 @@ export class TestClient {
   }) => {
     return await this.program.methods
       .removeCollateral({
-        collateralUsd,
+        collateralUsd: new BN(collateralUsd.toString()),
       })
       .accounts({
         owner: user.wallet.publicKey,
@@ -974,6 +974,42 @@ export class TestClient {
         tokenProgram: spl.TOKEN_PROGRAM_ID,
       })
       .instruction();
+  };
+
+  forceClose = async ({
+    user,
+    tokenAccount,
+    positionAccount,
+    custody,
+  }: {
+    user: User;
+    tokenAccount: PublicKey;
+    positionAccount: PublicKey;
+    custody: Custody;
+  }) => {
+    let multisig = await this.program.account.multisig.fetch(
+      this.multisig.publicKey,
+    );
+    for (let i = 0; i < multisig.minSignatures; ++i) {
+      await this.program.methods
+        .forceClose({})
+        .accounts({
+          admin: this.admins[i].publicKey,
+          multisig: this.multisig.publicKey,
+          owner: user.wallet.publicKey,
+          receivingAccount: tokenAccount,
+          transferAuthority: this.authority.publicKey,
+          perpetuals: this.perpetuals.publicKey,
+          pool: this.pool.publicKey,
+          position: positionAccount,
+          custody: custody.custody,
+          custodyOracleAccount: custody.oracleAccount,
+          custodyTokenAccount: custody.tokenAccount,
+          tokenProgram: spl.TOKEN_PROGRAM_ID,
+        })
+        .signers([this.admins[i]])
+        .rpc();
+    }
   };
 
   liquidateInstruction = async ({

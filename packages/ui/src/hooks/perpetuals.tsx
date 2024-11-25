@@ -457,7 +457,7 @@ export const useAllUserPositions = (user: PublicKey | null) => {
   return useQuery<Address[]>({
     queryKey: ["positions", user?.toString()],
     enabled: !!program && user !== null && user !== undefined,
-    refetchInterval: 2 * ONE_MINUTE,
+    refetchInterval: 1000 * 10,
     queryFn: async () => {
       const data = await program!.account.position.all();
       const positions = data.map(parsePosition);

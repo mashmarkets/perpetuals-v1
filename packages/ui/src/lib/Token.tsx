@@ -1,9 +1,12 @@
 import { Address } from "@solana/addresses";
+import { PublicKey } from "@solana/web3.js";
 import { memoize } from "lodash-es";
 
 import { getFaucetMint } from "@/actions/faucet";
 
 import { universe } from "./universe";
+
+export const SOL_MINT = PublicKey.default.toString() as Address; // "Mint" to represent SOL (not WSOL)
 
 export const isValidSymbol = (symbol: unknown): boolean => {
   if (typeof symbol !== "string") {
@@ -68,38 +71,29 @@ export const getCompetitionMint = (epoch: Date) =>
     epoch,
   );
 
-const SOL = universe.find((x) => x.symbol === "SOL")!;
-
 // Remap mainnet address to testnet faucet address
 export const getTokenList = (epoch: Date) => {
-  return [
-    // Add unmocked WSOL so we can use it in the buyin process
-    {
-      ...SOL,
+  return universe.map((x) => {
+    // Leave SOL as is
+    if (x.address === SOL_MINT) {
+      return x as Token;
+    }
+    return {
+      ...x,
       extensions: {
-        ...SOL.extensions,
-        canonical: SOL.address as Address,
+        ...x.extensions,
+        canonical: x.address,
+        tradingView: `PYTH:${x.symbol}USD`,
       },
-    } as Token,
-    ...universe.map(
-      (x) =>
-        ({
-          ...x,
-          extensions: {
-            ...x.extensions,
-            canonical: x.address,
-            tradingView: `PYTH:${x.symbol}USD`,
-          },
-          // Note: For simulation trading we also mock WSOL. Otherwise we should leave native mint intact
-          address: getFaucetMint(
-            x.address as Address,
-            x.address === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
-              ? epoch
-              : new Date(0),
-          ).toString() as Address,
-        }) as Token,
-    ),
-  ];
+
+      address: getFaucetMint(
+        x.address as Address,
+        x.address === "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+          ? epoch
+          : new Date(0),
+      ).toString() as Address,
+    } as Token;
+  });
 };
 
 const getTokensByMint = memoize((epoch: Date) => {

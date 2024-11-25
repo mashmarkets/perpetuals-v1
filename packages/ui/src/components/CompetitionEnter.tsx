@@ -1,6 +1,4 @@
 import * as Dialog from "@radix-ui/react-dialog";
-import { Address } from "@solana/addresses";
-import { NATIVE_MINT } from "@solana/spl-token";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,6 +10,7 @@ import { SolidButton } from "@/components/ui/SolidButton";
 import { useCompetitionMint, useCurrentEpoch } from "@/hooks/competition";
 import { useBalance, useGetTokenInfo } from "@/hooks/token";
 import { useWriteFaucetProgram } from "@/hooks/useProgram";
+import { SOL_MINT } from "@/lib/Token";
 import { SOL_RESERVE_AMOUNT } from "@/lib/types";
 import { wrapTransactionWithNotification } from "@/utils/TransactionHandlers";
 
@@ -27,7 +26,7 @@ export function BuyInModal({ children }: { children?: React.ReactNode }) {
   const { publicKey } = useWallet();
   const queryClient = useQueryClient();
 
-  const payToken = NATIVE_MINT.toString() as Address;
+  const payToken = SOL_MINT;
 
   const { data: balance } = useBalance(payToken, publicKey);
 

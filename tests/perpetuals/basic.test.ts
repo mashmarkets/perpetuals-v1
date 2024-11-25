@@ -693,7 +693,7 @@ describe("perpetuals", async () => {
 
   it("addCollateral", async () => {
     const ix = await tc.addCollateralInstruction({
-      collateral: tc.toTokenAmount(1, tc.custodies[0].decimals),
+      collateral: parseUnits("1", CUSTODY_DECIMALS),
       user: tc.users[0],
       fundingAccount: tc.users[0].tokenAccounts[0],
       positionAccount: tc.users[0].positionAccountsLong[0],
@@ -719,7 +719,7 @@ describe("perpetuals", async () => {
 
   it("removeCollateral", async () => {
     const ix = await tc.removeCollateralInstruction({
-      collateralUsd: tc.toTokenAmount(1, 6),
+      collateralUsd: parseUnits("1.23", USD_DECIMALS), // 0.01 SOL
       user: tc.users[0],
       receivingAccount: tc.users[0].tokenAccounts[0],
       positionAccount: tc.users[0].positionAccountsLong[0],
@@ -730,14 +730,14 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          collateralAmount: parseUnits("1.999991870", CUSTODY_DECIMALS),
+          collateralAmount: parseUnits("1.99", CUSTODY_DECIMALS),
           custody: tc.custodies[0].custody.toString(),
           owner: tc.users[0].wallet.publicKey.toString(),
           pool: tc.pool.publicKey.toString(),
           price: parseUnits("123.000000000", PRICE_DECIMALS),
           sizeUsd: parseUnits("861.000000000", USD_DECIMALS),
           time: 111n,
-          transferAmount: parseUnits("0.000008130", CUSTODY_DECIMALS),
+          transferAmount: parseUnits("0.01", CUSTODY_DECIMALS),
         },
         name: "removeCollateral",
       },
@@ -756,7 +756,7 @@ describe("perpetuals", async () => {
     expect(simplify(await getEvents(result))).toStrictEqual([
       {
         data: {
-          collateralAmount: parseUnits("1.999991870", CUSTODY_DECIMALS),
+          collateralAmount: parseUnits("1.99", CUSTODY_DECIMALS),
           custody: tc.custodies[0].custody.toString(),
           feeAmount: parseUnits("0", CUSTODY_DECIMALS),
           lossUsd: parseUnits("0", USD_DECIMALS),
@@ -767,7 +767,7 @@ describe("perpetuals", async () => {
           protocolFee: parseUnits("0", CUSTODY_DECIMALS),
           sizeUsd: parseUnits("861.000000000", USD_DECIMALS),
           time: 111n,
-          transferAmount: parseUnits("1.999991869", CUSTODY_DECIMALS),
+          transferAmount: parseUnits("1.99", CUSTODY_DECIMALS),
         },
         name: "closePosition",
       },
@@ -853,6 +853,31 @@ describe("perpetuals", async () => {
         name: "liquidatePosition",
       },
     ]);
+
+    await expect(
+      program.account.position.fetch(tc.users[0].positionAccountsLong[0]),
+    ).rejects.toThrow("Could not find");
+  });
+
+  it("Can force close position", async () => {
+    await processInstructions([
+      await tc.openPositionInstruction({
+        price: 125,
+        collateral: tc.toTokenAmount(0.01, tc.custodies[0].decimals),
+        size: tc.toTokenAmount(10, tc.custodies[0].decimals),
+        user: tc.users[0],
+        fundingAccount: tc.users[0].tokenAccounts[0],
+        positionAccount: tc.users[0].positionAccountsLong[0],
+        custody: tc.custodies[0],
+      }),
+    ]);
+
+    await tc.forceClose({
+      user: tc.users[0],
+      tokenAccount: tc.users[0].tokenAccounts[0],
+      positionAccount: tc.users[0].positionAccountsLong[0],
+      custody: tc.custodies[0],
+    });
 
     await expect(
       program.account.position.fetch(tc.users[0].positionAccountsLong[0]),

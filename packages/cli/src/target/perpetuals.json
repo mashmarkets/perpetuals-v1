@@ -406,6 +406,10 @@
           "writable": true
         },
         {
+          "name": "owner",
+          "writable": true
+        },
+        {
           "name": "receiving_account",
           "writable": true
         },

@@ -108,6 +108,7 @@ async function forceClose(
     await program.methods
       .forceClose({})
       .accounts({
+        owner: position.account.owner,
         admin: publicKey,
         multisig: findPerpetualsAddressSync(program, "multisig"),
         receivingAccount,

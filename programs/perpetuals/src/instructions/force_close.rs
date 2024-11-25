@@ -1,9 +1,9 @@
-//! Liquidate instruction handler
+//! ForceClose instruction handler
 
 use {
     crate::{
         error::PerpetualsError,
-        math,
+        events, math,
         state::{
             custody::Custody,
             multisig::{AdminInstruction, Multisig},
@@ -28,6 +28,9 @@ pub struct ForceClose<'info> {
         bump = multisig.load()?.bump
     )]
     pub multisig: AccountLoader<'info, Multisig>,
+
+    #[account(mut)]
+    pub owner: SystemAccount<'info>,
 
     #[account(
         mut,
@@ -67,7 +70,7 @@ pub struct ForceClose<'info> {
             &[Side::Long as u8]
         ],
         bump = position.bump,
-        close = admin
+        close = owner
     )]
     pub position: Box<Account<'info, Position>>,
 
@@ -89,7 +92,7 @@ pub struct ForceClose<'info> {
             b"custody_token_account",
             pool.key().as_ref(),
             custody.mint.as_ref()
-            ],
+        ],
         bump = custody.token_account_bump
     )]
     pub custody_token_account: Box<Account<'info, TokenAccount>>,
@@ -132,8 +135,7 @@ pub fn force_close<'info>(
     let position = ctx.accounts.position.as_mut();
     let pool = ctx.accounts.pool.as_mut();
 
-    // check if position can be liquidated
-    msg!("Check position state");
+    // compute exit price
     let curtime = perpetuals.get_time()?;
 
     let token_price = OraclePrice::new_from_oracle(
@@ -142,18 +144,18 @@ pub fn force_close<'info>(
         curtime,
     )?;
 
+    let exit_price = pool.get_exit_price(&token_price, custody)?;
+    msg!("Exit price: {}", exit_price);
+
     msg!("Settle position");
-    let (total_amount_out, fee_amount, profit_usd, loss_usd) =
-        pool.get_close_amount(position, &token_price, custody, curtime, true)?;
+    let (transfer_amount, fee_amount, profit_usd, loss_usd) =
+        pool.get_close_amount(position, &token_price, custody, curtime, false)?;
 
     let fee_amount_usd = token_price.get_asset_amount_usd(fee_amount, custody.decimals)?;
 
     msg!("Net profit: {}, loss: {}", profit_usd, loss_usd);
     msg!("Collected fee: {}", fee_amount);
-
-    let user_amount = total_amount_out;
-
-    msg!("Amount out: {}", user_amount);
+    msg!("Amount out: {}", transfer_amount);
 
     // unlock pool funds
     custody.unlock_funds(position.locked_amount)?;
@@ -161,7 +163,7 @@ pub fn force_close<'info>(
     // check pool constraints
     msg!("Check pool constraints");
     require!(
-        pool.check_available_amount(total_amount_out, custody)?,
+        pool.check_available_amount(transfer_amount, custody)?,
         PerpetualsError::CustodyAmountLimit
     );
 
@@ -172,21 +174,21 @@ pub fn force_close<'info>(
         ctx.accounts.receiving_account.to_account_info(),
         ctx.accounts.transfer_authority.to_account_info(),
         ctx.accounts.token_program.to_account_info(),
-        user_amount,
+        transfer_amount,
     )?;
 
     // update custody stats
     msg!("Update custody stats");
-    custody.collected_fees.liquidation_usd = custody
+    custody.collected_fees.close_position_usd = custody
         .collected_fees
-        .liquidation_usd
+        .close_position_usd
         .wrapping_add(fee_amount_usd);
 
-    if total_amount_out > position.collateral_amount {
-        let amount_lost = total_amount_out.saturating_sub(position.collateral_amount);
+    if transfer_amount > position.collateral_amount {
+        let amount_lost = transfer_amount.saturating_sub(position.collateral_amount);
         custody.assets.owned = math::checked_sub(custody.assets.owned, amount_lost)?;
     } else {
-        let amount_gained = position.collateral_amount.saturating_sub(total_amount_out);
+        let amount_gained = position.collateral_amount.saturating_sub(transfer_amount);
         custody.assets.owned = math::checked_add(custody.assets.owned, amount_gained)?;
     }
     custody.assets.collateral =
@@ -202,8 +204,10 @@ pub fn force_close<'info>(
         custody.assets.owned = math::checked_sub(custody.assets.owned, protocol_fee)?;
     }
 
-    custody.volume_stats.liquidation_usd =
-        math::checked_add(custody.volume_stats.liquidation_usd, position.size_usd)?;
+    custody.volume_stats.close_position_usd = custody
+        .volume_stats
+        .close_position_usd
+        .wrapping_add(position.size_usd);
 
     custody.trade_stats.oi_long_usd = custody
         .trade_stats
@@ -216,5 +220,19 @@ pub fn force_close<'info>(
     custody.remove_position(position, curtime)?;
     custody.update_borrow_rate(curtime)?;
 
+    emit!(events::ClosePosition {
+        profit_usd,
+        loss_usd,
+        fee_amount,
+        transfer_amount,
+        protocol_fee,
+        collateral_amount: position.collateral_amount,
+        custody: position.custody,
+        time: position.open_time,
+        owner: position.owner,
+        pool: position.pool,
+        price: exit_price,
+        size_usd: position.size_usd,
+    });
     Ok(0)
 }

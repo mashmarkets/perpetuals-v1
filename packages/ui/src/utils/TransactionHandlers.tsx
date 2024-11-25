@@ -49,6 +49,7 @@ export const wrapTransactionWithNotification = async (
       </a>
     );
   };
+
   await toast.promise(
     p.then((tx) => {
       signature = typeof tx === "string" ? tx : tx.signature;

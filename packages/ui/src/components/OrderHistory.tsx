@@ -107,7 +107,7 @@ export function OrderHistory({ poolAddress }: { poolAddress: Address }) {
       <table className="min-w-full text-right text-white">
         <thead>
           <tr className="border-b border-gray-700">
-            <th className="px-4 py-3 text-left">Pair</th>
+            <th className="px-4 py-3 text-left">Symbol</th>
             <th className="px-4 py-3 text-left">Time</th>
             <th className="px-4 py-3 text-center">Action</th>
             <th className="px-4 py-3">Price</th>
@@ -140,7 +140,7 @@ export function OrderHistory({ poolAddress }: { poolAddress: Address }) {
                 key={h.signature}
                 className="border-b border-gray-800 transition-colors hover:bg-gray-800/50"
               >
-                <td className="px-4 py-3 text-left">{`${symbol}-USD`}</td>
+                <td className="px-4 py-3 text-left">{symbol}</td>
                 <td className="px-4 py-3 text-left">
                   {h.blockTime.toLocaleString()}
                 </td>

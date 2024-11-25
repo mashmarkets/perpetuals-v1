@@ -12,12 +12,17 @@ import { AccountInfo, PublicKey } from "@solana/web3.js";
 import { useQueries, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 
-import { getTokenInfo, getTokenList } from "@/lib/Token";
+import { getTokenInfo, getTokenList, SOL_MINT } from "@/lib/Token";
+import { queryClient } from "@/utils/queryClient";
 
 import { useCurrentEpoch } from "./competition";
 import { connectionBatcher } from "./connection";
 
 const ONE_MINUTE = 60 * 1000;
+queryClient.setQueryDefaults(["account"], {
+  refetchInterval: 1000 * 10,
+  staleTime: 400,
+});
 export const useMint = (mint: Address | undefined) => {
   const { connection } = useConnection();
   return useQuery({
@@ -33,7 +38,7 @@ export const useMint = (mint: Address | undefined) => {
   });
 };
 
-// Like getAssociatedTokenAddressSync, but for handles NATIVE_MINT
+// Like getAssociatedTokenAddressSync, but for handles SOL_MINT
 const getTokenPublicKey = (
   mint: Address | undefined,
   user: Address | undefined,
@@ -42,7 +47,7 @@ const getTokenPublicKey = (
     return undefined;
   }
   // For Solana balance, just look up the user's account
-  if (mint === NATIVE_MINT.toString()) {
+  if (mint === SOL_MINT) {
     return user;
   }
   // Otherwise the user's associated token account
@@ -50,6 +55,7 @@ const getTokenPublicKey = (
   return getAssociatedTokenAddressSync(
     new PublicKey(mint),
     new PublicKey(user),
+    true,
   ).toString() as Address;
 };
 
@@ -71,7 +77,7 @@ export const useAccount = (
       connectionBatcher(connection)
         .fetch(publicKey!)
         .then((info) => {
-          if (info !== null && mint !== NATIVE_MINT.toString()) {
+          if (info !== null && mint !== SOL_MINT.toString()) {
             return unpackAccount(new PublicKey(publicKey!), info);
           }
           return info;
@@ -91,7 +97,7 @@ const useAccounts = (mints: Address[], users: Address[]) => {
           connectionBatcher(connection)
             .fetch(publicKey)
             .then((info) => {
-              if (info !== null && mint !== NATIVE_MINT.toString()) {
+              if (info !== null && mint !== SOL_MINT.toString()) {
                 return unpackAccount(new PublicKey(publicKey!), info);
               }
               return info;
@@ -127,7 +133,7 @@ export const useBalance = (
   }
 
   const balance =
-    mint === NATIVE_MINT.toString()
+    mint === SOL_MINT.toString()
       ? (data as AccountInfo<Buffer>)?.lamports
         ? BigInt((data as AccountInfo<Buffer>).lamports)
         : BigInt(0)
@@ -148,7 +154,7 @@ export const useBalances = (mint: Address | undefined, users: Address[]) => {
         return acc;
       }
       acc[user as Address] =
-        mint === NATIVE_MINT.toString()
+        mint === SOL_MINT.toString()
           ? BigInt((account as AccountInfo<Buffer>).lamports)
           : (account as Account).amount;
       return acc;
@@ -182,7 +188,7 @@ export const useAllMintHolders = (mint: Address | undefined) => {
       });
 
       const accounts = data.map((x) => {
-        if (mint === NATIVE_MINT.toString()) {
+        if (mint === SOL_MINT.toString()) {
           return x.account;
         }
         return unpackAccount(new PublicKey(mint!), x.account);
@@ -208,13 +214,20 @@ export const useTokenList = () => {
 export const useTradeableMints = () => {
   const epoch = useCurrentEpoch();
   return useMemo(() => {
-    return getTokenList(epoch)
-      .filter(
-        (x) =>
-          !x.symbol.startsWith("US") && x.address !== NATIVE_MINT.toString(),
-      )
-      .sort((a, b) => a.symbol.localeCompare(b.symbol))
-      .map((x) => x.address) as Address[];
+    return (
+      getTokenList(epoch)
+        // .filter( // 1000x Leverage Pairs
+        //   (x) =>
+        //     ["Bonk", "SOL", "WBTC"].includes(x.symbol) &&
+        //     x.address !== SOL_MINT,
+        // )
+        .filter(
+          (x) =>
+            !x.symbol.startsWith("US") && x.address !== NATIVE_MINT.toString(),
+        )
+        .sort((a, b) => a.symbol.localeCompare(b.symbol))
+        .map((x) => x.address) as Address[]
+    );
   }, [epoch]);
 };
 

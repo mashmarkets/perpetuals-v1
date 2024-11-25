@@ -412,6 +412,10 @@ export type Perpetuals = {
           "writable": true
         },
         {
+          "name": "owner",
+          "writable": true
+        },
+        {
           "name": "receivingAccount",
           "writable": true
         },
